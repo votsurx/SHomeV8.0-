@@ -54,3 +54,5 @@ ios/Pods/
 .env
 .env.*
 !.env.example
+# Debug info backup (НЕ коммитить!)
+debug_info_backup/
