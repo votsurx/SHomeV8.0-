@@ -43,14 +43,35 @@ class SceneRepositoryImpl implements SceneRepository {
   }
 
   /// Выполняет сцену: для каждого действия отправляет команду на устройство.
-  /// Поддерживает команды turnOn и turnOff.
+  /// Поддерживает команды turnOn, turnOff, setBrightness.
+  /// Все действия выполняются последовательно, ошибки не блокируют остальные.
   @override
   Future<void> executeScene(Scene scene) async {
-    for (final action in scene.actions) {
-      switch (action.command) {
-        case 'turnOn': await _deviceRepository.turnOn(action.deviceId);
-        case 'turnOff': await _deviceRepository.turnOff(action.deviceId);
+    // Создаём список Future для параллельного выполнения
+    final futures = scene.actions.map((action) async {
+      try {
+        switch (action.command) {
+          case 'turnOn':
+            await _deviceRepository.turnOn(action.deviceId);
+            break;
+          case 'turnOff':
+            await _deviceRepository.turnOff(action.deviceId);
+            break;
+          case 'setBrightness':
+            await _deviceRepository.setBrightness(
+              action.deviceId,
+              action.value ?? 255,
+            );
+            break;
+          default:
+            print('⚠️ Неизвестная команда: ${action.command}');
+        }
+      } catch (e) {
+        print('❌ Ошибка: $e');
       }
-    }
+    }).toList();
+
+    // Ждём завершения всех действий
+    await Future.wait(futures);
   }
 }
