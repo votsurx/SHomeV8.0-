@@ -1,0 +1,121 @@
+# ============================================================
+# SHome v3.0 — Умный дом на Flutter
+# Управление устройствами Tuya по локальной сети
+# ============================================================
+
+name: shome
+description: SHome v8.0 - Smart Home Control
+publish_to: 'none'          # Приватный проект, не публикуется на pub.dev
+version: 8.0.0+1
+
+# Минимальная версия Dart SDK
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+    #==============Перемещение виджетов==========
+  reorderable_grid_view: ^2.2.8
+
+  # ============ State Management ============
+  flutter_riverpod: ^2.6.1     # Управление состоянием
+  riverpod_annotation: ^2.6.1  # Аннотации для кодогенерации Riverpod
+
+  # ============ Navigation ============
+  go_router: ^14.8.1           # Маршрутизация с поддержкой deep links
+
+  # ============ Dependency Injection ============
+  get_it: ^8.0.3               # Service Locator для DI
+
+  # ============ Storage ============
+  sqflite: ^2.4.1              # Локальная БД SQLite
+  flutter_secure_storage: ^9.2.4  # Защищённое хранилище ключей
+
+  # ============ Logging ============
+  talker: ^4.6.3               # Логгер
+  talker_flutter: ^4.6.3       # Интеграция логгера с Flutter
+
+  # ============ Utilities ============
+  freezed_annotation: ^2.4.4   # Аннотации для иммутабельных моделей
+  json_annotation: ^4.9.0      # Аннотации для JSON-сериализации
+  uuid: ^4.5.1                 # Генерация UUID
+  path: ^1.8.3                 # Работа с путями файлов
+
+  # ============ UI ============
+  flutter_animate: ^4.5.2      # Анимации
+
+  # ============ Tuya Protocol ============
+  tinytuya:
+    path: lib/packages/tinytuya  # Локальная копия библиотеки (pub.dev версия битая)
+  cryptography: ^2.9.0         # Шифрование для Tuya протокола
+
+  # ============ Settings ============
+  shared_preferences: ^2.2.2   # Хранение настроек (тема, интервал опроса)
+
+  # ============ Export/Import ============
+  file_picker: ^8.1.7          # Выбор файла для импорта
+  share_plus: ^10.1.4          # Поделиться файлом для экспорта
+  path_provider: ^2.1.5        # Пути к папкам приложения
+
+  # ============ Permissions ============
+  permission_handler: ^11.3.0  # Запрос разрешений (запись файлов)
+
+  # ============ MQTT (заготовка) ============
+  mqtt_client: ^10.0.0         # MQTT клиент для будущей интеграции
+
+  # =============WEBdav=================
+  webdav_client: ^1.2.1
+
+  # ========Для открытия браузера========
+  url_launcher: ^6.3.0
+
+  # ==========Pogoda=============
+  http: ^1.2.0
+  # SQLite
+  sqlite3_flutter_libs: ^0.5.24  # ← ДОБАВИТЬ ЭТУ СТРОКУ
+
+  #=============VIDEO=============
+  camera: ^0.11.1
+  udp: ^5.0.1           # для SSDP/ONVIF сканирования
+  multicast_dns: ^0.3.2  # mDNS поиск
+  network_info_plus: ^6.1.0
+  flutter_vlc_player: ^7.4.4
+  video_player: ^2.8.0
+  lottie: ^3.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: "^0.13.1"
+
+  # ============ Code Generation ============
+  build_runner: ^2.4.14        # Запуск кодогенераторов
+  freezed: ^2.5.8              # Генерация иммутабельных моделей
+  json_serializable: ^6.9.4    # Генерация JSON-сериализации
+
+  # ============ Testing ============
+  mockito: ^5.4.5              # Моки для тестов
+  sqflite_common_ffi: ^2.3.0   # SQLite для тестов без эмулятора
+
+  # ============ Linting ============
+  flutter_lints: ^5.0.0        # Правила линтинга Flutter
+
+  # ============ Statistics ============
+  fl_chart: ^0.68.0            # Графики для статистики
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/
+    - assets/animations/
+
+flutter_icons:
+  android: true
+  ios: false  # если iOS не нужен
+  image_path: "assets/icon.png"  # путь к вашей иконке
+  adaptive_icon_background: "#FFFFFF"  # цвет фона для адаптивной иконки
+  adaptive_icon_foreground: "assets/icon.png"  # или отдельный файл для переднего плана
+  adaptive_icon_monochrome: "assets/icon.png"
