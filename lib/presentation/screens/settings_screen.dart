@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
+import 'notification_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -188,6 +189,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
+
+          // ============================================================
+          // VK BOT
+          // ============================================================
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.notifications, color: Colors.purple),
+              title: const Text('Уведомления'),
+              subtitle: const Text('Настройка VK Bot'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationSettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
 
           // ============================================================
           // 💾 РЕЗЕРВНОЕ КОПИРОВАНИЕ

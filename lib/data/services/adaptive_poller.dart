@@ -13,6 +13,9 @@ import '../../di/injection.dart';
 import '../../domain/repositories/scene_repository.dart';
 import '../../domain/models/scene.dart';
 import '../../application/constants/debug_config.dart';
+import '../../application/state/global_container.dart';
+import '../../application/state/notification_settings_provider.dart';
+import '../../data/services/vk_notification_service.dart';
 
 class AdaptivePoller {
   final TuyaProtocol _tuyaProtocol;
@@ -283,6 +286,9 @@ Future<void> _checkSensorTriggers(Device sensorDevice, Map<String, dynamic> dps)
           talker.info('Sensor trigger activated: ${scene.name} (value: $currentValue, threshold: ${trigger.sensorThreshold})');
           await sceneRepo.executeScene(scene);
 
+          // Отправляем VK-уведомление
+          await _sendSceneNotification(scene);
+
           final updatedScene = scene.copyWith(
             trigger: scene.trigger?.copyWith(lastExecuted: now.toIso8601String()),
           );
@@ -293,6 +299,18 @@ Future<void> _checkSensorTriggers(Device sensorDevice, Map<String, dynamic> dps)
   } catch (e, stackTrace) {
     final talker = getIt<Talker>();
     talker.error('Error checking sensor triggers', e, stackTrace);
+  }
+}
+Future<void> _sendSceneNotification(Scene scene) async {
+  try {
+    final settings = globalContainer.read(notificationSettingsProvider);
+    if (settings.enabled && settings.notifyScenes && settings.isConfigured) {
+      final vk = VkNotificationService();
+      await vk.loadSettings();
+      await vk.sendSceneNotification(sceneName: scene.name, success: true);
+    }
+  } catch (e) {
+    getIt<Talker>().error('VK scene notification error', e);
   }
 }
 

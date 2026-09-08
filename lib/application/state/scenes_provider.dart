@@ -7,6 +7,9 @@ import '../../data/services/event_logger.dart';
 import '../../domain/models/scene.dart';
 import '../../domain/repositories/scene_repository.dart';
 import '../../di/injection.dart';
+import '../../data/services/vk_notification_service.dart';
+import 'notification_settings_provider.dart';
+import 'global_container.dart';
 
 /// Глобальный провайдер списка сцен.
 final scenesProvider = StateNotifierProvider<ScenesNotifier, List<Scene>>((ref) {
@@ -38,6 +41,15 @@ class ScenesNotifier extends StateNotifier<List<Scene>> {
   Future<void> executeScene(String id) async {
     final scene = state.firstWhere((s) => s.id == id);
     await _repository.executeScene(scene);
+
+    // Отправляем уведомление
+    final settings = globalContainer.read(notificationSettingsProvider);
+    if (settings.enabled && settings.notifyScenes && settings.isConfigured) {
+      final vk = VkNotificationService();
+      await vk.loadSettings();
+      await vk.sendSceneNotification(sceneName: scene.name, success: true);
+    }
+
     await EventLogger.log(
       deviceId: '',
       deviceName: '',

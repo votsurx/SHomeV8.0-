@@ -87,4 +87,32 @@ class VkNotificationService {
       default: return '⚠️';
     }
   }
+
+  /// Отправляет уведомление о сцене.
+  Future<bool> sendSceneNotification({
+    required String sceneName,
+    required bool success,
+  }) async {
+    final emoji = success ? '✅' : '❌';
+    final message = '$emoji Сцена\n'
+        '🎬 Название: $sceneName\n'
+        '🕐 ${DateTime.now().toString().substring(0, 19)}';
+
+    return sendMessage(message);
+  }
+
+  /// Отправляет уведомление об устройстве.
+  Future<bool> sendDeviceNotification({
+    required String deviceName,
+    required String action,
+    required bool success,
+  }) async {
+    final emoji = success ? '✅' : '❌';
+    final message = '$emoji Устройство\n'
+        '📦 ${deviceName}\n'
+        '🔧 $action\n'
+        '🕐 ${DateTime.now().toString().substring(0, 19)}';
+
+    return sendMessage(message);
+  }
 }

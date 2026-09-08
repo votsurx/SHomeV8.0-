@@ -6,6 +6,9 @@ import 'dart:async';
 import 'package:talker/talker.dart';
 import '../../domain/models/scene.dart';
 import '../../domain/repositories/scene_repository.dart';
+import '../../application/state/global_container.dart';
+import '../../application/state/notification_settings_provider.dart';
+import '../../data/services/vk_notification_service.dart';
 
 class AutomationEngine {
   final SceneRepository _sceneRepository;
@@ -43,6 +46,8 @@ class AutomationEngine {
               (_lastCheck == null || !_isSameMinute(_lastCheck!, now))) {
             _talker.info('Executing time-triggered scene: ${scene.name} at $currentTime');
             await _sceneRepository.executeScene(scene);
+            // Отправляем VK-уведомление
+            await _sendSceneNotification(scene);
           }
         }
       }
@@ -50,6 +55,20 @@ class AutomationEngine {
       _lastCheck = now;
     } catch (e, stackTrace) {
       _talker.error('Error checking time triggers', e, stackTrace);
+    }
+  }
+  Future<void> _sendSceneNotification(Scene scene) async {
+    try {
+      final settings = globalContainer.read(notificationSettingsProvider);
+      if (settings.enabled && settings.notifyScenes && settings.isConfigured) {
+        final vk = VkNotificationService();
+        await vk.loadSettings();
+        await vk.sendSceneNotification(sceneName: scene.name, success: true);
+      } else {
+        print('🔔 Условия не выполнены');
+      }
+    } catch (e) {
+      _talker.error('VK scene notification error', e);
     }
   }
 
