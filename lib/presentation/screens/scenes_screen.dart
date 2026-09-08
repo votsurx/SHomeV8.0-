@@ -20,14 +20,26 @@ class ScenesScreen extends ConsumerWidget {
     final scenes = ref.watch(scenesProvider);
     final devices = ref.watch(devicesProvider);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
+    final crossAxisCount = _calculateCrossAxisCount(screenWidth, isLandscape);
+    final tileWidth = _calculateTileWidth(
+      screenWidth,
+      crossAxisCount,
+    );
+    final scale = (tileWidth / 160).clamp(0.9, 1.8);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Сцены')),
       body: scenes.isEmpty
           ? const Center(child: Text('Нет сцен. Создайте первую!'))
           : GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
+        padding: EdgeInsets.all(8 * scale),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 8 * scale,
+          mainAxisSpacing: 8 * scale,
         ),
         itemCount: scenes.length,
         itemBuilder: (context, index) {
@@ -42,7 +54,7 @@ class ScenesScreen extends ConsumerWidget {
                     SnackBar(
                       content: Text(
                         '⏰ Сцена "${scene.name}" запускается автоматически по триггеру',
-                        style: const TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: 12 * scale),
                       ),
                       duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
@@ -53,7 +65,7 @@ class ScenesScreen extends ConsumerWidget {
               onLongPress: () => _showSceneMenu(context, ref, scene),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(6 * scale),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -61,36 +73,39 @@ class ScenesScreen extends ConsumerWidget {
                     // Заголовок: иконка + название
                     Row(
                       children: [
-                        Text(scene.icon, style: const TextStyle(fontSize: 18)),
-                        const SizedBox(width: 4),
+                        Text(scene.icon, style: TextStyle(fontSize: 16 * scale)),
+                        SizedBox(width: 4 * scale),
                         Expanded(
                           child: Text(
                             scene.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11 * scale,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 5 * scale),
 
                     // Информация о триггере
-                    _buildTriggerInfo(scene),
+                    _buildTriggerInfo(scene, scale),
 
-                    const SizedBox(height: 4),
-                    const Divider(height: 1, thickness: 0.5),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4 * scale),
+                    Divider(height: 1, thickness: 0.5),
+                    SizedBox(height: 4 * scale),
 
                     // Список действий
                     Expanded(
-                      child: _buildActionsList(scene, devices),
+                      child: _buildActionsList(scene, devices, scale),
                     ),
 
                     // Количество устройств
                     Text(
                       '${scene.actions.length} ${_pluralize(scene.actions.length)}',
-                      style: const TextStyle(fontSize: 8, color: Colors.grey),
+                      style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -106,16 +121,35 @@ class ScenesScreen extends ConsumerWidget {
     );
   }
 
+  int _calculateCrossAxisCount(double width, bool isLandscape) {
+    if (isLandscape) {
+      if (width >= 1200) return 5;
+      if (width >= 900) return 4;
+      if (width >= 700) return 3;
+      return 2;
+    }
+    if (width >= 900) return 3;
+    if (width >= 600) return 2;
+    return 1;
+  }
+
+  double _calculateTileWidth(double screenWidth, int crossAxisCount) {
+    const horizontalPadding = 16.0;
+    const spacing = 8.0;
+    final available = screenWidth - horizontalPadding - (spacing * (crossAxisCount - 1));
+    return available / crossAxisCount;
+  }
+
   /// Отображает информацию о типе запуска
-  Widget _buildTriggerInfo(Scene scene) {
+  Widget _buildTriggerInfo(Scene scene, double scale) {
     if (scene.trigger == null || scene.trigger!.type == TriggerType.manual) {
       return Row(
         children: [
-          Icon(Icons.touch_app, size: 12, color: Colors.grey[600]),
-          const SizedBox(width: 2),
+          Icon(Icons.touch_app, size: 11 * scale, color: Colors.grey[600]),
+          SizedBox(width: 2 * scale),
           Text(
             'Вручную',
-            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 9 * scale, color: Colors.grey[600]),
           ),
         ],
       );
@@ -128,26 +162,26 @@ class ScenesScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Text('⏰', style: const TextStyle(fontSize: 12)),
-                const SizedBox(width: 2),
+                Text('⏰', style: TextStyle(fontSize: 11 * scale)),
+                SizedBox(width: 2 * scale),
                 Text(
                   scene.trigger!.time ?? '--:--',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 10 * scale, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
             if (scene.trigger!.repeat != RepeatType.once) ...[
-              const SizedBox(height: 2),
+              SizedBox(height: 2 * scale),
               if (scene.trigger!.repeat == RepeatType.weekly &&
                   scene.trigger!.repeatDays?.isNotEmpty == true) ...[
                 Row(
                   children: [
-                    Text('🔄', style: const TextStyle(fontSize: 10)),
-                    const SizedBox(width: 2),
+                    Text('🔄', style: TextStyle(fontSize: 9 * scale)),
+                    SizedBox(width: 2 * scale),
                     Expanded(
                       child: Text(
                         _daysLabel(scene.trigger!.repeatDays),
-                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                        style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -157,12 +191,12 @@ class ScenesScreen extends ConsumerWidget {
               ] else ...[
                 Row(
                   children: [
-                    Text('🔄', style: const TextStyle(fontSize: 10)),
-                    const SizedBox(width: 2),
+                    Text('🔄', style: TextStyle(fontSize: 9 * scale)),
+                    SizedBox(width: 2 * scale),
                     Expanded(
                       child: Text(
                         _repeatLabel(scene.trigger!.repeat),
-                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                        style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -172,10 +206,10 @@ class ScenesScreen extends ConsumerWidget {
                 if (scene.trigger!.repeat == RepeatType.weekly &&
                     scene.trigger!.repeatDays?.isNotEmpty != true)
                   Padding(
-                    padding: const EdgeInsets.only(left: 14),
+                    padding: EdgeInsets.only(left: 14 * scale),
                     child: Text(
                       _repeatLabel(scene.trigger!.repeat),
-                      style: const TextStyle(fontSize: 8, color: Colors.grey),
+                      style: TextStyle(fontSize: 7 * scale, color: Colors.grey),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -188,12 +222,12 @@ class ScenesScreen extends ConsumerWidget {
       case TriggerType.deviceState:
         return Row(
           children: [
-            Text('🌡️', style: const TextStyle(fontSize: 12)),
-            const SizedBox(width: 2),
+            Text('🌡️', style: TextStyle(fontSize: 11 * scale)),
+            SizedBox(width: 2 * scale),
             Expanded(
               child: Text(
                 _sensorConditionLabel(scene.trigger!),
-                style: const TextStyle(fontSize: 9),
+                style: TextStyle(fontSize: 8 * scale),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -207,7 +241,7 @@ class ScenesScreen extends ConsumerWidget {
   }
 
   /// Отображает список действий компактно
-  Widget _buildActionsList(Scene scene, List<Device> devices) {
+  Widget _buildActionsList(Scene scene, List<Device> devices, double scale) {
     return ListView.builder(
       padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
@@ -221,21 +255,21 @@ class ScenesScreen extends ConsumerWidget {
         final actionColor = _actionColor(action.command);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1),
+          padding: EdgeInsets.symmetric(vertical: 1 * scale),
           child: Row(
             children: [
-              Text(deviceIcon, style: const TextStyle(fontSize: 10)),
-              const SizedBox(width: 2),
+              Text(deviceIcon, style: TextStyle(fontSize: 9 * scale)),
+              SizedBox(width: 2 * scale),
               Expanded(
                 child: Text(
                   deviceName,
-                  style: const TextStyle(fontSize: 9),
+                  style: TextStyle(fontSize: 8 * scale),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                padding: EdgeInsets.symmetric(horizontal: 3 * scale, vertical: 1),
                 decoration: BoxDecoration(
                   color: actionColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -243,7 +277,7 @@ class ScenesScreen extends ConsumerWidget {
                 child: Text(
                   actionLabel,
                   style: TextStyle(
-                    fontSize: 8,
+                    fontSize: 7 * scale,
                     fontWeight: FontWeight.bold,
                     color: actionColor,
                   ),
@@ -372,7 +406,6 @@ class ScenesScreen extends ConsumerWidget {
     String repeatType = existingScene?.trigger?.repeat.name ?? 'once';
     final Set<int> selectedDays = Set.from(existingScene?.trigger?.repeatDays ?? []);
 
-    // Переменные для сенсорного триггера
     String? selectedSensorId = existingScene?.trigger?.sensorDeviceId;
     String selectedSensorCondition = existingScene?.trigger?.sensorCondition ?? 'temperature_above';
     final sensorThresholdController = TextEditingController(
@@ -403,7 +436,6 @@ class ScenesScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // ====== Триггер по времени ======
                 if (triggerType == 'time') ...[
                   ListTile(
                     title: Text('${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}'),
@@ -425,7 +457,6 @@ class ScenesScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // ====== Триггер по датчику ======
                 if (triggerType == 'sensor') ...[
                   DropdownButtonFormField<String>(
                     initialValue: selectedSensorId,
