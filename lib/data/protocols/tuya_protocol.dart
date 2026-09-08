@@ -7,6 +7,7 @@ library;
 import 'package:tinytuya/tinytuya.dart' hide Device;
 import 'package:talker/talker.dart';
 import '../../domain/models/device.dart';
+import '../../application/constants/debug_config.dart';
 
 class TuyaProtocol {
   final Talker _talker;
@@ -161,13 +162,19 @@ class TuyaProtocol {
   /// Не все устройства поддерживают status() (например, SimPal-TY130).
   Future<Map<String, dynamic>?> getStatus(Device device) async {
     try {
-      _talker.info('Getting status for: ${device.name}');
+      if (DebugConfig.showDebug) {
+        _talker.info('Getting status for: ${device.name}');
+      }
       final outlet = _createOutletDevice(device);
       final result = await outlet.status();
-      _talker.debug('Status result: $result');
+      if (DebugConfig.showDebug) {
+        _talker.debug('Status result: $result');
+      }
       return result;
     } catch (e) {
+    if (DebugConfig.showDebug) {
       _talker.error('Failed to get status for ${device.name}: $e');
+    }
       return null;
     }
   }

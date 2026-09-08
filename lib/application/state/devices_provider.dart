@@ -12,6 +12,7 @@ import '../../domain/repositories/device_repository.dart';
 import '../../data/protocols/tuya_protocol.dart';
 import '../../di/injection.dart';
 import '../../data/services/event_logger.dart';
+import '../../application/constants/debug_config.dart';
 
 /// Глобальный провайдер списка устройств.
 /// Все виджеты, подписанные через ref.watch, перестраиваются при изменении state.
@@ -114,8 +115,12 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
   }
 
   void updateOnlineState(String id, bool isOnline) {
-    print('🔵🔵 updateOnlineState: id=$id, isOnline=$isOnline');
-    print('🔵🔵 State has: ${state.map((d) => d.id).join(", ")}');
+    if (DebugConfig.showDebug) {
+      print('🔵🔵 updateOnlineState: id=$id, isOnline=$isOnline');
+    }
+    if (DebugConfig.showDebug) {
+      print('🔵🔵 State has: ${state.map((d) => d.id).join(", ")}');
+    }
     final device = state.firstWhere((d) => d.id == id);
     final updated = device.copyWith(
       isOnline: isOnline,

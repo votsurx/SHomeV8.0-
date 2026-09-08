@@ -8,6 +8,7 @@ import '../../domain/models/nvr_models.dart';
 import '../../domain/repositories/device_repository.dart';
 import 'mqtt_bridge.dart';
 import '../../application/state/devices_provider.dart';
+import '../../application/constants/debug_config.dart';
 
 class IspySyncService {
   final DeviceRepository _deviceRepo;
@@ -213,7 +214,9 @@ class IspySyncService {
 
         // Обновляем UI напрямую!
         _devicesNotifier.updateOnlineState(existing.id, isOnline);
-        print('🔵 updateOnlineState called for ${existing.id} -> $isOnline');
+        if (DebugConfig.showDebug) {
+          print('🔵 updateOnlineState called for ${existing.id} -> $isOnline');
+        }
         print('🔵 State after update: ${_devicesNotifier.state.map((d) => "${d.id}=${d.isOnline}").join(", ")}');
 
         _talker.debug('📡 MyiSpy Camera $cameraId: ${isOnline ? "ONLINE" : "OFFLINE"}');

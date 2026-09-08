@@ -12,6 +12,7 @@ import 'event_logger.dart';
 import '../../di/injection.dart';
 import '../../domain/repositories/scene_repository.dart';
 import '../../domain/models/scene.dart';
+import '../../application/constants/debug_config.dart';
 
 class AdaptivePoller {
   final TuyaProtocol _tuyaProtocol;
@@ -102,7 +103,9 @@ class AdaptivePoller {
 
     try {
       final result = await _tuyaProtocol.getStatus(device);
-      _talker.debug('Status result for ${device.name}: $result');
+      if (DebugConfig.showDebug) {
+        _talker.debug('Status result for ${device.name}: $result');
+      }
 
       if (result != null && result['dps'] != null) {
         state.onSuccess();
