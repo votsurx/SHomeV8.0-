@@ -88,10 +88,16 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
         );
       case 'enum':
         final enumValues = (config['enum_values'] as List?)?.cast<String>() ?? [];
+        // Убираем дубликаты
+        final uniqueValues = enumValues.toSet().toList();
         return DropdownButtonFormField<String>(
-          value: currentValue?.toString(),
+          initialValue: uniqueValues.contains(currentValue?.toString())
+              ? currentValue?.toString()
+              : null,
           decoration: InputDecoration(labelText: config['label'] ?? dpId),
-          items: enumValues.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+          items: uniqueValues
+              .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+              .toList(),
           onChanged: (val) {
             if (val != null) _sendCommand(dpId, val);
           },
