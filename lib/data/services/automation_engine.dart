@@ -65,7 +65,6 @@ class AutomationEngine {
         await vk.loadSettings();
         await vk.sendSceneNotification(sceneName: scene.name, success: true);
       } else {
-        print('🔔 Условия не выполнены');
       }
     } catch (e) {
       _talker.error('VK scene notification error', e);

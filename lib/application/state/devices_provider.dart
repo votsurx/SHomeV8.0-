@@ -13,6 +13,10 @@ import '../../data/protocols/tuya_protocol.dart';
 import '../../di/injection.dart';
 import '../../data/services/event_logger.dart';
 import '../../application/constants/debug_config.dart';
+import '../../data/services/vk_notification_service.dart';
+import '../../application/state/global_container.dart';
+import '../../application/state/notification_settings_provider.dart';
+import 'package:flutter/foundation.dart';
 
 /// Глобальный провайдер списка устройств.
 /// Все виджеты, подписанные через ref.watch, перестраиваются при изменении state.
@@ -116,10 +120,8 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   void updateOnlineState(String id, bool isOnline) {
     if (DebugConfig.showDebug) {
-      print('🔵🔵 updateOnlineState: id=$id, isOnline=$isOnline');
     }
     if (DebugConfig.showDebug) {
-      print('🔵🔵 State has: ${state.map((d) => d.id).join(", ")}');
     }
     final device = state.firstWhere((d) => d.id == id);
     final updated = device.copyWith(
@@ -167,6 +169,13 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     _updateLocalState(id, true);
     final success = await _tuyaProtocol.turnOn(device);
     if (!success) _updateLocalState(id, false);
+
+    if (success) {
+      _sendDeviceNotification(device.name, 'Включено', true);
+    } else {
+      _sendDeviceNotification(device.name, 'Включено', false);
+    }
+
     return success;
   }
 
@@ -177,7 +186,31 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     _updateLocalState(id, false);
     final success = await _tuyaProtocol.turnOff(device);
     if (!success) _updateLocalState(id, true);
+
+    if (success) {
+      _sendDeviceNotification(device.name, 'Выключено', true);
+    } else {
+      _sendDeviceNotification(device.name, 'Выключено', false);
+    }
+
     return success;
+  }
+
+  Future<void> _sendDeviceNotification(String deviceName, String action, bool success) async {
+    try {
+      final settings = globalContainer.read(notificationSettingsProvider);
+      if (settings.enabled && settings.notifyDevices && settings.isConfigured) {
+        final vk = VkNotificationService();
+        await vk.loadSettings();
+        await vk.sendDeviceNotification(
+          deviceName: deviceName,
+          action: action,
+          success: success,
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ VK device notification error: $e');
+    }
   }
 
   Future<bool> setSwitchChannel(String id, int channel, bool value) async {

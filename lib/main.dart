@@ -24,7 +24,6 @@ import 'application/state/nvr_provider.dart';
 import 'data/services/ispy_sync_service.dart';
 import 'domain/services/mqtt_service_interface.dart';
 import 'application/state/devices_provider.dart';
-import 'application/state/global_container.dart';
 
 /// Глобальный доступ к MQTT сервису
 MqttService? globalMqttService;

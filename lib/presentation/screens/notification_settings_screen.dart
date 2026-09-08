@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../application/models/notification_settings.dart';
 import '../../application/state/notification_settings_provider.dart';
 import '../../data/services/vk_notification_service.dart';
 
