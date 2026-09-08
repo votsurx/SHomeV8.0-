@@ -129,7 +129,7 @@ class ScenesScreen extends ConsumerWidget {
       return 2;
     }
     if (width >= 900) return 3;
-    if (width >= 600) return 2;
+    if (width >= 300) return 2;
     return 1;
   }
 
