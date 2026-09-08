@@ -18,6 +18,7 @@ class ScenesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scenes = ref.watch(scenesProvider);
+    final devices = ref.watch(devicesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Сцены')),
@@ -33,40 +34,64 @@ class ScenesScreen extends ConsumerWidget {
           final scene = scenes[index];
           return Card(
             child: InkWell(
-              onTap: () => ref.read(scenesProvider.notifier).executeScene(scene.id),
+              onTap: () {
+                if (scene.trigger == null || scene.trigger!.type == TriggerType.manual) {
+                  ref.read(scenesProvider.notifier).executeScene(scene.id);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '⏰ Сцена "${scene.name}" запускается автоматически по триггеру',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      duration: const Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
               onLongPress: () => _showSceneMenu(context, ref, scene),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    // Заголовок: иконка + название
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(scene.icon, style: const TextStyle(fontSize: 20)),
+                        Text(scene.icon, style: const TextStyle(fontSize: 18)),
                         const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(scene.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                              textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Expanded(
+                          child: Text(
+                            scene.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    if (scene.trigger != null && scene.trigger!.type != TriggerType.manual) ...[
-                      if (scene.trigger!.type == TriggerType.time) ...[
-                        Text('⏰ ${scene.trigger!.time}', style: const TextStyle(fontSize: 11)),
-                        if (scene.trigger!.repeat != RepeatType.once) ...[
-                          Text('🔄 ${_repeatLabel(scene.trigger!.repeat)}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                          if (scene.trigger!.repeatDays?.isNotEmpty == true)
-                            Text(_daysLabel(scene.trigger!.repeatDays), style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                        ],
-                      ] else if (scene.trigger!.type == TriggerType.deviceState) ...[
-                        Text('🌡️ ${scene.trigger!.sensorCondition ?? ""} ${scene.trigger!.sensorThreshold ?? ""}',
-                            style: const TextStyle(fontSize: 10)),
-                      ],
-                    ],
-                    Text('${scene.actions.length} действ.', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+
+                    // Информация о триггере
+                    _buildTriggerInfo(scene),
+
+                    const SizedBox(height: 4),
+                    const Divider(height: 1, thickness: 0.5),
+                    const SizedBox(height: 4),
+
+                    // Список действий
+                    Expanded(
+                      child: _buildActionsList(scene, devices),
+                    ),
+
+                    // Количество устройств
+                    Text(
+                      '${scene.actions.length} ${_pluralize(scene.actions.length)}',
+                      style: const TextStyle(fontSize: 8, color: Colors.grey),
+                    ),
                   ],
                 ),
               ),
@@ -79,6 +104,212 @@ class ScenesScreen extends ConsumerWidget {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  /// Отображает информацию о типе запуска
+  Widget _buildTriggerInfo(Scene scene) {
+    if (scene.trigger == null || scene.trigger!.type == TriggerType.manual) {
+      return Row(
+        children: [
+          Icon(Icons.touch_app, size: 12, color: Colors.grey[600]),
+          const SizedBox(width: 2),
+          Text(
+            'Вручную',
+            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+          ),
+        ],
+      );
+    }
+
+    switch (scene.trigger!.type) {
+      case TriggerType.time:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('⏰', style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 2),
+                Text(
+                  scene.trigger!.time ?? '--:--',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            if (scene.trigger!.repeat != RepeatType.once) ...[
+              const SizedBox(height: 2),
+              if (scene.trigger!.repeat == RepeatType.weekly &&
+                  scene.trigger!.repeatDays?.isNotEmpty == true) ...[
+                Row(
+                  children: [
+                    Text('🔄', style: const TextStyle(fontSize: 10)),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: Text(
+                        _daysLabel(scene.trigger!.repeatDays),
+                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Text('🔄', style: const TextStyle(fontSize: 10)),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: Text(
+                        _repeatLabel(scene.trigger!.repeat),
+                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                if (scene.trigger!.repeat == RepeatType.weekly &&
+                    scene.trigger!.repeatDays?.isNotEmpty != true)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 14),
+                    child: Text(
+                      _repeatLabel(scene.trigger!.repeat),
+                      style: const TextStyle(fontSize: 8, color: Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ],
+          ],
+        );
+
+      case TriggerType.deviceState:
+        return Row(
+          children: [
+            Text('🌡️', style: const TextStyle(fontSize: 12)),
+            const SizedBox(width: 2),
+            Expanded(
+              child: Text(
+                _sensorConditionLabel(scene.trigger!),
+                style: const TextStyle(fontSize: 9),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  /// Отображает список действий компактно
+  Widget _buildActionsList(Scene scene, List<Device> devices) {
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: scene.actions.length,
+      itemBuilder: (context, index) {
+        final action = scene.actions[index];
+        final device = devices.where((d) => d.id == action.deviceId).firstOrNull;
+        final deviceName = device?.name ?? 'Устройство';
+        final deviceIcon = _getDeviceIcon(device?.type);
+        final actionLabel = _actionLabel(action.command);
+        final actionColor = _actionColor(action.command);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1),
+          child: Row(
+            children: [
+              Text(deviceIcon, style: const TextStyle(fontSize: 10)),
+              const SizedBox(width: 2),
+              Expanded(
+                child: Text(
+                  deviceName,
+                  style: const TextStyle(fontSize: 9),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: actionColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  actionLabel,
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                    color: actionColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Возвращает иконку устройства
+  String _getDeviceIcon(DeviceType? type) {
+    switch (type) {
+      case DeviceType.outlet: return '🔌';
+      case DeviceType.switch1:
+      case DeviceType.switch2:
+      case DeviceType.switch3: return '💡';
+      case DeviceType.light: return '💡';
+      case DeviceType.sensor: return '🌡️';
+      case DeviceType.camera: return '📹';
+      case DeviceType.compound: return '🤖';
+      default: return '📦';
+    }
+  }
+
+  /// Возвращает текст действия
+  String _actionLabel(String command) {
+    switch (command) {
+      case 'turnOn': return 'ВКЛ';
+      case 'turnOff': return 'ВЫКЛ';
+      case 'setBrightness': return 'ЯРК';
+      default: return command.toUpperCase();
+    }
+  }
+
+  /// Возвращает цвет действия
+  Color _actionColor(String command) {
+    switch (command) {
+      case 'turnOn': return Colors.green;
+      case 'turnOff': return Colors.red;
+      case 'setBrightness': return Colors.orange;
+      default: return Colors.blue;
+    }
+  }
+
+  /// Возвращает текст условия датчика
+  String _sensorConditionLabel(SceneTrigger trigger) {
+    final condition = trigger.sensorCondition ?? '';
+    final threshold = trigger.sensorThreshold ?? 0;
+
+    switch (condition) {
+      case 'temperature_above': return 'Темп. > $threshold°C';
+      case 'temperature_below': return 'Темп. < $threshold°C';
+      case 'humidity_above': return 'Влаж. > $threshold%';
+      case 'humidity_below': return 'Влаж. < $threshold%';
+      default: return '$condition $threshold';
+    }
+  }
+
+  /// Склонение слова "устройство"
+  String _pluralize(int count) {
+    if (count == 1) return 'устр.';
+    if (count >= 2 && count <= 4) return 'устр.';
+    return 'устр.';
   }
 
   String _repeatLabel(RepeatType repeat) {
