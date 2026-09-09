@@ -12,23 +12,20 @@ class SHomeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ProviderScope(
-      child: Consumer(
-        builder: (context, ref, child) {
-          // ✅ ЗАГРУЖАЕМ NVR НАСТРОЙКИ ПРИ СТАРТЕ
-          ref.watch(nvrSettingsProvider);
-          final themeMode = ref.watch(themeProvider);
+    return Consumer(
+      builder: (context, ref, child) {
+        ref.watch(nvrSettingsProvider);
+        final themeMode = ref.watch(themeProvider);
 
-          return MaterialApp.router(
-            title: 'SHome',
-            theme: AppTheme.light(),
-            darkTheme: AppTheme.dark(),
-            themeMode: themeMode,
-            routerConfig: router,
-            debugShowCheckedModeBanner: false,
-          );
-        },
-      ),
+        return MaterialApp.router(
+          title: 'SHome',
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: themeMode,
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

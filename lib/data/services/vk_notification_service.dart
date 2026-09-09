@@ -115,4 +115,19 @@ class VkNotificationService {
 
     return sendMessage(message);
   }
+  /// Отправляет уведомление для составного устройства.
+  Future<bool> sendCompoundNotification({
+    required String deviceName,
+    required Map<String, String> changes,
+  }) async {
+    final lines = changes.entries
+        .map((e) => '${e.key}: ${e.value}')
+        .join('\n');
+    final message = '🤖 $deviceName\n'
+        '$lines\n'
+        '🕐 ${DateTime.now().toString().substring(0, 19)}';
+
+    return sendMessage(message);
+  }
 }
+

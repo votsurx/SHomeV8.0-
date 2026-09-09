@@ -42,10 +42,8 @@ void main() {
 
   runApp(
     UncontrolledProviderScope(
-      container: globalContainer,  // ← ИСПОЛЬЗУЕМ ГЛОБАЛЬНЫЙ КОНТЕЙНЕР!
-      child: const ProviderScope(
-        child: SHomeAppObserver(child: SHomeApp()),
-      ),
+      container: globalContainer,
+      child: SHomeAppObserver(child: SHomeApp()),
     ),
   );
 }

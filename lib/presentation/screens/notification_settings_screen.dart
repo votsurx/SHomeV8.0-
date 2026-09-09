@@ -24,7 +24,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
             subtitle: const Text('Отправка сообщений в VK'),
             value: settings.enabled,
             onChanged: (val) {
+              print('🔔 Меняю enabled на: $val');
               notifier.update(settings.copyWith(enabled: val));
+              print('🔔 После: ${ref.read(notificationSettingsProvider).enabled}');
             },
           ),
           const SizedBox(height: 16),
@@ -36,7 +38,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 hintText: 'Вставьте токен бота',
               ),
               onChanged: (val) {
-                notifier.update(settings.copyWith(vkToken: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(vkToken: val),
+                );
               },
             ),
             const SizedBox(height: 8),
@@ -48,7 +52,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               ),
               keyboardType: TextInputType.number,
               onChanged: (val) {
-                notifier.update(settings.copyWith(vkUserId: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(vkUserId: val),
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -57,7 +63,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Уведомления о выполнении сцен'),
               value: settings.notifyScenes,
               onChanged: (val) {
-                notifier.update(settings.copyWith(notifyScenes: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(notifyScenes: val),
+                );
               },
             ),
             SwitchListTile(
@@ -65,7 +73,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Изменение состояния устройств'),
               value: settings.notifyDevices,
               onChanged: (val) {
-                notifier.update(settings.copyWith(notifyDevices: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(notifyDevices: val),
+                );
               },
             ),
             SwitchListTile(
@@ -73,7 +83,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Обнаружение движения'),
               value: settings.notifyAlarms,
               onChanged: (val) {
-                notifier.update(settings.copyWith(notifyAlarms: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(notifyAlarms: val),
+                );
               },
             ),
             SwitchListTile(
@@ -81,7 +93,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Сбои и ошибки'),
               value: settings.notifyErrors,
               onChanged: (val) {
-                notifier.update(settings.copyWith(notifyErrors: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(notifyErrors: val),
+                );
               },
             ),
             const Divider(height: 32),
@@ -90,7 +104,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Отправлять только в указанное время'),
               value: settings.useSchedule,
               onChanged: (val) {
-                notifier.update(settings.copyWith(useSchedule: val));
+                ref.read(notificationSettingsProvider.notifier).update(
+                  ref.read(notificationSettingsProvider).copyWith(useSchedule: val),
+                );
               },
             ),
             if (settings.useSchedule) ...[
@@ -99,7 +115,9 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 subtitle: const Text('Тревоги отправлять всегда'),
                 value: settings.scheduleOnlyAlarms,
                 onChanged: (val) {
-                  notifier.update(settings.copyWith(scheduleOnlyAlarms: val));
+                  ref.read(notificationSettingsProvider.notifier).update(
+                    ref.read(notificationSettingsProvider).copyWith(scheduleOnlyAlarms: val),
+                  );
                 },
               ),
               ListTile(

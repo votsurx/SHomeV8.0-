@@ -6,9 +6,8 @@ import 'dart:async';
 import 'package:talker/talker.dart';
 import '../../domain/models/scene.dart';
 import '../../domain/repositories/scene_repository.dart';
-import '../../application/state/global_container.dart';
-import '../../application/state/notification_settings_provider.dart';
 import '../../data/services/vk_notification_service.dart';
+import '../../application/services/notification_settings_service.dart';
 
 class AutomationEngine {
   final SceneRepository _sceneRepository;
@@ -59,12 +58,11 @@ class AutomationEngine {
   }
   Future<void> _sendSceneNotification(Scene scene) async {
     try {
-      final settings = globalContainer.read(notificationSettingsProvider);
-      if (settings.enabled && settings.notifyScenes && settings.isConfigured) {
+      final shouldSend = await NotificationSettingsService.shouldSendSceneNotification();
+      if (shouldSend) {
         final vk = VkNotificationService();
         await vk.loadSettings();
         await vk.sendSceneNotification(sceneName: scene.name, success: true);
-      } else {
       }
     } catch (e) {
       _talker.error('VK scene notification error', e);

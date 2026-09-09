@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/services/vk_notification_service.dart';
 import '../../domain/models/device.dart';
 import '../../application/state/devices_provider.dart';
 import '../../data/protocols/tuya_protocol.dart';
 import '../../di/injection.dart';
+import '../../application/services/notification_settings_service.dart';
 
 class DeviceControlScreen extends ConsumerStatefulWidget {
   final Device device;
@@ -108,18 +110,19 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
   }
 
   Future<void> _sendCommand(String dpId, dynamic value) async {
-    // 1. Оптимистично обновляем UI (сохраняем старое значение для отката)
     final oldProperties = Map<String, dynamic>.from(widget.device.properties);
     final updatedProperties = Map<String, dynamic>.from(oldProperties);
     updatedProperties['dps_$dpId'] = value;
 
     ref.read(devicesProvider.notifier).updateDeviceProperties(widget.device.id, updatedProperties);
 
-    // 2. Отправляем команду
     try {
       final success = await _tuyaProtocol.setDp(widget.device, int.parse(dpId), value);
-      if (!success) {
-        // 3. Если ошибка – откатываем UI обратно
+
+      if (success) {
+        // Уведомление при успешном изменении
+        await _sendCompoundNotification(dpId, value);
+      } else {
         ref.read(devicesProvider.notifier).updateDeviceProperties(widget.device.id, oldProperties);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -128,13 +131,32 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
         }
       }
     } catch (e) {
-      // 4. При исключении тоже откатываем
       ref.read(devicesProvider.notifier).updateDeviceProperties(widget.device.id, oldProperties);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('❌ Ошибка: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _sendCompoundNotification(String dpId, dynamic value) async {
+    try {
+      final shouldSend = await NotificationSettingsService.shouldSendDeviceNotification();
+      if (!shouldSend) return;
+
+      final dpsMap = widget.device.properties['dps_map'] as Map<String, dynamic>? ?? {};
+      final config = dpsMap[dpId] as Map<String, dynamic>? ?? {};
+      final label = config['label'] ?? dpId;
+
+      final vk = VkNotificationService();
+      await vk.loadSettings();
+      await vk.sendCompoundNotification(
+        deviceName: widget.device.name,
+        changes: {label: value.toString()},
+      );
+    } catch (e) {
+      debugPrint('❌ VK compound notification error: $e');
     }
   }
 }

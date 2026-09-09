@@ -14,9 +14,8 @@ import '../../di/injection.dart';
 import '../../data/services/event_logger.dart';
 import '../../application/constants/debug_config.dart';
 import '../../data/services/vk_notification_service.dart';
-import '../../application/state/global_container.dart';
-import '../../application/state/notification_settings_provider.dart';
 import 'package:flutter/foundation.dart';
+import '../../application/services/notification_settings_service.dart';
 
 /// Глобальный провайдер списка устройств.
 /// Все виджеты, подписанные через ref.watch, перестраиваются при изменении state.
@@ -198,8 +197,8 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<void> _sendDeviceNotification(String deviceName, String action, bool success) async {
     try {
-      final settings = globalContainer.read(notificationSettingsProvider);
-      if (settings.enabled && settings.notifyDevices && settings.isConfigured) {
+      final shouldSend = await NotificationSettingsService.shouldSendDeviceNotification();
+      if (shouldSend) {
         final vk = VkNotificationService();
         await vk.loadSettings();
         await vk.sendDeviceNotification(
@@ -219,6 +218,13 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     _updateChannelState(id, channel, value);
     final success = await _tuyaProtocol.setSwitchChannel(device, channel, value);
     if (!success) _updateChannelState(id, channel, !value);
+    if (success) {
+      _sendDeviceNotification(
+        device.name,
+        'Канал $channel: ${value ? 'Включен' : 'Выключен'}',
+        true,
+      );
+    }
     return success;
   }
 

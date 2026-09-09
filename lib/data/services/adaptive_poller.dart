@@ -13,9 +13,8 @@ import '../../di/injection.dart';
 import '../../domain/repositories/scene_repository.dart';
 import '../../domain/models/scene.dart';
 import '../../application/constants/debug_config.dart';
-import '../../application/state/global_container.dart';
-import '../../application/state/notification_settings_provider.dart';
 import '../../data/services/vk_notification_service.dart';
+import '../../application/services/notification_settings_service.dart';
 
 class AdaptivePoller {
   final TuyaProtocol _tuyaProtocol;
@@ -113,6 +112,10 @@ class AdaptivePoller {
       if (result != null && result['dps'] != null) {
         state.onSuccess();
         _onOnlineChanged(device.id, true);
+        final isFirstPoll = !state.firstPollDone;
+        if (isFirstPoll) {
+          state.firstPollDone = true;
+        }
 
         final dps = result['dps'] as Map<String, dynamic>;
 
@@ -126,7 +129,7 @@ class AdaptivePoller {
             final type = cfg['type'] as String? ?? 'value';
             final propKey = 'dps_$key';
 
-            final raw = dps[int.tryParse(key)] ?? dps[key] ?? dps[key.toString()];
+            final raw = dps[key] ?? dps[key.toString()];
 
             if (raw == null) return;
 
@@ -152,6 +155,10 @@ class AdaptivePoller {
           final updated = device.copyWith(properties: newProperties);
           _updateDeviceInList(updated);
           onSensorUpdate?.call(device.id, newProperties);
+          // Отправляем уведомление об изменениях
+          if (!isFirstPoll) {
+            await _sendCompoundChangesNotification(device, newProperties);
+          }
         }
 
         // --- Многоканальные устройства ---
@@ -164,7 +171,7 @@ class AdaptivePoller {
           var changed = false;
 
           for (var i = 1; i <= channels; i++) {
-            final val = dps[i] ?? dps[i.toString()];
+            final val = dps['$i'];
             if (val != null) {
               final isOn = val == true || val == 1;
               if (i - 1 < currentStates.length && currentStates[i - 1] != isOn) {
@@ -181,11 +188,14 @@ class AdaptivePoller {
             _updateDeviceInList(updatedDevice);
             _talker.info('Multi-channel state changed: $currentStates');
             _onStatesChanged(device.id, currentStates);
+            if (!isFirstPoll) {
+              await _sendMultiChannelNotification(device, currentStates);
+            }
           }
         } else if (device.type != DeviceType.compound) {
           // --- Одноканальные устройства (кроме универсальных устройств) ---
           final dpsIndex = device.dpsIndex ?? 1;
-          final rawValue = dps[dpsIndex] ?? dps[dpsIndex.toString()];
+          final rawValue = dps['$dpsIndex'];
 
           if (rawValue != null) {
             final realIsOn = rawValue == true || rawValue == 1;
@@ -193,6 +203,13 @@ class AdaptivePoller {
 
             if (realIsOn != currentIsOn) {
               _onStateChanged(device.id, realIsOn);
+              if (!isFirstPoll) {
+                await _sendSimpleDeviceNotification(
+                  device,
+                  realIsOn ? 'Включено' : 'Выключено',
+                  true,
+                );
+              }
               try {
                 EventLogger.log(deviceId: device.id, deviceName: device.name, event: realIsOn ? 'turnOn' : 'turnOff');
               } catch (_) {}
@@ -238,6 +255,88 @@ class AdaptivePoller {
   }
 
   void stop() => _timer?.cancel();
+}
+
+Future<void> _sendMultiChannelNotification(
+    Device device,
+    List<bool> states,
+    ) async {
+  try {
+    final shouldSend = await NotificationSettingsService.shouldSendDeviceNotification();
+    if (!shouldSend) return;
+
+    final changes = <String, String>{};
+    for (var i = 0; i < states.length; i++) {
+      changes['Канал ${i + 1}'] = states[i] ? 'Включен' : 'Выключен';
+    }
+
+    final vk = VkNotificationService();
+    await vk.loadSettings();
+    await vk.sendCompoundNotification(
+      deviceName: device.name,
+      changes: changes,
+    );
+  } catch (e) {
+    getIt<Talker>().error('VK multi-channel notification error', e);
+  }
+}
+
+Future<void> _sendSimpleDeviceNotification(
+    Device device,
+    String action,
+    bool success,
+    ) async {
+  try {
+    final shouldSend = await NotificationSettingsService.shouldSendDeviceNotification();
+    if (!shouldSend) return;
+
+    final vk = VkNotificationService();
+    await vk.loadSettings();
+    await vk.sendDeviceNotification(
+      deviceName: device.name,
+      action: action,
+      success: success,
+    );
+  } catch (e) {
+    getIt<Talker>().error('VK device notification error', e);
+  }
+}
+
+Future<void> _sendCompoundChangesNotification(
+    Device device,
+    Map<String, dynamic> newProperties,
+    ) async {
+  try {
+    final shouldSend = await NotificationSettingsService.shouldSendDeviceNotification();
+    if (!shouldSend) return;
+
+    final dpsMap = device.properties['dps_map'] as Map<String, dynamic>? ?? {};
+    final changes = <String, String>{};
+
+    dpsMap.forEach((key, config) {
+      final cfg = config as Map<String, dynamic>;
+      final role = cfg['role'] ?? '';
+      if (role == 'info' || role == 'status') return;
+
+      final label = cfg['label'] ?? 'DPS $key';
+      final oldValue = device.properties['dps_$key']?.toString() ?? '';
+      final newValue = newProperties['dps_$key']?.toString() ?? '';
+      if (oldValue != newValue) {
+        changes[label] = newValue;
+      }
+    });
+
+    if (changes.isNotEmpty) {
+      final vk = VkNotificationService();
+      await vk.loadSettings();
+      await vk.sendCompoundNotification(
+        deviceName: device.name,
+        changes: changes,
+      );
+    }
+  } catch (e) {
+    getIt<Talker>().error('VK compound notification error', e);
+  }
 }
 
 Future<void> _checkSensorTriggers(Device sensorDevice, Map<String, dynamic> dps) async {
@@ -303,8 +402,8 @@ Future<void> _checkSensorTriggers(Device sensorDevice, Map<String, dynamic> dps)
 }
 Future<void> _sendSceneNotification(Scene scene) async {
   try {
-    final settings = globalContainer.read(notificationSettingsProvider);
-    if (settings.enabled && settings.notifyScenes && settings.isConfigured) {
+    final shouldSend = await NotificationSettingsService.shouldSendSceneNotification();
+    if (shouldSend) {
       final vk = VkNotificationService();
       await vk.loadSettings();
       await vk.sendSceneNotification(sceneName: scene.name, success: true);
@@ -320,6 +419,7 @@ class _DevicePollState {
   final Duration _normalInterval;
   DateTime nextPollAt = DateTime.now();
   bool polling = false;
+  bool firstPollDone = false;
 
   _DevicePollState(Duration normalInterval)
       : interval = normalInterval,
@@ -346,5 +446,6 @@ class _DevicePollState {
     interval = _normalInterval;
     nextPollAt = DateTime.now();
     polling = false;
+    firstPollDone = false;
   }
 }
