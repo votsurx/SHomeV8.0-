@@ -58,251 +58,254 @@ class DeviceSettings {
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ╔══════════════════════════════════════════╗
-                // ║        НАЗВАНИЕ (для всех устройств)     ║
-                // ╚══════════════════════════════════════════╝
-                Text(device.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Название', prefixIcon: Icon(Icons.edit)),
-                ),
-                const SizedBox(height: 8),
+        builder: (ctx, setModalState) {
+          // Берём актуальное устройство из провайдера
+          final latestDevice = ref.watch(devicesProvider).firstWhere(
+                (d) => d.id == device.id,
+            orElse: () => device,
+          );
 
-                // ╔══════════════════════════════════════════╗
-                // ║        КОМНАТА (для всех устройств)      ║
-                // ╚══════════════════════════════════════════╝
-                DropdownButtonFormField<String>(
-                  initialValue: selectedRoomId,
-                  decoration: const InputDecoration(labelText: 'Комната', prefixIcon: Icon(Icons.meeting_room)),
-                  items: rooms
-                      .map((r) => DropdownMenuItem(
-                    value: r.id,
-                    child: Text('${r.icon ?? "🏠"} ${r.name}'),
-                  ))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) setModalState(() => selectedRoomId = v);
-                  },
-                ),
-
-                // ╔══════════════════════════════════════════╗
-                // ║    RTSP URL (только для RTSP камер)      ║
-                // ╚══════════════════════════════════════════╝
-                if (device.type == DeviceType.camera && device.properties['cameraType'] == 'rtsp') ...[
-                  const SizedBox(height: 8),
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ╔══════════════════════════════════════════╗
+                  // ║        НАЗВАНИЕ (для всех устройств)     ║
+                  // ╚══════════════════════════════════════════╝
+                  Text(latestDevice.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
                   TextField(
-                    controller: rtspUrlController,
-                    decoration: const InputDecoration(labelText: 'RTSP URL', prefixIcon: Icon(Icons.link)),
-                  ),
-                ],
-
-                // ╔══════════════════════════════════════════╗
-                // ║  СТАНДАРТНЫЕ ПОЛЯ TUYA (кроме камер)     ║
-                // ╚══════════════════════════════════════════╝
-                if (device.type != DeviceType.camera) ...[
-                  const SizedBox(height: 8),
-
-                  // Device ID (только чтение)
-                  TextField(
-                    controller: TextEditingController(text: device.deviceId ?? ''),
-                    decoration: const InputDecoration(labelText: 'Device ID', prefixIcon: Icon(Icons.fingerprint)),
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Название', prefixIcon: Icon(Icons.edit)),
                   ),
                   const SizedBox(height: 8),
 
-                  // IP Адрес
-                  TextField(
-                    controller: addressController,
-                    decoration: const InputDecoration(labelText: 'IP Адрес', prefixIcon: Icon(Icons.wifi)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Local Key
-                  TextField(
-                    controller: localKeyController,
-                    decoration: const InputDecoration(labelText: 'Local Key', prefixIcon: Icon(Icons.vpn_key)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Версия протокола Tuya
-                  DropdownButtonFormField<double>(
-                    initialValue: selectedVersion,
-                    decoration:
-                    const InputDecoration(labelText: 'Версия протокола', prefixIcon: Icon(Icons.info_outline)),
-                    items: const [
-                      DropdownMenuItem(value: 3.1, child: Text('3.1')),
-                      DropdownMenuItem(value: 3.3, child: Text('3.3')),
-                      DropdownMenuItem(value: 3.4, child: Text('3.4')),
-                      DropdownMenuItem(value: 3.5, child: Text('3.5')),
-                    ],
+                  // ╔══════════════════════════════════════════╗
+                  // ║        КОМНАТА (для всех устройств)      ║
+                  // ╚══════════════════════════════════════════╝
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedRoomId,
+                    decoration: const InputDecoration(labelText: 'Комната', prefixIcon: Icon(Icons.meeting_room)),
+                    items: rooms
+                        .map((r) => DropdownMenuItem(
+                      value: r.id,
+                      child: Text('${r.icon ?? "🏠"} ${r.name}'),
+                    ))
+                        .toList(),
                     onChanged: (v) {
-                      if (v != null) setModalState(() => selectedVersion = v);
+                      if (v != null) setModalState(() => selectedRoomId = v);
                     },
                   ),
-                ],
 
-                // ╔══════════════════════════════════════════╗
-                // ║  DPS ИНДЕКСЫ (выключатели и обычные)     ║
-                // ║  Скрыто: камеры, пылесосы (dps_map)      ║
-                // ╚══════════════════════════════════════════╝
-                if (device.type != DeviceType.camera && device.type != DeviceType.compound) ...[
-                  const SizedBox(height: 8),
-                  if (device.type == DeviceType.switch1 ||
-                      device.type == DeviceType.switch2 ||
-                      device.type == DeviceType.switch3) ...[
-                    Text('Каналы:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
-                    const SizedBox(height: 4),
-                    ..._buildDpsMapEditor(device, setModalState, ctx, ref),
-                  ] else ...[
+                  // ╔══════════════════════════════════════════╗
+                  // ║    RTSP URL (только для RTSP камер)      ║
+                  // ╚══════════════════════════════════════════╝
+                  if (latestDevice.type == DeviceType.camera && latestDevice.properties['cameraType'] == 'rtsp') ...[
+                    const SizedBox(height: 8),
                     TextField(
-                      controller: dpsControllers.first,
-                      decoration: const InputDecoration(labelText: 'DPS Индекс', hintText: '1', prefixIcon: Icon(Icons.tune)),
-                      keyboardType: TextInputType.number,
+                      controller: rtspUrlController,
+                      decoration: const InputDecoration(labelText: 'RTSP URL', prefixIcon: Icon(Icons.link)),
                     ),
                   ],
-                ],
 
-                // ╔══════════════════════════════════════════╗
-                // ║ DPS КАРТА (для универсального устройства)║
-                // ║   Редактор составных устройств           ║
-                // ╚══════════════════════════════════════════╝
-                if (device.type == DeviceType.compound) ...[
-                  const SizedBox(height: 8),
-                  Text('DPS карта:',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
-                  const SizedBox(height: 4),
-                  ..._buildDpsMapEditor(device, setModalState, ctx, ref),
-                  // Кнопка добавления нового DPS
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: () => _showDpsEditor(ctx, setModalState, device, null, ref),
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Добавить DPS'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 36),
+                  // ╔══════════════════════════════════════════╗
+                  // ║  СТАНДАРТНЫЕ ПОЛЯ TUYA (кроме камер)     ║
+                  // ╚══════════════════════════════════════════╝
+                  if (latestDevice.type != DeviceType.camera) ...[
+                    const SizedBox(height: 8),
+
+                    // Device ID (только чтение)
+                    TextField(
+                      controller: TextEditingController(text: latestDevice.deviceId ?? ''),
+                      decoration: const InputDecoration(labelText: 'Device ID', prefixIcon: Icon(Icons.fingerprint)),
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
 
-                // ╔══════════════════════════════════════════╗
-                // ║    ОТОБРАЖЕНИЕ НА КАРТОЧКЕ              ║
-                // ║   (только для устройств с dps_map)      ║
-                // ╚══════════════════════════════════════════╝
-                if (device.type == DeviceType.compound) ...[
-                  const SizedBox(height: 12),
-                  _buildDisplaySettings(ref, device),
-                ],
+                    // IP Адрес
+                    TextField(
+                      controller: addressController,
+                      decoration: const InputDecoration(labelText: 'IP Адрес', prefixIcon: Icon(Icons.wifi)),
+                    ),
+                    const SizedBox(height: 8),
 
-                // ╔══════════════════════════════════════════╗
-                // ║      КНОПКИ: СОХРАНИТЬ / УДАЛИТЬ         ║
-                // ╚══════════════════════════════════════════╝
-                const SizedBox(height: 16),
-                Row(children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Получаем актуальное состояние устройства из провайдера
-                        final latestDevice = ref
-                            .read(devicesProvider)
-                            .firstWhere((d) => d.id == device.id, orElse: () => device);
+                    // Local Key
+                    TextField(
+                      controller: localKeyController,
+                      decoration: const InputDecoration(labelText: 'Local Key', prefixIcon: Icon(Icons.vpn_key)),
+                    ),
+                    const SizedBox(height: 8),
 
-                        Map<String, dynamic> newProperties = {...latestDevice.properties};
-
-                        // Обновляем RTSP URL для камер
-                        if (latestDevice.type == DeviceType.camera &&
-                            latestDevice.properties['cameraType'] == 'rtsp') {
-                          newProperties['rtspUrl'] = rtspUrlController.text;
-                        }
-
-                        final updated = latestDevice.copyWith(
-                          name: nameController.text,
-                          roomId: selectedRoomId,
-                          address: latestDevice.type != DeviceType.camera && addressController.text.isNotEmpty
-                              ? addressController.text
-                              : latestDevice.address,
-                          localKey: latestDevice.type != DeviceType.camera && localKeyController.text.isNotEmpty
-                              ? localKeyController.text
-                              : latestDevice.localKey,
-                          dpsIndex: latestDevice.type != DeviceType.camera && latestDevice.type != DeviceType.compound
-                              ? (int.tryParse(dpsControllers.first.text) ?? latestDevice.dpsIndex)
-                              : latestDevice.dpsIndex,
-                          version: latestDevice.type != DeviceType.camera ? selectedVersion : latestDevice.version,
-                          properties: newProperties,
-                        );
-                        ref.read(devicesProvider.notifier).updateDevice(updated);
-                        Navigator.pop(ctx);
+                    // Версия протокола Tuya
+                    DropdownButtonFormField<double>(
+                      initialValue: selectedVersion,
+                      decoration:
+                      const InputDecoration(labelText: 'Версия протокола', prefixIcon: Icon(Icons.info_outline)),
+                      items: const [
+                        DropdownMenuItem(value: 3.1, child: Text('3.1')),
+                        DropdownMenuItem(value: 3.3, child: Text('3.3')),
+                        DropdownMenuItem(value: 3.4, child: Text('3.4')),
+                        DropdownMenuItem(value: 3.5, child: Text('3.5')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) setModalState(() => selectedVersion = v);
                       },
-                      icon: const Icon(Icons.save),
-                      label: const Text('Сохранить'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => showDialog(
-                        context: ctx,
-                        builder: (dCtx) => AlertDialog(
-                          title: const Text('Удалить?'),
-                          content: Text('Удалить "${device.name}"?'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Отмена')),
-                            ElevatedButton(
-                              onPressed: () {
-                                ref.read(devicesProvider.notifier).removeDevice(device.id);
-                                Navigator.pop(dCtx);
-                                Navigator.pop(ctx);
-                              },
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                              child: const Text('Удалить'),
-                            ),
-                          ],
-                        ),
+                  ],
+
+                  // ╔══════════════════════════════════════════╗
+                  // ║  DPS ИНДЕКСЫ (выключатели и обычные)     ║
+                  // ║  Скрыто: камеры, пылесосы (dps_map)      ║
+                  // ╚══════════════════════════════════════════╝
+                  if (latestDevice.type != DeviceType.camera && latestDevice.type != DeviceType.compound) ...[
+                    const SizedBox(height: 8),
+                    if (latestDevice.type == DeviceType.switch1 ||
+                        latestDevice.type == DeviceType.switch2 ||
+                        latestDevice.type == DeviceType.switch3) ...[
+                      Text('Каналы:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
+                      const SizedBox(height: 4),
+                      ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref),
+                    ] else ...[
+                      TextField(
+                        controller: dpsControllers.first,
+                        decoration: const InputDecoration(labelText: 'DPS Индекс', hintText: '1', prefixIcon: Icon(Icons.tune)),
+                        keyboardType: TextInputType.number,
                       ),
-                      icon: const Icon(Icons.delete),
-                      label: const Text('Удалить'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                    ),
-                  ),
-                ]),
+                    ],
+                  ],
 
-                // ╔══════════════════════════════════════════╗
-                // ║  СОЗДАТЬ ДАТЧИК (не для камер/датчиков/  ║
-                // ║  универсальных устройств                 ║
-                // ╚══════════════════════════════════════════╝
-                if (device.type != DeviceType.sensor &&
-                    device.type != DeviceType.camera &&
-                    device.type != DeviceType.compound) ...[
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _showCreateSensorDialog(context, ref, device);
-                      },
-                      icon: const Icon(Icons.add_chart, size: 18),
-                      label: const Text('Создать датчик'),
+                  // ╔══════════════════════════════════════════╗
+                  // ║ DPS КАРТА (для универсального устройства)║
+                  // ║   Редактор составных устройств           ║
+                  // ╚══════════════════════════════════════════╝
+                  if (latestDevice.type == DeviceType.compound) ...[
+                    const SizedBox(height: 8),
+                    Text('DPS карта:',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
+                    const SizedBox(height: 4),
+                    ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref),
+                    // Кнопка добавления нового DPS
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _showDpsEditor(ctx, setModalState, latestDevice, null, ref),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Добавить DPS'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 36),
+                      ),
                     ),
-                  ),
+                  ],
+
+                  // ╔══════════════════════════════════════════╗
+                  // ║    ОТОБРАЖЕНИЕ НА КАРТОЧКЕ              ║
+                  // ║   (только для устройств с dps_map)      ║
+                  // ╚══════════════════════════════════════════╝
+                  if (latestDevice.type == DeviceType.compound) ...[
+                    const SizedBox(height: 12),
+                    _buildDisplaySettings(ref, latestDevice),
+                  ],
+
+                  // ╔══════════════════════════════════════════╗
+                  // ║      КНОПКИ: СОХРАНИТЬ / УДАЛИТЬ         ║
+                  // ╚══════════════════════════════════════════╝
+                  const SizedBox(height: 16),
+                  Row(children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Map<String, dynamic> newProperties = {...latestDevice.properties};
+
+                          // Обновляем RTSP URL для камер
+                          if (latestDevice.type == DeviceType.camera &&
+                              latestDevice.properties['cameraType'] == 'rtsp') {
+                            newProperties['rtspUrl'] = rtspUrlController.text;
+                          }
+
+                          final updated = latestDevice.copyWith(
+                            name: nameController.text,
+                            roomId: selectedRoomId,
+                            address: latestDevice.type != DeviceType.camera && addressController.text.isNotEmpty
+                                ? addressController.text
+                                : latestDevice.address,
+                            localKey: latestDevice.type != DeviceType.camera && localKeyController.text.isNotEmpty
+                                ? localKeyController.text
+                                : latestDevice.localKey,
+                            dpsIndex: latestDevice.type != DeviceType.camera && latestDevice.type != DeviceType.compound
+                                ? (int.tryParse(dpsControllers.first.text) ?? latestDevice.dpsIndex)
+                                : latestDevice.dpsIndex,
+                            version: latestDevice.type != DeviceType.camera ? selectedVersion : latestDevice.version,
+                            properties: newProperties,
+                          );
+                          ref.read(devicesProvider.notifier).updateDevice(updated);
+                          Navigator.pop(ctx);
+                        },
+                        icon: const Icon(Icons.save),
+                        label: const Text('Сохранить'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => showDialog(
+                          context: ctx,
+                          builder: (dCtx) => AlertDialog(
+                            title: const Text('Удалить?'),
+                            content: Text('Удалить "${latestDevice.name}"?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Отмена')),
+                              ElevatedButton(
+                                onPressed: () {
+                                  ref.read(devicesProvider.notifier).removeDevice(latestDevice.id);
+                                  Navigator.pop(dCtx);
+                                  Navigator.pop(ctx);
+                                },
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                child: const Text('Удалить'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Удалить'),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                      ),
+                    ),
+                  ]),
+
+                  // ╔══════════════════════════════════════════╗
+                  // ║  СОЗДАТЬ ДАТЧИК (не для камер/датчиков/  ║
+                  // ║  универсальных устройств                 ║
+                  // ╚══════════════════════════════════════════╝
+                  if (latestDevice.type != DeviceType.sensor &&
+                      latestDevice.type != DeviceType.camera &&
+                      latestDevice.type != DeviceType.compound) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showCreateSensorDialog(context, ref, latestDevice);
+                        },
+                        icon: const Icon(Icons.add_chart, size: 18),
+                        label: const Text('Создать датчик'),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 8),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
