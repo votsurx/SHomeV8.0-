@@ -41,16 +41,34 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<void> _loadDevices() async {
     final devices = await _repository.getAllDevices();
-    state = devices.map((d) => d.copyWith(
-      isOnline: false,
-      state: DeviceState.offline,
-      properties: {
-        ...d.properties,
-        'isOn': false,
-        if (d.properties['states'] != null)
-          'states': List<bool>.filled((d.properties['channels'] as int?) ?? 1, false),
-      },
-    )).toList();
+    state = devices.map((d) {
+      final props = Map<String, dynamic>.from(d.properties);
+
+      // Добавляем dps_map для многоканальных устройств, если его нет
+      if (d.type == DeviceType.switch1 ||
+          d.type == DeviceType.switch2 ||
+          d.type == DeviceType.switch3) {
+        if (props['dps_map'] == null || (props['dps_map'] as Map).isEmpty) {
+          final channels = props['channels'] as int? ??
+              (d.type == DeviceType.switch3 ? 3 : d.type == DeviceType.switch2 ? 2 : 1);
+          props['dps_map'] = {
+            for (var i = 1; i <= channels; i++)
+              '$i': {'label': 'Канал $i', 'type': 'bool', 'role': 'channel'},
+          };
+        }
+      }
+
+      props['isOn'] = false;
+      if (props['states'] != null) {
+        props['states'] = List<bool>.filled((props['channels'] as int?) ?? 1, false);
+      }
+
+      return d.copyWith(
+        isOnline: false,
+        state: DeviceState.offline,
+        properties: props,
+      );
+    }).toList();
     _restoreOrder();
   }
 
@@ -290,11 +308,32 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
   static Map<String, dynamic> defaultProperties(DeviceType type) {
     switch (type) {
       case DeviceType.switch1:
-        return {'channels': 1, 'states': [false]};
+        return {
+          'channels': 1,
+          'states': [false],
+          'dps_map': {
+            '1': {'label': 'Канал 1', 'type': 'bool', 'role': 'channel'},
+          },
+        };
       case DeviceType.switch2:
-        return {'channels': 2, 'states': [false, false]};
+        return {
+          'channels': 2,
+          'states': [false, false],
+          'dps_map': {
+            '1': {'label': 'Канал 1', 'type': 'bool', 'role': 'channel'},
+            '2': {'label': 'Канал 2', 'type': 'bool', 'role': 'channel'},
+          },
+        };
       case DeviceType.switch3:
-        return {'channels': 3, 'states': [false, false, false]};
+        return {
+          'channels': 3,
+          'states': [false, false, false],
+          'dps_map': {
+            '1': {'label': 'Канал 1', 'type': 'bool', 'role': 'channel'},
+            '2': {'label': 'Канал 2', 'type': 'bool', 'role': 'channel'},
+            '3': {'label': 'Канал 3', 'type': 'bool', 'role': 'channel'},
+          },
+        };
       case DeviceType.curtain:
         return {'position': 100, 'isMoving': false};
       case DeviceType.light:

@@ -49,7 +49,10 @@ class _ChannelButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isOnline = device.state != DeviceState.offline && device.state != DeviceState.offline;
+    final isOnline = device.state != DeviceState.offline;
+    final dpsMap = device.properties['dps_map'] as Map<String, dynamic>? ?? {};
+    final channelConfig = dpsMap['$channel'] as Map<String, dynamic>? ?? {};
+    final label = channelConfig['label'] as String? ?? 'Кан.$channel';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -74,7 +77,10 @@ class _ChannelButton extends ConsumerWidget {
           ),
         ),
         if (showLabel)
-          Padding(padding: const EdgeInsets.only(top: 2), child: Text('Кан.$channel', style: TextStyle(fontSize: 9, color: Colors.grey[600]))),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(label, style: TextStyle(fontSize: 9, color: Colors.grey[600]), maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
       ],
     );
   }

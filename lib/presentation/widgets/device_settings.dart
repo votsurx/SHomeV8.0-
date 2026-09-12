@@ -162,25 +162,13 @@ class DeviceSettings {
                   if (device.type == DeviceType.switch1 ||
                       device.type == DeviceType.switch2 ||
                       device.type == DeviceType.switch3) ...[
-                    // Многоканальные — DPS для каждого канала
-                    Text('DPS каналов:',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
+                    Text('Каналы:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
                     const SizedBox(height: 4),
-                    ...List.generate(channelCount, (i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: TextField(
-                        controller: dpsControllers[i],
-                        decoration: InputDecoration(
-                            labelText: 'DPS канала ${i + 1}', prefixIcon: const Icon(Icons.tune)),
-                        keyboardType: TextInputType.number,
-                      ),
-                    )),
+                    ..._buildDpsMapEditor(device, setModalState, ctx, ref),
                   ] else ...[
-                    // Одноканальные — один DPS индекс
                     TextField(
                       controller: dpsControllers.first,
-                      decoration: const InputDecoration(
-                          labelText: 'DPS Индекс', hintText: '1', prefixIcon: Icon(Icons.tune)),
+                      decoration: const InputDecoration(labelText: 'DPS Индекс', hintText: '1', prefixIcon: Icon(Icons.tune)),
                       keyboardType: TextInputType.number,
                     ),
                   ],
@@ -340,19 +328,29 @@ class DeviceSettings {
     return sortedKeys.map((key) {
       final cfg = dpsMap[key] as Map<String, dynamic>;
       final label = cfg['label'] as String? ?? '';
-      final type = cfg['type'] as String? ?? '';
       final role = cfg['role'] as String? ?? '';
       final iconName = cfg['icon'] as String? ?? '';
 
+      // Для каналов — своя иконка, для остальных — по роли
+      final leading = role == 'channel'
+          ? const Icon(Icons.tune, size: 16, color: Colors.blueGrey)
+          : _dpsIcon(role, iconName);
+
+      // Для каналов — префикс «Канал», для остальных — «DPS»
+      final titlePrefix = role == 'channel' ? 'Канал' : 'DPS';
+
       return ListTile(
         dense: true,
-        leading: _dpsIcon(role, iconName),
-        title: Text('DPS $key: $label', style: const TextStyle(fontSize: 12)),
-        subtitle: Text('$type / $role', style: const TextStyle(fontSize: 10)),
+        leading: leading,
+        title: Text('$titlePrefix $key: $label', style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.edit, size: 16),
         onTap: () {
-          Navigator.pop(ctx);
-          _showDpsEditor(ctx, setModalState, device, key, ref);
+          //Navigator.pop(ctx);
+          if (role == 'channel') {
+            _showChannelEditor(ctx, setModalState, device, key, ref);
+          } else {
+            _showDpsEditor(ctx, setModalState, device, key, ref);
+          }
         },
       );
     }).toList();
@@ -360,11 +358,9 @@ class DeviceSettings {
 
   /// Возвращает иконку для DPS: сначала кастомная, затем по роли.
   static Widget _dpsIcon(String role, String? iconName) {
-    // Если задана кастомная иконка — показываем эмодзи
     if (iconName != null && iconName.isNotEmpty) {
       return Text(_iconEmoji(iconName), style: const TextStyle(fontSize: 16));
     }
-    // Иначе — иконка по роли
     return _dpsRoleIcon(role);
   }
 
@@ -383,6 +379,10 @@ class DeviceSettings {
         return const Icon(Icons.info, size: 16, color: Colors.teal);
       case 'slider':
         return const Icon(Icons.tune, size: 16, color: Colors.purple);
+      case 'enum':
+        return const Icon(Icons.list, size: 16, color: Colors.indigo);
+      case 'channel':
+        return const Icon(Icons.tune, size: 16, color: Colors.blueGrey);
       default:
         return const Icon(Icons.help_outline, size: 16);
     }
@@ -433,8 +433,20 @@ class DeviceSettings {
     final keyController = TextEditingController(text: dpsKey ?? '');
     final labelController = TextEditingController(text: isNew ? '' : dpsMap[dpsKey]?['label'] ?? '');
     String selectedType = isNew ? 'bool' : dpsMap[dpsKey]?['type'] ?? 'bool';
+    const validTypes = ['bool', 'value', 'enum', 'slider'];
+    if (!validTypes.contains(selectedType)) {
+      selectedType = 'bool';
+    }
     String selectedRole = isNew ? 'action' : dpsMap[dpsKey]?['role'] ?? 'action';
+    // Если роль не входит в допустимые — заменяем на 'action'
+    const validRoles = ['main', 'action', 'toggle', 'info', 'status', 'enum', 'slider', 'channel'];
+    if (!validRoles.contains(selectedRole)) {
+      selectedRole = 'action';
+    }
     String selectedIcon = isNew ? '' : dpsMap[dpsKey]?['icon'] ?? '';
+    final enumValuesController = TextEditingController(
+      text: isNew ? '' : (dpsMap[dpsKey]?['enum_values'] as List?)?.join(', ') ?? '',
+    );
 
     showDialog(
       context: context,
@@ -484,7 +496,9 @@ class DeviceSettings {
                   DropdownMenuItem(value: 'toggle', child: Text('toggle (переключатель)')),
                   DropdownMenuItem(value: 'info', child: Text('info (информация)')),
                   DropdownMenuItem(value: 'status', child: Text('status (статус)')),
+                  DropdownMenuItem(value: 'enum', child: Text('enum (выпадающий список)')),
                   DropdownMenuItem(value: 'slider', child: Text('slider (ползунок)')),
+                  DropdownMenuItem(value: 'channel', child: Text('channel (канал)')),
                 ],
                 onChanged: (v) {
                   if (v != null) setDialogState(() => selectedRole = v);
@@ -508,6 +522,15 @@ class DeviceSettings {
                   DropdownMenuItem(value: 'timer', child: Text('⏱ Таймер')),
                   DropdownMenuItem(value: 'area', child: Text('📐 Площадь')),
                   DropdownMenuItem(value: 'fan', child: Text('🌀 Вентилятор')),
+                  DropdownMenuItem(value: 'cool', child: Text('❄️ Охлаждение')),
+                  DropdownMenuItem(value: 'heat', child: Text('🔥 Обогрев')),
+                  DropdownMenuItem(value: 'dry', child: Text('💨 Осушение')),
+                  DropdownMenuItem(value: 'auto', child: Text('🔄 Авто')),
+                  DropdownMenuItem(value: 'sleep', child: Text('😴 Сон')),
+                  DropdownMenuItem(value: 'swing_vertical', child: Text('↕️ Вертикальные жалюзи')),
+                  DropdownMenuItem(value: 'swing_horizontal', child: Text('↔️ Горизонтальные жалюзи')),
+                  DropdownMenuItem(value: 'air_quality', child: Text('🌬️ Качество воздуха')),
+                  DropdownMenuItem(value: 'filter', child: Text('🧹 Фильтр')),
                   DropdownMenuItem(value: 'temp', child: Text('🌡 Температура')),
                   DropdownMenuItem(value: 'ac', child: Text('❄️ Кондиционер')),
                   DropdownMenuItem(value: 'heater', child: Text('🔥 Обогреватель')),
@@ -549,6 +572,12 @@ class DeviceSettings {
                   'type': selectedType,
                   'role': selectedRole,
                   if (selectedIcon.isNotEmpty) 'icon': selectedIcon,
+                  if (selectedType == 'enum' && enumValuesController.text.isNotEmpty)
+                    'enum_values': enumValuesController.text
+                        .split(',')
+                        .map((e) => e.trim())
+                        .where((e) => e.isNotEmpty)
+                        .toList(),
                 };
 
                 final updated = device.copyWith(
@@ -556,11 +585,12 @@ class DeviceSettings {
                 );
                 ref.read(devicesProvider.notifier).updateDevice(updated);
                 Navigator.pop(ctx);
+                setModalState(() {});
 
                 // Переоткрываем настройки с обновлённым устройством
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  DeviceSettings.show(context, ref, updated);
-                });
+                //WidgetsBinding.instance.addPostFrameCallback((_) {
+                  //DeviceSettings.show(context, ref, updated);
+                //});
               },
               child: Text(isNew ? 'Добавить' : 'Сохранить'),
             ),
@@ -769,6 +799,72 @@ class DeviceSettings {
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+  static void _showChannelEditor(
+      BuildContext context,
+      void Function(VoidCallback) setModalState,
+      Device device,
+      String channelKey,
+      WidgetRef ref,
+      ) {
+    final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
+    final currentConfig = dpsMap[channelKey] as Map<String, dynamic>? ?? {};
+    final keyController = TextEditingController(text: channelKey);
+    final labelController = TextEditingController(text: currentConfig['label'] ?? 'Канал $channelKey');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Канал'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: keyController,
+                decoration: const InputDecoration(labelText: 'Номер канала'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: labelController,
+                decoration: const InputDecoration(labelText: 'Название'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+            ElevatedButton(
+              onPressed: () {
+                final newKey = keyController.text.trim();
+                if (newKey.isEmpty || labelController.text.isEmpty) return;
+
+                final newDpsMap = Map<String, dynamic>.from(dpsMap);
+
+                // Если номер канала изменился — удаляем старый
+                if (channelKey != newKey) {
+                  newDpsMap.remove(channelKey);
+                }
+
+                newDpsMap[newKey] = {
+                  'label': labelController.text,
+                  'type': 'bool',
+                  'role': 'channel',
+                };
+
+                final updated = device.copyWith(
+                  properties: {...device.properties, 'dps_map': newDpsMap},
+                );
+                ref.read(devicesProvider.notifier).updateDevice(updated);
+                Navigator.pop(ctx);
+                setModalState(() {});
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
         ),
       ),
     );
