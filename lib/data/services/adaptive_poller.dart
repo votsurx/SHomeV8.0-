@@ -139,7 +139,9 @@ class AdaptivePoller {
                 break;
               case 'value':
               case 'slider':
-                newProperties[propKey] = raw is num ? raw : int.tryParse(raw.toString()) ?? 0;
+                final divider = (cfg['divider'] as num?)?.toDouble() ?? 1.0;
+                final numValue = raw is num ? raw.toDouble() : double.tryParse(raw.toString()) ?? 0.0;
+                newProperties[propKey] = divider > 1 ? numValue / divider : numValue;
                 break;
               case 'enum':
                 newProperties[propKey] = raw.toString();

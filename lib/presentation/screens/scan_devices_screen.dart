@@ -245,6 +245,7 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                     DropdownMenuItem(value: DeviceType.sensor, child: Text('Датчик')),
                     DropdownMenuItem(value: DeviceType.light, child: Text('Лампа')),
                     DropdownMenuItem(value: DeviceType.curtain, child: Text('Шторы')),
+                    DropdownMenuItem(value: DeviceType.hvac, child: Text('❄️ Кондиционер')),
                     DropdownMenuItem(value: DeviceType.compound, child: Text('🦾 Универсальное устройство')),
                   ],
                   onChanged: (value) =>

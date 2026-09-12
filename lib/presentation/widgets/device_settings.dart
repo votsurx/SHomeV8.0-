@@ -185,7 +185,7 @@ class DeviceSettings {
                   // ║ DPS КАРТА (для универсального устройства)║
                   // ║   Редактор составных устройств           ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type == DeviceType.compound) ...[
+                  if (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac) ...[
                     const SizedBox(height: 8),
                     Text('DPS карта:',
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
@@ -207,9 +207,9 @@ class DeviceSettings {
                   // ║    ОТОБРАЖЕНИЕ НА КАРТОЧКЕ              ║
                   // ║   (только для устройств с dps_map)      ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type == DeviceType.compound) ...[
+                  if (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac) ...[
                     const SizedBox(height: 12),
-                    _buildDisplaySettings(ref, latestDevice),
+                    _buildDisplaySettings(ref, latestDevice, () => setModalState(() {})),
                   ],
 
                   // ╔══════════════════════════════════════════╗
@@ -558,7 +558,7 @@ class DeviceSettings {
               ),
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final newKey = keyController.text.trim();
                 if (newKey.isEmpty || labelController.text.isEmpty) return;
 
@@ -583,11 +583,16 @@ class DeviceSettings {
                         .toList(),
                 };
 
-                final updated = device.copyWith(
-                  properties: {...device.properties, 'dps_map': newDpsMap},
+                final latestDevice = ref.read(devicesProvider).firstWhere(
+                      (d) => d.id == device.id,
+                  orElse: () => device,
                 );
-                ref.read(devicesProvider.notifier).updateDevice(updated);
-                Navigator.pop(ctx);
+
+                final updated = latestDevice.copyWith(
+                  properties: {...latestDevice.properties, 'dps_map': newDpsMap},
+                );
+                await ref.read(devicesProvider.notifier).updateDevice(updated);
+                if (ctx.mounted) Navigator.pop(ctx);
                 setModalState(() {});
 
                 // Переоткрываем настройки с обновлённым устройством
@@ -724,7 +729,7 @@ class DeviceSettings {
     );
   }
 
-  static Widget _buildDisplaySettings(WidgetRef ref, Device device) {
+  static Widget _buildDisplaySettings(WidgetRef ref, Device device, VoidCallback setModalState) {
     return Card(
       color: Colors.blue.shade50,
       child: Padding(
@@ -794,7 +799,8 @@ class DeviceSettings {
                         ref
                             .read(devicesProvider.notifier)
                             .updateDeviceProperties(latestDevice.id, updatedProperties);
-                        // Интерфейс обновится автоматически благодаря ref.watch выше
+                        // Обновляем основное окно настроек
+                        setModalState();
                       },
                       activeThumbColor: Colors.blue,
                     );
@@ -841,7 +847,7 @@ class DeviceSettings {
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 final newKey = keyController.text.trim();
                 if (newKey.isEmpty || labelController.text.isEmpty) return;
 
@@ -858,11 +864,16 @@ class DeviceSettings {
                   'role': 'channel',
                 };
 
-                final updated = device.copyWith(
-                  properties: {...device.properties, 'dps_map': newDpsMap},
+                final latestDevice = ref.read(devicesProvider).firstWhere(
+                      (d) => d.id == device.id,
+                  orElse: () => device,
                 );
-                ref.read(devicesProvider.notifier).updateDevice(updated);
-                Navigator.pop(ctx);
+
+                final updated = latestDevice.copyWith(
+                  properties: {...latestDevice.properties, 'dps_map': newDpsMap},
+                );
+                await ref.read(devicesProvider.notifier).updateDevice(updated);
+                if (ctx.mounted) Navigator.pop(ctx);
                 setModalState(() {});
               },
               child: const Text('Сохранить'),

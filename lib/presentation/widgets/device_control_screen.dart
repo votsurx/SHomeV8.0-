@@ -62,6 +62,7 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
           onChanged: (val) => _sendCommand(dpId, val),
         );
       case 'slider':
+        final divider = (config['divider'] as num?)?.toDouble() ?? 1.0;
         double min = (config['min'] as num?)?.toDouble() ?? 0;
         double max = (config['max'] as num?)?.toDouble() ?? 100;
         double step = (config['step'] as num?)?.toDouble() ?? 1;
@@ -71,20 +72,19 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${config['label'] ?? dpId}: ${currentVal.round().toString()}'),
+            Text('${config['label'] ?? dpId}: ${currentVal.toStringAsFixed(divider > 1 ? 1 : 0)}'),
             Slider(
-              value: currentVal,
+              value: currentVal.clamp(min, max),
               min: min,
               max: max,
               divisions: divisions,
-              label: currentVal.round().toString(),
+              label: currentVal.toStringAsFixed(divider > 1 ? 1 : 0),
               onChanged: (val) {
-                // локально обновляем для плавности
                 final updatedProperties = Map<String, dynamic>.from(device.properties);
-                updatedProperties['dps_$dpId'] = val.round();
+                updatedProperties['dps_$dpId'] = val;
                 ref.read(devicesProvider.notifier).updateDeviceProperties(device.id, updatedProperties);
               },
-              onChangeEnd: (val) => _sendCommand(dpId, val.round()),
+              onChangeEnd: (val) => _sendCommand(dpId, val),
             ),
           ],
         );
@@ -110,6 +110,12 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
   }
 
   Future<void> _sendCommand(String dpId, dynamic value) async {
+    // Учитываем divider для value/slider
+    final dpsMap = widget.device.properties['dps_map'] as Map<String, dynamic>? ?? {};
+    final config = dpsMap[dpId] as Map<String, dynamic>? ?? {};
+    final divider = (config['divider'] as num?)?.toDouble() ?? 1.0;
+    final sendValue = (value is num && divider > 1) ? (value * divider).round() : value;
+
     final oldProperties = Map<String, dynamic>.from(widget.device.properties);
     final updatedProperties = Map<String, dynamic>.from(oldProperties);
     updatedProperties['dps_$dpId'] = value;
@@ -117,7 +123,7 @@ class _DeviceControlScreenState extends ConsumerState<DeviceControlScreen> {
     ref.read(devicesProvider.notifier).updateDeviceProperties(widget.device.id, updatedProperties);
 
     try {
-      final success = await _tuyaProtocol.setDp(widget.device, int.parse(dpId), value);
+      final success = await _tuyaProtocol.setDp(widget.device, int.parse(dpId), sendValue);
 
       if (success) {
         // Уведомление при успешном изменении
