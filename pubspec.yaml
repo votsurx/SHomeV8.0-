@@ -88,7 +88,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: "^0.13.1"
+  flutter_launcher_icons: ^0.14.4
 
   # ============ Code Generation ============
   build_runner: ^2.4.14        # Запуск кодогенераторов
@@ -104,6 +104,7 @@ dev_dependencies:
 
   # ============ Statistics ============
   fl_chart: ^0.68.0            # Графики для статистики
+  flutter_native_splash: ^2.4.8
 
 flutter:
   uses-material-design: true
@@ -112,10 +113,20 @@ flutter:
     - assets/images/
     - assets/animations/
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
-  ios: false  # если iOS не нужен
-  image_path: "assets/icon.png"  # путь к вашей иконке
-  adaptive_icon_background: "#FFFFFF"  # цвет фона для адаптивной иконки
-  adaptive_icon_foreground: "assets/icon.png"  # или отдельный файл для переднего плана
+  ios: false
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon.png"
   adaptive_icon_monochrome: "assets/icon.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/splash.png
+  android: true
+  ios: false
+  android_12:
+    image: assets/splash.png
+    icon_background_color: "#FFFFFF"
+    color: "#FFFFFF"
