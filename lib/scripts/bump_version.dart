@@ -20,7 +20,7 @@ void main(List<String> args) {
   print('✅ pubspec.yaml → $newVersion');
 
   // 2. Обновляем legal_documents.dart
-  final legalDocs = File('lib/application/constants/legal_documents.dart');
+  final legalDocs = File('lib/presentation/screens/documents/legal_documents.dart');
   if (legalDocs.existsSync()) {
     var legalContent = legalDocs.readAsStringSync();
     legalContent = legalContent.replaceAll(

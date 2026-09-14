@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker/talker.dart';
-import 'application/services/update_service.dart';
 import 'data/services/nvr_api_client.dart';
 import 'di/injection.dart';
 import 'domain/models/room.dart';
@@ -34,7 +33,6 @@ final globalContainer = ProviderContainer();
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
-  UpdateService.initialize();
   ThemeNotifier.updateAutoCache();
 
   getIt<TimerEngine>().start();
