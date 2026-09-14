@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
+import '../../application/services/update_service.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
 import 'notification_settings_screen.dart';
@@ -173,11 +174,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         .toList(),
                   ),
                 );
-                if (!mounted) return;
+                if (!context.mounted) return;  // ← ЗАМЕНИ mounted на context.mounted
                 if (selected != null) {
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setInt('poll_interval', selected);
-                  if (!mounted) return;
+                  if (!context.mounted) return;  // ← И ЗДЕСЬ
                   setState(() => _pollInterval = selected);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -251,6 +252,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
+
+          // ============================================================
+          // ℹ️ Обновление
+          // ============================================================
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.update, color: Colors.green),
+              title: const Text('Проверить обновления'),
+              subtitle: const Text('Проверить наличие новой версии'),
+              onTap: () => UpdateService.checkForUpdates(context),
+            ),
+          ),
 
           // ============================================================
           // ℹ️ О ПРИЛОЖЕНИИ
