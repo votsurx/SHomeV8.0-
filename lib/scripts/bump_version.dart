@@ -1,7 +1,7 @@
 import 'dart:io';
 
 void main(List<String> args) {
-  // Читаем текущую версию из pubspec.yaml
+  // 1. Читаем текущую версию из pubspec.yaml
   final pubspec = File('pubspec.yaml');
   var content = pubspec.readAsStringSync();
 
@@ -12,14 +12,23 @@ void main(List<String> args) {
   }
 
   final currentVersion = versionMatch.group(1)!;
-  final parts = currentVersion.split('.');
-  final newPatch = int.parse(parts[2]) + 1;
-  final newVersion = '${parts[0]}.${parts[1]}.$newPatch';
+  String newVersion;
 
-  print('📦 Текущая версия: $currentVersion');
-  print('🆕 Новая версия: $newVersion\n');
+  if (args.isNotEmpty) {
+    // Если аргумент есть — используем его
+    newVersion = args[0];
+    print('📦 Текущая версия: $currentVersion');
+    print('🆕 Новая версия (из аргумента): $newVersion\n');
+  } else {
+    // Если аргумента нет — увеличиваем +1
+    final parts = currentVersion.split('.');
+    final newPatch = int.parse(parts[2]) + 1;
+    newVersion = '${parts[0]}.${parts[1]}.$newPatch';
+    print('📦 Текущая версия: $currentVersion');
+    print('🆕 Новая версия (+1): $newVersion\n');
+  }
 
-  // 1. Обновляем pubspec.yaml
+  // 2. Обновляем pubspec.yaml
   content = content.replaceAll(
     RegExp(r'version: \d+\.\d+\.\d+\+\d+'),
     'version: $newVersion+1',
@@ -31,7 +40,7 @@ void main(List<String> args) {
   pubspec.writeAsStringSync(content);
   print('✅ pubspec.yaml → $newVersion');
 
-  // 2. Обновляем legal_documents.dart
+  // 3. legal_documents.dart
   final legalDocs = File('lib/presentation/screens/documents/legal_documents.dart');
   if (legalDocs.existsSync()) {
     var legalContent = legalDocs.readAsStringSync();
@@ -43,7 +52,7 @@ void main(List<String> args) {
     print('✅ legal_documents.dart → $newVersion');
   }
 
-  // 3. Обновляем build.gradle.kts
+  // 4. build.gradle.kts
   final gradle = File('android/app/build.gradle.kts');
   if (gradle.existsSync()) {
     var gradleContent = gradle.readAsStringSync();

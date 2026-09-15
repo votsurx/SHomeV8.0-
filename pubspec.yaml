@@ -4,9 +4,9 @@
 # ============================================================
 
 name: shome
-description: SHome v8.1.17 - Smart Home Control
+description: SHome vv8.1.18 - Smart Home Control
 publish_to: 'none'          # Приватный проект, не публикуется на pub.dev
-version: 8.1.17+1
+version: v8.1.18+1
 
 # Минимальная версия Dart SDK
 environment:
