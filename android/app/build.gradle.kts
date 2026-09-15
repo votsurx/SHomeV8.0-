@@ -32,7 +32,7 @@ android {
         applicationId = "com.example.shome"
         minSdk = 24
         targetSdk = 36
-        versionCode = 22
+        versionCode = 80121
         versionName = "v8.1.18"
     }
 

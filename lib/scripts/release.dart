@@ -138,6 +138,15 @@ String _nextVersion(String version) {
   return '${parts[0]}.${parts[1]}.$newPatch';
 }
 
+/// Вычисляет versionCode из версии (8.1.18 → 80118)
+int _calcVersionCode(String version) {
+  final parts = version.split('.');
+  final major = int.parse(parts[0]);
+  final minor = int.parse(parts[1]);
+  final patch = int.parse(parts[2]);
+  return major * 10000 + minor * 100 + patch;
+}
+
 /// Обновляет версию во всех файлах
 Future<void> _updateVersionFiles(String newVersion, String content, File pubspec) async {
   // 1. pubspec.yaml
@@ -168,23 +177,21 @@ Future<void> _updateVersionFiles(String newVersion, String content, File pubspec
   final gradle = File('android/app/build.gradle.kts');
   if (gradle.existsSync()) {
     var gradleContent = gradle.readAsStringSync();
+
+    // versionName
     gradleContent = gradleContent.replaceAll(
       RegExp(r'versionName = "\d+\.\d+\.\d+"'),
       'versionName = "$newVersion"',
     );
 
-    final versionCodeMatch = RegExp(r'versionCode = (\d+)').firstMatch(gradleContent);
-    if (versionCodeMatch != null) {
-      final currentCode = int.parse(versionCodeMatch.group(1)!);
-      final newCode = currentCode + 1;
-      gradleContent = gradleContent.replaceAll(
-        RegExp(r'versionCode = \d+'),
-        'versionCode = $newCode',
-      );
-      print('✅ versionCode → $newCode');
-    }
+    // versionCode = 8.1.18 → 80118
+    final versionCode = _calcVersionCode(newVersion);
+    gradleContent = gradleContent.replaceAll(
+      RegExp(r'versionCode = \d+'),
+      'versionCode = $versionCode',
+    );
 
     gradle.writeAsStringSync(gradleContent);
-    print('✅ build.gradle.kts → $newVersion');
+    print('✅ build.gradle.kts → $newVersion (code: $versionCode)');
   }
 }
