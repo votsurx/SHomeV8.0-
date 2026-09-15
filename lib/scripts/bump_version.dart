@@ -16,6 +16,10 @@ void main(List<String> args) {
     RegExp(r'version: \d+\.\d+\.\d+\+\d+'),
     'version: $newVersion+1',
   );
+  content = content.replaceAll(
+    RegExp(r'description: SHome v\d+\.\d+\.\d+'),
+    'description: SHome v$newVersion',
+  );
   pubspec.writeAsStringSync(content);
   print('✅ pubspec.yaml → $newVersion');
 
@@ -35,10 +39,25 @@ void main(List<String> args) {
   final gradle = File('android/app/build.gradle.kts');
   if (gradle.existsSync()) {
     var gradleContent = gradle.readAsStringSync();
+
+    // Обновляем versionName
     gradleContent = gradleContent.replaceAll(
       RegExp(r'versionName = "\d+\.\d+\.\d+"'),
       'versionName = "$newVersion"',
     );
+
+    // Обновляем versionCode (+1)
+    final versionCodeMatch = RegExp(r'versionCode = (\d+)').firstMatch(gradleContent);
+    if (versionCodeMatch != null) {
+      final currentCode = int.parse(versionCodeMatch.group(1)!);
+      final newCode = currentCode + 1;
+      gradleContent = gradleContent.replaceAll(
+        RegExp(r'versionCode = \d+'),
+        'versionCode = $newCode',
+      );
+      print('✅ versionCode → $newCode');
+    }
+
     gradle.writeAsStringSync(gradleContent);
     print('✅ build.gradle.kts → $newVersion');
   }

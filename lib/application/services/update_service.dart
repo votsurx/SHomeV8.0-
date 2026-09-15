@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:github_release_apk_updater/github_release_apk_updater.dart';
 import 'package:restart_app/restart_app.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class UpdateService {
   static final _updater = GithubReleaseApkUpdater();
   static final _apiService = GithubApiService();
+
+  static Future<String?> _getReleaseNotes(String version) async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.github.com/repos/votsurx/SHome-Releases/releases/tags/v$version'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['body'] as String?;
+      }
+    } catch (e) {
+      debugPrint('❌ Ошибка получения release notes: $e');
+    }
+    return null;
+  }
 
   static Future<void> checkForUpdates(BuildContext context) async {
     try {
@@ -50,30 +67,60 @@ class UpdateService {
     }
   }
 
-  static void _showUpdateDialog(BuildContext context, GithubAPKRelease release) {
-    // Контроллер для диалога прогресса
+  static void _showUpdateDialog(BuildContext context, GithubAPKRelease release) async {
+    final releaseNotes = await _getReleaseNotes(release.version);
     final progressNotifier = ValueNotifier<double>(0);
     final isDownloading = ValueNotifier<bool>(false);
+
+    if (!context.mounted) return;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (dialogCtx, setDialogState) => AlertDialog(
-          title: const Text('Доступно обновление'),
-          content: isDownloading.value
-              ? ValueListenableBuilder<double>(
-            valueListenable: progressNotifier,
-            builder: (context, progress, _) => Column(
+          title: Row(
+            children: [
+              const Icon(Icons.system_update, color: Colors.green),
+              const SizedBox(width: 8),
+              Text('Обновление ${release.version}'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: isDownloading.value
+                ? ValueListenableBuilder<double>(
+              valueListenable: progressNotifier,
+              builder: (context, progress, _) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '${(progress * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('Скачивание обновления...', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            )
+                : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                LinearProgressIndicator(value: progress),
-                const SizedBox(height: 8),
-                Text('${(progress * 100).toStringAsFixed(0)}%'),
+                if (releaseNotes != null && releaseNotes.isNotEmpty) ...[
+                  const Text('Что нового:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text(releaseNotes, style: const TextStyle(fontSize: 13)),
+                ] else
+                  const Text('Доступна новая версия приложения.'),
               ],
             ),
-          )
-              : Text('Новая версия: ${release.version}'),
+          ),
           actions: isDownloading.value
               ? null
               : [
@@ -81,7 +128,7 @@ class UpdateService {
               onPressed: () => Navigator.pop(dialogCtx),
               child: const Text('Позже'),
             ),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () async {
                 isDownloading.value = true;
                 setDialogState(() {});
@@ -98,10 +145,7 @@ class UpdateService {
                 );
 
                 if (filePath != null) {
-                  // Устанавливаем APK
                   await _updater.installApk(filePath);
-
-                  // Перезапускаем приложение
                   await Restart.restartApp();
                 } else {
                   if (dialogCtx.mounted) {
@@ -112,7 +156,8 @@ class UpdateService {
                   }
                 }
               },
-              child: const Text('Обновить'),
+              icon: const Icon(Icons.download),
+              label: const Text('Обновить'),
             ),
           ],
         ),
