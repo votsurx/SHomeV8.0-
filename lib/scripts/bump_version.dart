@@ -1,17 +1,25 @@
 import 'dart:io';
 
 void main(List<String> args) {
-  if (args.isEmpty) {
-    print('Usage: dart run scripts/bump_version.dart <version>');
-    print('Example: dart run scripts/bump_version.dart 8.1.0');
+  // Читаем текущую версию из pubspec.yaml
+  final pubspec = File('pubspec.yaml');
+  var content = pubspec.readAsStringSync();
+
+  final versionMatch = RegExp(r'version: (\d+\.\d+\.\d+)\+\d+').firstMatch(content);
+  if (versionMatch == null) {
+    print('❌ Не удалось найти версию в pubspec.yaml');
     return;
   }
 
-  final newVersion = args[0];
+  final currentVersion = versionMatch.group(1)!;
+  final parts = currentVersion.split('.');
+  final newPatch = int.parse(parts[2]) + 1;
+  final newVersion = '${parts[0]}.${parts[1]}.$newPatch';
+
+  print('📦 Текущая версия: $currentVersion');
+  print('🆕 Новая версия: $newVersion\n');
 
   // 1. Обновляем pubspec.yaml
-  final pubspec = File('pubspec.yaml');
-  var content = pubspec.readAsStringSync();
   content = content.replaceAll(
     RegExp(r'version: \d+\.\d+\.\d+\+\d+'),
     'version: $newVersion+1',
@@ -40,13 +48,11 @@ void main(List<String> args) {
   if (gradle.existsSync()) {
     var gradleContent = gradle.readAsStringSync();
 
-    // Обновляем versionName
     gradleContent = gradleContent.replaceAll(
       RegExp(r'versionName = "\d+\.\d+\.\d+"'),
       'versionName = "$newVersion"',
     );
 
-    // Обновляем versionCode (+1)
     final versionCodeMatch = RegExp(r'versionCode = (\d+)').firstMatch(gradleContent);
     if (versionCodeMatch != null) {
       final currentCode = int.parse(versionCodeMatch.group(1)!);

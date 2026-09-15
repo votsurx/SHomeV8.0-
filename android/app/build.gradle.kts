@@ -32,8 +32,8 @@ android {
         applicationId = "com.example.shome"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10
-        versionName = "8.1.11"
+        versionCode = 12
+        versionName = "8.1.12"
     }
 
     signingConfigs {
@@ -46,6 +46,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
         }
