@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'changelog_screen.dart';
 import 'legal_documents.dart';
 import 'eula_screen.dart';
 import 'privacy_policy_screen.dart';
@@ -12,7 +13,7 @@ class LegalDocumentsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Юридическая информация'),
+        title: const Text('Информация'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: ListView(
@@ -93,6 +94,7 @@ class LegalDocumentsScreen extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const TermsScreen()),
             ),
           ),
+
           _buildDocumentTile(
             context,
             icon: Icons.copyright,
@@ -105,7 +107,16 @@ class LegalDocumentsScreen extends StatelessWidget {
               applicationLegalese: LegalDocuments.copyright,
             ),
           ),
-
+          _buildDocumentTile(
+            context,
+            icon: Icons.history,
+            title: 'История изменений',
+            subtitle: 'Что нового в каждой версии',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChangelogScreen()),
+            ),
+          ),
           const SizedBox(height: 16),
           Center(
             child: Text(

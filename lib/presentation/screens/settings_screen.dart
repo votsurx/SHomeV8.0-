@@ -271,7 +271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.gavel),
-              title: const Text('Юридическая информация'),
+              title: const Text('Информация'),
               subtitle: const Text('Лицензии и соглашения'),
               onTap: () {
                 Navigator.push(

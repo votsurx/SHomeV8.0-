@@ -115,6 +115,7 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/animations/
+    - CHANGELOG.md
 
 flutter_launcher_icons:
   android: true
