@@ -6,7 +6,7 @@
 name: shome
 description: SHome vv8.1.18 - Smart Home Control
 publish_to: 'none'          # Приватный проект, не публикуется на pub.dev
-version: 8.1.21+1
+version: 8.1.22+1
 
 # Минимальная версия Dart SDK
 environment:
@@ -87,6 +87,9 @@ dependencies:
 
   github_release_apk_updater: ^1.0.5
   restart_app: ^1.9.1
+
+  device_info_plus: ^10.1.0
+  disk_usage: ^1.0.0
 
 dev_dependencies:
   flutter_test:

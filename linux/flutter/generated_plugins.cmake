@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  disk_usage
   flutter_secure_storage_linux
   restart_app
   sqlite3_flutter_libs
