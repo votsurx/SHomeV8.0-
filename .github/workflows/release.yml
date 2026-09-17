@@ -43,7 +43,7 @@ jobs:
           echo "storeFile=../app/shome-key.jks" >> android/key.properties
 
       - name: Build APK (split-per-abi)
-        run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/debug-info
+        run: flutter build apk --release --obfuscate --split-debug-info=build/debug-info
 
       - name: Get commits since last tag
         id: commits
@@ -70,7 +70,5 @@ jobs:
             ### Что нового:
             ${{ steps.commits.outputs.commits }}
           files: |
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-x86_64-release.apk
+            build/app/outputs/flutter-apk/app-release.apk
           token: ${{ secrets.PAT_FOR_PUBLIC_REPO }}
