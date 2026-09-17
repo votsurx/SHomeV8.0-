@@ -24,10 +24,9 @@ void main() async {
   print('Выберите действие:');
   print('  [1] Создать релиз (bump + commit + tag + push)');
   print('  [2] Синхронизировать версию из pubspec.yaml');
-  print('  [3] Запустить flutter run с новой версией');
-  print('  [4] Выйти');
+  print('  [3] Выйти');
   print('');
-  stdout.write('Введите номер (1-4): ');
+  stdout.write('Введите номер (1-3): ');
 
   final choice = stdin.readLineSync()?.trim() ?? '';
 
@@ -39,9 +38,6 @@ void main() async {
       await _syncVersion(currentVersion);
       break;
     case '3':
-      await _runWithVersion(currentVersion, content, pubspec);
-      break;
-    case '4':
       print('👋 Выход');
       break;
     default:
@@ -109,31 +105,6 @@ Future<void> _syncVersion(String currentVersion) async {
 
   print('');
   print('🎉 Версия синхронизирована: $currentVersion');
-}
-
-/// Запустить flutter run с новой версией
-Future<void> _runWithVersion(String currentVersion, String content, File pubspec) async {
-  print('');
-  stdout.write('Новая версия (Enter = ${_nextVersion(currentVersion)}): ');
-  final input = stdin.readLineSync()?.trim() ?? '';
-
-  final newVersion = input.isEmpty ? _nextVersion(currentVersion) : _cleanVersion(input);
-  print('');
-  print('🆕 Новая версия: $newVersion');
-
-  await _updateVersionFiles(newVersion, content, pubspec);
-
-  print('');
-  print('🚀 Запускаю flutter run...');
-  print('');
-
-  final result = await Process.start(
-    'flutter.bat',
-    ['run'],
-    mode: ProcessStartMode.inheritStdio,
-    runInShell: true,
-  );
-  await result.exitCode;
 }
 
 /// Убирает 'v' в начале версии
