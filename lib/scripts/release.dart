@@ -80,6 +80,16 @@ Future<void> _createRelease(String currentVersion, String content, File pubspec)
   await Process.run('git', ['push', 'origin', 'main']);
 
   print('🏷️  Тег...');
+
+  // Удаляем старый тег, если существует
+  final checkTag = await Process.run('git', ['tag', '-l', 'v$newVersion']);
+  if (checkTag.stdout.toString().trim().isNotEmpty) {
+    print('⚠️  Тег v$newVersion уже существует, удаляю...');
+    await Process.run('git', ['tag', '-d', 'v$newVersion']);
+    await Process.run('git', ['push', 'origin', ':refs/tags/v$newVersion']);
+  }
+
+  // Создаём новый тег
   await Process.run('git', ['tag', 'v$newVersion']);
   await Process.run('git', ['push', 'origin', 'v$newVersion']);
 
