@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:github_release_apk_updater/github_release_apk_updater.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:restart_app/restart_app.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -147,8 +149,31 @@ class UpdateService {
 
                 if (filePath != null) {
                   debugPrint('✅ APK скачан: $filePath');
-                  final result = await OpenFilex.open(filePath);
+
+                  // Копируем в публичную папку Downloads
+                  String publicPath = filePath;
+                  try {
+                    final downloadsDir = await getDownloadsDirectory() ?? Directory('/storage/emulated/0/Download');
+                    if (!await downloadsDir.exists()) {
+                      await downloadsDir.create(recursive: true);
+                    }
+                    publicPath = '${downloadsDir.path}/SHome_update.apk';
+                    final publicFile = File(publicPath);
+                    if (await publicFile.exists()) {
+                      await publicFile.delete();
+                    }
+                    await File(filePath).copy(publicPath);
+                    debugPrint('📂 APK скопирован в: $publicPath');
+                  } catch (e) {
+                    debugPrint('⚠️ Не удалось скопировать в Downloads: $e');
+                    // Если не удалось, пробуем установить из исходного пути
+                    publicPath = filePath;
+                  }
+
+                  // Открываем APK
+                  final result = await OpenFilex.open(publicPath);
                   debugPrint('📦 Результат: ${result.type} — ${result.message}');
+
                   if (result.type == ResultType.done) {
                     await Future.delayed(const Duration(seconds: 2));
                     await Restart.restartApp();
@@ -158,6 +183,13 @@ class UpdateService {
                         SnackBar(content: Text('Ошибка установки: ${result.message}')),
                       );
                     }
+                  }
+                } else {
+                  if (dialogCtx.mounted) {
+                    Navigator.pop(dialogCtx);
+                    ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                      const SnackBar(content: Text('Ошибка скачивания')),
+                    );
                   }
                 }
               },
