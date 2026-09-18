@@ -32,8 +32,8 @@ android {
         applicationId = "com.example.shome"
         minSdk = 24
         targetSdk = 36
-        versionCode = 80130
-        versionName = "8.1.30"
+        versionCode = 80131
+        versionName = "8.1.31"
     }
 
     signingConfigs {
