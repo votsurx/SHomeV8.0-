@@ -3,6 +3,7 @@ import 'package:github_release_apk_updater/github_release_apk_updater.dart';
 import 'package:restart_app/restart_app.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:open_file/open_file.dart';
 
 class UpdateService {
   static final _updater = GithubReleaseApkUpdater();
@@ -145,8 +146,20 @@ class UpdateService {
                 );
 
                 if (filePath != null) {
-                  await _updater.installApk(filePath);
-                  await Restart.restartApp();
+                  debugPrint('✅ APK скачан: $filePath');
+                  final result = await OpenFile.open(filePath);
+                  if (result.type != ResultType.done) {
+                    debugPrint('❌ Ошибка установки: ${result.message}');
+                    if (dialogCtx.mounted) {
+                      ScaffoldMessenger.of(dialogCtx).showSnackBar(
+                        SnackBar(content: Text('Ошибка установки: ${result.message}')),
+                      );
+                    }
+                  } else {
+                    // Ждём немного и перезапускаем
+                    await Future.delayed(const Duration(seconds: 2));
+                    await Restart.restartApp();
+                  }
                 } else {
                   if (dialogCtx.mounted) {
                     Navigator.pop(dialogCtx);
