@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:github_release_apk_updater/github_release_apk_updater.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:restart_app/restart_app.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:open_file/open_file.dart';
 
 class UpdateService {
   static final _updater = GithubReleaseApkUpdater();
@@ -147,25 +147,17 @@ class UpdateService {
 
                 if (filePath != null) {
                   debugPrint('✅ APK скачан: $filePath');
-                  final result = await OpenFile.open(filePath);
-                  if (result.type != ResultType.done) {
-                    debugPrint('❌ Ошибка установки: ${result.message}');
+                  final result = await OpenFilex.open(filePath);
+                  debugPrint('📦 Результат: ${result.type} — ${result.message}');
+                  if (result.type == ResultType.done) {
+                    await Future.delayed(const Duration(seconds: 2));
+                    await Restart.restartApp();
+                  } else {
                     if (dialogCtx.mounted) {
                       ScaffoldMessenger.of(dialogCtx).showSnackBar(
                         SnackBar(content: Text('Ошибка установки: ${result.message}')),
                       );
                     }
-                  } else {
-                    // Ждём немного и перезапускаем
-                    await Future.delayed(const Duration(seconds: 2));
-                    await Restart.restartApp();
-                  }
-                } else {
-                  if (dialogCtx.mounted) {
-                    Navigator.pop(dialogCtx);
-                    ScaffoldMessenger.of(dialogCtx).showSnackBar(
-                      const SnackBar(content: Text('Ошибка скачивания')),
-                    );
                   }
                 }
               },
