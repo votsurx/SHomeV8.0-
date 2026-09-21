@@ -9,6 +9,7 @@ import 'dart:convert';
 class MailruCloudService {
   static const String _webdavUrl = 'https://webdav.cloud.mail.ru';
   static const String _backupFolder = 'SHome/backups';
+  static const String _presenceFolder = 'SHome/presence';
 
   final String login;
   final String password;
@@ -26,7 +27,6 @@ class MailruCloudService {
 
   // ─── ПОДКЛЮЧЕНИЕ ───────────────────────────────────────
 
-  /// Проверяет соединение с облаком.
   Future<bool> testConnection() async {
     try {
       final client = _createClient();
@@ -40,7 +40,6 @@ class MailruCloudService {
 
   // ─── БЕКАПЫ ────────────────────────────────────────────
 
-  /// Загружает JSON бекапа в облако.
   Future<bool> uploadBackup(String jsonConfig) async {
     try {
       final client = _createClient();
@@ -65,7 +64,6 @@ class MailruCloudService {
     }
   }
 
-  /// Скачивает JSON бекапа по имени файла.
   Future<String?> downloadBackup(String fileName) async {
     try {
       final client = _createClient();
@@ -80,7 +78,6 @@ class MailruCloudService {
     }
   }
 
-  /// Возвращает список имён файлов бекапов в облаке.
   Future<List<String>> listBackups() async {
     try {
       final client = _createClient();
@@ -97,6 +94,63 @@ class MailruCloudService {
     } catch (e) {
       debugPrint('❌ Ошибка получения списка бекапов: $e');
       return [];
+    }
+  }
+
+  // ─── PRESENCE ──────────────────────────────────────────
+
+  /// Скачивает файл presence из облака.
+  /// Путь: SHome/presence/{pairId}/{phoneId}.json
+  Future<String?> downloadPresence({
+    required String pairId,
+    required String phoneId,
+  }) async {
+    try {
+      final client = _createClient();
+      final filePath = '/$_presenceFolder/$pairId/$phoneId.json';
+      final bytes = await client.read(filePath);
+      final content = utf8.decode(bytes);
+      debugPrint('📥 Presence скачан: $filePath');
+      return content;
+    } catch (e) {
+      debugPrint('❌ Ошибка скачивания presence: $e');
+      return null;
+    }
+  }
+
+  /// Возвращает список ID телефонов для пары.
+  Future<List<String>> listPresencePhones(String pairId) async {
+    try {
+      final client = _createClient();
+      await _createFolderIfNeeded(client, '/$_presenceFolder/$pairId');
+
+      final files = await client.readDir('/$_presenceFolder/$pairId');
+      final phones = files
+          .where((f) => f.name != null && f.name!.endsWith('.json'))
+          .map((f) => f.name!.replaceAll('.json', ''))
+          .toList();
+
+      return phones;
+    } catch (e) {
+      debugPrint('❌ Ошибка получения списка телефонов: $e');
+      return [];
+    }
+  }
+
+  /// Удаляет файл presence.
+  Future<bool> deletePresence({
+    required String pairId,
+    required String phoneId,
+  }) async {
+    try {
+      final client = _createClient();
+      final filePath = '/$_presenceFolder/$pairId/$phoneId.json';
+      await client.remove(filePath);
+      debugPrint('🗑 Presence удалён: $filePath');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Ошибка удаления presence: $e');
+      return false;
     }
   }
 

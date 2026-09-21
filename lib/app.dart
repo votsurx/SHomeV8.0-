@@ -3,6 +3,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'application/navigation/router.dart';
+import 'application/state/presence_detector_provider.dart';
 import 'application/state/theme_provider.dart';
 import 'presentation/theme/app_theme.dart';
 import 'application/state/nvr_provider.dart';
@@ -15,6 +16,7 @@ class SHomeApp extends StatelessWidget {
     return Consumer(
       builder: (context, ref, child) {
         ref.watch(nvrSettingsProvider);
+        ref.watch(presenceDetectorProvider);
         final themeMode = ref.watch(themeProvider);
 
         return MaterialApp.router(
