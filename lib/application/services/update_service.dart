@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:github_release_apk_updater/github_release_apk_updater.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class UpdateService {
   static final _updater = GithubReleaseApkUpdater();
@@ -27,7 +29,7 @@ class UpdateService {
     try {
       if (!context.mounted) return;
 
-      final supportedAbis = await _updater.getSupportedAbis();
+      final supportedAbis = await _updater.getSupportedAbis() ?? ['arm64-v8a'];
       final release = await _apiService.getLatestGithubAPKRelease(
         ownerGithub: 'votsurx',
         repositoryGithub: 'SHome-Releases',
@@ -64,6 +66,72 @@ class UpdateService {
       }
     } catch (e) {
       debugPrint('❌ Ошибка проверки обновлений: $e');
+    }
+  }
+
+  /// Прямое скачивание APK с GitHub Releases
+  static Future<String?> _downloadApkDirect(
+      String version,
+      String abi,
+      void Function(double progress) onProgress,
+      ) async {
+    try {
+      // Определяем имя файла по ABI
+      String fileName;
+      if (abi.contains('arm64')) {
+        fileName = 'app-arm64-v8a-release.apk';
+      } else if (abi.contains('armeabi')) {
+        fileName = 'app-armeabi-v7a-release.apk';
+      } else if (abi.contains('x86_64')) {
+        fileName = 'app-x86_64-release.apk';
+      } else {
+        fileName = 'app-arm64-v8a-release.apk';
+      }
+
+      // Прямой URL
+      final url = Uri.parse(
+        'https://github.com/votsurx/SHome-Releases/releases/download/v$version/$fileName',
+      );
+
+      debugPrint('📥 Прямое скачивание: $url');
+
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/SHome_update.apk';
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      final client = http.Client();
+      final request = http.Request('GET', url);
+      final response = await client.send(request);
+
+      if (response.statusCode != 200) {
+        debugPrint('❌ Ошибка скачивания: ${response.statusCode}');
+        client.close();
+        return null;
+      }
+
+      final total = response.contentLength ?? 0;
+      int received = 0;
+      final sink = file.openWrite();
+
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        received += chunk.length;
+        if (total > 0) {
+          onProgress(received / total);
+        }
+      }
+
+      await sink.close();
+      client.close();
+
+      debugPrint('✅ APK скачан: $filePath');
+      return filePath;
+    } catch (e) {
+      debugPrint('❌ Ошибка скачивания: $e');
+      return null;
     }
   }
 
@@ -140,14 +208,16 @@ class UpdateService {
                 isDownloading.value = true;
                 setDialogState(() {});
 
-                final downloader = ApkDownloaderService();
-                final filePath = await downloader.downloadAPK(
-                  release.apkUrl,
-                  null,
-                      (received, total) {
-                    if (total > 0) {
-                      progressNotifier.value = received / total;
-                    }
+                // Получаем ABI устройства
+                final abis = await _updater.getSupportedAbis();
+                final abi = (abis != null && abis.isNotEmpty) ? abis.first : 'arm64-v8a';
+
+                // Прямое скачивание
+                final filePath = await _downloadApkDirect(
+                  release.version,
+                  abi,
+                      (progress) {
+                    progressNotifier.value = progress;
                   },
                 );
 
@@ -165,7 +235,7 @@ class UpdateService {
                     );
                   } else {
                     Navigator.pop(dialogCtx);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(dialogCtx).showSnackBar(
                       const SnackBar(content: Text('После установки откройте SHome вручную')),
                     );
                   }
