@@ -60,7 +60,7 @@ dependencies:
   path_provider: ^2.1.5        # Пути к папкам приложения
 
   # ============ Permissions ============
-  permission_handler: ^11.3.0  # Запрос разрешений (запись файлов)
+  permission_handler: ^13.0.2  # Запрос разрешений (запись файлов)
 
   # ============ MQTT (заготовка) ============
   mqtt_client: ^10.0.0         # MQTT клиент для будущей интеграции
@@ -88,6 +88,7 @@ dependencies:
   github_release_apk_updater: ^1.0.5
   restart_app: ^1.9.1
   open_filex: ^4.7.0
+  crypto: ^3.0.7
 dev_dependencies:
   flutter_test:
     sdk: flutter

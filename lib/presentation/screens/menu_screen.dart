@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../application/state/theme_provider.dart';
 import '../../application/state/nvr_provider.dart';
+import 'notification_channels_screen.dart';
 
 class MenuScreen extends ConsumerStatefulWidget {
   const MenuScreen({super.key});
@@ -146,6 +147,16 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   label: 'Облако',
                   color: Colors.lightBlue,
                   onTap: () => context.push('/cloud'),
+                ),
+
+                // ============================================================
+                // ☁️ Уведомления
+                // ============================================================
+                _buildTile(
+                  icon: Icons.notifications_active,
+                  label: 'Уведомления',
+                  color: Colors.orange,
+                  onTap: () => context.push('/notifications'),
                 ),
 
                 // ============================================================

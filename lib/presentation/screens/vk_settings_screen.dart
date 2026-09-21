@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/state/notification_settings_provider.dart';
 import '../../data/services/vk_notification_service.dart';
 
-class NotificationSettingsScreen extends ConsumerWidget {
-  const NotificationSettingsScreen({super.key});
+class VkSettingsScreen extends ConsumerWidget {
+  const VkSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,18 +15,16 @@ class NotificationSettingsScreen extends ConsumerWidget {
     final userIdController = TextEditingController(text: settings.vkUserId);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Уведомления')),
+      appBar: AppBar(title: const Text('VK Bot')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwitchListTile(
-            title: const Text('Включить уведомления'),
-            subtitle: const Text('Отправка сообщений в VK'),
+            title: const Text('Включить VK'),
+            subtitle: const Text('Отправлять уведомления в VK'),
             value: settings.enabled,
             onChanged: (val) {
-              print('🔔 Меняю enabled на: $val');
               notifier.update(settings.copyWith(enabled: val));
-              print('🔔 После: ${ref.read(notificationSettingsProvider).enabled}');
             },
           ),
           const SizedBox(height: 16),
@@ -38,9 +36,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 hintText: 'Вставьте токен бота',
               ),
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(vkToken: val),
-                );
+                notifier.update(settings.copyWith(vkToken: val));
               },
             ),
             const SizedBox(height: 8),
@@ -52,20 +48,21 @@ class NotificationSettingsScreen extends ConsumerWidget {
               ),
               keyboardType: TextInputType.number,
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(vkUserId: val),
-                );
+                notifier.update(settings.copyWith(vkUserId: val));
               },
             ),
-            const SizedBox(height: 16),
+            const Divider(height: 32),
+            const Text(
+              'События',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
             SwitchListTile(
               title: const Text('Сцены'),
               subtitle: const Text('Уведомления о выполнении сцен'),
               value: settings.notifyScenes,
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(notifyScenes: val),
-                );
+                notifier.update(settings.copyWith(notifyScenes: val));
               },
             ),
             SwitchListTile(
@@ -73,9 +70,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Изменение состояния устройств'),
               value: settings.notifyDevices,
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(notifyDevices: val),
-                );
+                notifier.update(settings.copyWith(notifyDevices: val));
               },
             ),
             SwitchListTile(
@@ -83,9 +78,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Обнаружение движения'),
               value: settings.notifyAlarms,
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(notifyAlarms: val),
-                );
+                notifier.update(settings.copyWith(notifyAlarms: val));
               },
             ),
             SwitchListTile(
@@ -93,9 +86,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Сбои и ошибки'),
               value: settings.notifyErrors,
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(notifyErrors: val),
-                );
+                notifier.update(settings.copyWith(notifyErrors: val));
               },
             ),
             const Divider(height: 32),
@@ -104,9 +95,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
               subtitle: const Text('Отправлять только в указанное время'),
               value: settings.useSchedule,
               onChanged: (val) {
-                ref.read(notificationSettingsProvider.notifier).update(
-                  ref.read(notificationSettingsProvider).copyWith(useSchedule: val),
-                );
+                notifier.update(settings.copyWith(useSchedule: val));
               },
             ),
             if (settings.useSchedule) ...[
@@ -115,9 +104,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 subtitle: const Text('Тревоги отправлять всегда'),
                 value: settings.scheduleOnlyAlarms,
                 onChanged: (val) {
-                  ref.read(notificationSettingsProvider.notifier).update(
-                    ref.read(notificationSettingsProvider).copyWith(scheduleOnlyAlarms: val),
-                  );
+                  notifier.update(settings.copyWith(scheduleOnlyAlarms: val));
                 },
               ),
               ListTile(
@@ -135,12 +122,10 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     ),
                   );
                   if (time != null) {
-                    notifier.update(
-                      settings.copyWith(
-                        startHour: time.hour,
-                        startMinute: time.minute,
-                      ),
-                    );
+                    notifier.update(settings.copyWith(
+                      startHour: time.hour,
+                      startMinute: time.minute,
+                    ));
                   }
                 },
               ),
@@ -159,12 +144,10 @@ class NotificationSettingsScreen extends ConsumerWidget {
                     ),
                   );
                   if (time != null) {
-                    notifier.update(
-                      settings.copyWith(
-                        endHour: time.hour,
-                        endMinute: time.minute,
-                      ),
-                    );
+                    notifier.update(settings.copyWith(
+                      endHour: time.hour,
+                      endMinute: time.minute,
+                    ));
                   }
                 },
               ),
@@ -203,7 +186,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
                 await vk.sendMessage('✅ Тестовое уведомление из SHome!');
               },
               icon: const Icon(Icons.send),
-              label: const Text('Отправить тест'),
+              label: const Text('Отправить тест VK'),
             ),
           ],
         ],

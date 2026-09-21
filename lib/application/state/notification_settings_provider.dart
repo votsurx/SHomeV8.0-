@@ -32,6 +32,8 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       endMinute: prefs.getInt('notify_end_minute') ?? 0,
       daysOfWeek: prefs.getStringList('notify_days')?.map(int.parse).toList() ??
           const [1, 2, 3, 4, 5, 6, 7],
+      smsEnabled: prefs.getBool('sms_enabled') ?? false,
+      smsPhoneNumber: prefs.getString('sms_phone') ?? '',
     );
   }
 
@@ -51,9 +53,12 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     await prefs.setInt('notify_start_minute', settings.startMinute);
     await prefs.setInt('notify_end_hour', settings.endHour);
     await prefs.setInt('notify_end_minute', settings.endMinute);
+    await prefs.setBool('sms_enabled', settings.smsEnabled);
+    await prefs.setString('sms_phone', settings.smsPhoneNumber);
     await prefs.setStringList(
       'notify_days',
       settings.daysOfWeek.map((e) => e.toString()).toList(),
+
     );
   }
 }

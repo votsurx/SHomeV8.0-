@@ -24,6 +24,7 @@ import 'application/state/nvr_provider.dart';
 import 'data/services/ispy_sync_service.dart';
 import 'domain/services/mqtt_service_interface.dart';
 import 'application/state/devices_provider.dart';
+import 'data/services/vk_notification_service.dart';
 
 /// Глобальный доступ к MQTT сервису
 MqttService? globalMqttService;
@@ -140,8 +141,32 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
       // ============================================================
       // 🔴 LEGION NVR — КОЛБЭКИ ДВИЖЕНИЯ
       // ============================================================
-      _mqttBridge!.onMotionEvent = (event) {
+      _mqttBridge!.onMotionEvent = (event) async {
         debugPrint('🔴 LegionNVR Motion: ${event.cameraName} → ${event.event}');
+
+        // Отправляем уведомление только при НАЧАЛЕ движения
+        if (event.event != 'motion_start') return;
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final enabled = prefs.getBool('notifications_enabled') ?? false;
+          final notifyAlarms = prefs.getBool('notify_alarms') ?? true;
+          final token = prefs.getString('vk_token') ?? '';
+          final userId = prefs.getString('vk_user_id') ?? '';
+
+          if (enabled && notifyAlarms && token.isNotEmpty && userId.isNotEmpty) {
+            final vk = VkNotificationService();
+            await vk.loadSettings();
+            await vk.sendAlarm(
+              cameraName: event.cameraName,
+              label: 'motion',
+              score: (event.percent ?? 90) / 100,
+            );
+            debugPrint('✅ VK: тревога отправлена');
+          }
+        } catch (e) {
+          debugPrint('❌ Ошибка отправки VK-тревоги: $e');
+        }
       };
 
       ///_mqttBridge!.onStatusEvent = (cameraId, isOnline) {

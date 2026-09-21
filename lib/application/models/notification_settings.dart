@@ -8,6 +8,9 @@ class NotificationSettings {
   final bool notifyAlarms;
   final bool notifyErrors;
 
+  final bool smsEnabled;
+  final String smsPhoneNumber;
+
   // Расписание
   final bool useSchedule;
   final bool scheduleOnlyAlarms; // true — вне расписания слать только тревоги
@@ -32,6 +35,8 @@ class NotificationSettings {
     this.endHour = 21,
     this.endMinute = 0,
     this.daysOfWeek = const [1, 2, 3, 4, 5, 6, 7],
+    this.smsEnabled = false,
+    this.smsPhoneNumber = '',
   });
 
   bool get isConfigured =>
@@ -52,6 +57,8 @@ class NotificationSettings {
     int? endHour,
     int? endMinute,
     List<int>? daysOfWeek,
+    bool? smsEnabled,
+    String? smsPhoneNumber,
   }) {
     return NotificationSettings(
       enabled: enabled ?? this.enabled,
@@ -68,6 +75,8 @@ class NotificationSettings {
       endHour: endHour ?? this.endHour,
       endMinute: endMinute ?? this.endMinute,
       daysOfWeek: daysOfWeek ?? this.daysOfWeek,
+      smsEnabled: smsEnabled ?? this.smsEnabled,
+      smsPhoneNumber: smsPhoneNumber ?? this.smsPhoneNumber,
     );
   }
 }

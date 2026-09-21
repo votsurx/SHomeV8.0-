@@ -16,6 +16,7 @@ import '../../presentation/screens/settings_screen.dart';
 import '../../presentation/screens/cloud_settings_screen.dart';
 import '../../presentation/screens/nvr_settings_screen.dart';
 import '../../presentation/screens/myispy_settings_screen.dart';
+import '../../presentation/screens/notification_channels_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -53,6 +54,12 @@ final router = GoRouter(
     GoRoute(
       path: '/cloud',
       builder: (context, state) => const CloudSettingsScreen(),
+    ),
+
+    // Уведомления
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationChannelsScreen(),
     ),
 
     // Управление комнатами

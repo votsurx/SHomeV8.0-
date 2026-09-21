@@ -84,6 +84,7 @@ class VkNotificationService {
       case 'cat': return '🐱';
       case 'dog': return '🐕';
       case 'bird': return '🐦';
+      case 'motion': return '🏃';
       default: return '⚠️';
     }
   }
@@ -109,7 +110,7 @@ class VkNotificationService {
   }) async {
     final emoji = success ? '✅' : '❌';
     final message = '$emoji Устройство\n'
-        '📦 ${deviceName}\n'
+        '📦 $deviceName\n'
         '🔧 $action\n'
         '🕐 ${DateTime.now().toString().substring(0, 19)}';
 

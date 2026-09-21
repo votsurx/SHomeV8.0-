@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../application/services/update_service.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
-import 'notification_settings_screen.dart';
+import 'vk_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -203,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const NotificationSettingsScreen(),
+                    builder: (_) => const VkSettingsScreen(),
                   ),
                 );
               },
