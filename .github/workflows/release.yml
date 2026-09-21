@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # ← ВАЖНО: нужно для git log между тегами
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -48,12 +48,18 @@ jobs:
       - name: Get commits since last tag
         id: commits
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          CURRENT_TAG="${{ github.ref_name }}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^$CURRENT_TAG$" | head -1)
+
           if [ -n "$PREV_TAG" ]; then
+            echo "📦 Предыдущий тег: $PREV_TAG"
+            echo "📦 Текущий тег: $CURRENT_TAG"
             COMMITS=$(git log $PREV_TAG..HEAD --pretty=format:"- %s" --no-merges)
           else
+            echo "⚠️ Предыдущий тег не найден, берём последние 10 коммитов"
             COMMITS=$(git log --pretty=format:"- %s" --no-merges -10)
           fi
+
           echo "commits<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
