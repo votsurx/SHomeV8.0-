@@ -23,7 +23,6 @@ class PresenceSettingsNotifier extends StateNotifier<PresenceSettings> {
 
     state = PresenceSettings(
       enabled: prefs.getBool('presence_enabled') ?? false,
-      pairId: prefs.getString('presence_pair_id') ?? '',
       phones: phonesList,
       homeLat: prefs.getDouble('presence_home_lat') ?? 0.0,
       homeLng: prefs.getDouble('presence_home_lng') ?? 0.0,
@@ -37,7 +36,6 @@ class PresenceSettingsNotifier extends StateNotifier<PresenceSettings> {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setBool('presence_enabled', settings.enabled);
-    await prefs.setString('presence_pair_id', settings.pairId);
     await prefs.setString(
       'presence_phones',
       jsonEncode(settings.phones.map((p) => p.toJson()).toList()),

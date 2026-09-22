@@ -42,7 +42,6 @@ class PresencePhone {
 
 class PresenceSettings {
   final bool enabled;
-  final String pairId;
   final List<PresencePhone> phones;
   final double homeLat;
   final double homeLng;
@@ -51,7 +50,6 @@ class PresenceSettings {
 
   PresenceSettings({
     this.enabled = false,
-    this.pairId = '',
     this.phones = const [],
     this.homeLat = 0.0,
     this.homeLng = 0.0,
@@ -59,12 +57,10 @@ class PresenceSettings {
     this.awayTimeoutMin = 5,
   });
 
-  bool get isConfigured =>
-      pairId.isNotEmpty && phones.any((p) => p.enabled);
+  bool get isConfigured => phones.any((p) => p.enabled);
 
   PresenceSettings copyWith({
     bool? enabled,
-    String? pairId,
     List<PresencePhone>? phones,
     double? homeLat,
     double? homeLng,
@@ -73,7 +69,6 @@ class PresenceSettings {
   }) {
     return PresenceSettings(
       enabled: enabled ?? this.enabled,
-      pairId: pairId ?? this.pairId,
       phones: phones ?? this.phones,
       homeLat: homeLat ?? this.homeLat,
       homeLng: homeLng ?? this.homeLng,

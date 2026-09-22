@@ -100,14 +100,13 @@ class MailruCloudService {
   // ─── PRESENCE ──────────────────────────────────────────
 
   /// Скачивает файл presence из облака.
-  /// Путь: SHome/presence/{pairId}/{phoneId}.json
+  /// Путь: SHome/presence/{phoneId}.json
   Future<String?> downloadPresence({
-    required String pairId,
     required String phoneId,
   }) async {
     try {
       final client = _createClient();
-      final filePath = '/$_presenceFolder/$pairId/$phoneId.json';
+      final filePath = '/$_presenceFolder/$phoneId.json';
       final bytes = await client.read(filePath);
       final content = utf8.decode(bytes);
       debugPrint('📥 Presence скачан: $filePath');
@@ -118,13 +117,13 @@ class MailruCloudService {
     }
   }
 
-  /// Возвращает список ID телефонов для пары.
-  Future<List<String>> listPresencePhones(String pairId) async {
+  /// Возвращает список ID телефонов.
+  Future<List<String>> listPresencePhones() async {
     try {
       final client = _createClient();
-      await _createFolderIfNeeded(client, '/$_presenceFolder/$pairId');
+      await _createFolderIfNeeded(client, '/$_presenceFolder');
 
-      final files = await client.readDir('/$_presenceFolder/$pairId');
+      final files = await client.readDir('/$_presenceFolder');
       final phones = files
           .where((f) => f.name != null && f.name!.endsWith('.json'))
           .map((f) => f.name!.replaceAll('.json', ''))
@@ -139,12 +138,11 @@ class MailruCloudService {
 
   /// Удаляет файл presence.
   Future<bool> deletePresence({
-    required String pairId,
     required String phoneId,
   }) async {
     try {
       final client = _createClient();
-      final filePath = '/$_presenceFolder/$pairId/$phoneId.json';
+      final filePath = '/$_presenceFolder/$phoneId.json';
       await client.remove(filePath);
       debugPrint('🗑 Presence удалён: $filePath');
       return true;

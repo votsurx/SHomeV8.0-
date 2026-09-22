@@ -42,6 +42,7 @@ class PresenceDetectorNotifier extends StateNotifier<PresenceDetector> {
       } else {
         // Перезапускаем с новыми настройками
         state.stop();
+        await Future.delayed(const Duration(milliseconds: 100));  // ← пауза
         await state.start(next);
       }
     } else {

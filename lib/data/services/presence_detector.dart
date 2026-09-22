@@ -58,7 +58,10 @@ class PresenceDetector {
 
   /// Запускает отслеживание
   Future<void> start(PresenceSettings settings) async {
-    if (_running) return;
+    if (_running) {
+      debugPrint('⚠️ PresenceDetector уже запущен');
+      return;
+    }
 
     _settings = settings;
     _phones.clear();
@@ -85,7 +88,11 @@ class PresenceDetector {
   Future<void> _checkAll() async {
     if (_settings == null) return;
 
-    for (final entry in _phones.entries) {
+    // Копируем список для безопасного обхода
+    final entries = List<MapEntry<String, PhonePresence>>.from(_phones.entries);
+
+    for (final entry in entries) {
+      if (!_running) return;  // ← выход, если остановлен
       final phone = entry.value;
       final settings = _settings!.phones.firstWhere(
             (p) => p.phoneId == phone.phoneId,
@@ -94,6 +101,9 @@ class PresenceDetector {
           phoneName: phone.phoneName,
         ),
       );
+
+      // Проверяем, что телефон всё ещё в _phones
+      if (!_phones.containsKey(phone.phoneId)) continue;
 
       await _checkPhone(phone, settings);
     }
@@ -186,12 +196,10 @@ class PresenceDetector {
       final password = await storage.read(key: 'mailru_password');
 
       if (login == null || password == null) return null;
-      if (_settings == null) return null;
 
       final service = MailruCloudService(login: login, password: password);
       final content = await service.downloadPresence(
-        pairId: _settings!.pairId,
-        phoneId: phoneId,
+        phoneId: phoneId,  // ← без pairId
       );
 
       if (content == null) return null;
