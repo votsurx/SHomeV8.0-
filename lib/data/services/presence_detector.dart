@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'mailru_cloud_service.dart';
 import '../../application/models/presence_settings.dart';
+import '../local/secure_storage/encrypted_keys.dart';
 
 /// Статус присутствия для одного телефона
 enum PhonePresenceStatus {
@@ -202,16 +202,14 @@ class PresenceDetector {
 
   Future<Map<String, dynamic>?> _checkCloud(String phoneId) async {
     try {
-      const storage = FlutterSecureStorage();
-      final login = await storage.read(key: 'mailru_login');
-      final password = await storage.read(key: 'mailru_password');
+      final keys = EncryptedKeys();
+      final login = await keys.getCloudLogin();
+      final password = await keys.getCloudPassword();
 
       if (login == null || password == null) return null;
 
       final service = MailruCloudService(login: login, password: password);
-      final content = await service.downloadPresence(
-        phoneId: phoneId,  // ← без pairId
-      );
+      final content = await service.downloadPresence(phoneId: phoneId);
 
       if (content == null) return null;
       return jsonDecode(content) as Map<String, dynamic>;

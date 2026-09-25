@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../application/services/update_service.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
+import 'package:restart_app/restart_app.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -29,6 +30,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // ЭКСПОРТ
+  // ═══════════════════════════════════════════════════════════════
+
   Future<void> _exportConfig() async {
     try {
       await ConfigService.exportConfig();
@@ -44,14 +49,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // ИМПОРТ — с диалогом перезапуска
+  // ═══════════════════════════════════════════════════════════════
+
   Future<void> _importConfig() async {
     try {
       await ConfigService.importConfig();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Импорт выполнен!')),
+
+      final restart = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('✅ Импорт выполнен'),
+          content: const Text(
+            'Данные восстановлены.\n\n'
+                'Рекомендуется перезапустить приложение, '
+                'чтобы все настройки (VK, облако, устройства) применились.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Позже'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Перезапустить'),
+            ),
+          ],
+        ),
       );
-      setState(() {});
+
+      if (restart == true) {
+        await Restart.restartApp();
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -59,6 +90,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ДИАЛОГ БЕКАПА
+  // ═══════════════════════════════════════════════════════════════
 
   void _showBackupDialog(BuildContext context) {
     showDialog(
@@ -94,6 +129,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // BUILD
+  // ═══════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ℹ️ О приложении
+          // ℹ️ Информация
           Card(
             child: ListTile(
               leading: const Icon(Icons.gavel),

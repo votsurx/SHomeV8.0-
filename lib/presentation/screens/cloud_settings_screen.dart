@@ -1,10 +1,5 @@
-/// Экран настроек облачного хранилища Mail.ru.
-/// Позволяет подключиться к облаку через WebDAV,
-/// управлять бекапами и настраивать автосинхронизацию.
-library;
-
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../data/local/secure_storage/encrypted_keys.dart';
 import '../../data/services/mailru_cloud_service.dart';
 import '../../data/services/config_service.dart';
 
@@ -16,7 +11,7 @@ class CloudSettingsScreen extends StatefulWidget {
 }
 
 class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
-  final _storage = const FlutterSecureStorage();
+  final _keys = EncryptedKeys();
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -35,25 +30,24 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Future<void> _loadState() async {
-    final login = await _storage.read(key: 'mailru_login');
-    final password = await _storage.read(key: 'mailru_password');
-    final autoSync = await _storage.read(key: 'mailru_autosync');
+    final login = await _keys.getCloudLogin();
+    final password = await _keys.getCloudPassword();
+    final autoSync = await _keys.getCloudAutoSync();
 
     if (login != null && password != null) {
+      if (!mounted) return;
       setState(() {
         _isConnected = true;
         _login = login;
-        _autoSync = autoSync == 'true';
+        _autoSync = autoSync ?? false;
       });
       _loadLastSync();
     }
   }
 
   Future<void> _loadLastSync() async {
-    final lastSync = await _storage.read(key: 'mailru_last_sync');
-    if (mounted) {
-      setState(() => _lastSync = lastSync);
-    }
+    final lastSync = await _keys.getCloudLastSync();
+    if (mounted) setState(() => _lastSync = lastSync);
   }
 
   Future<void> _connect() async {
@@ -70,23 +64,22 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
     try {
       final service = MailruCloudService(login: login, password: password);
       final success = await service.testConnection();
-
       if (!mounted) return;
 
       if (success) {
-        await _storage.write(key: 'mailru_login', value: login);
-        await _storage.write(key: 'mailru_password', value: password);
-        await _storage.write(key: 'mailru_autosync', value: 'false');
+        await _keys.saveCloudLogin(login);
+        await _keys.saveCloudPassword(password);
+        await _keys.saveCloudAutoSync(false);
 
+        if (!mounted) return;
         setState(() {
           _isConnected = true;
           _login = login;
           _autoSync = false;
         });
-
         _showSnack('✅ Подключено к облаку');
       } else {
-        _showSnack('❌ Не удалось подключиться. Проверьте логин и пароль приложения.');
+        _showSnack('❌ Не удалось подключиться. Проверьте логин и пароль.');
       }
     } catch (e) {
       if (mounted) _showSnack('❌ Ошибка: $e');
@@ -96,23 +89,23 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Future<void> _disconnect() async {
-    await _storage.delete(key: 'mailru_login');
-    await _storage.delete(key: 'mailru_password');
-    await _storage.delete(key: 'mailru_autosync');
-    await _storage.delete(key: 'mailru_last_sync');
+    await _keys.deleteCloudLogin();
+    await _keys.deleteCloudPassword();
+    await _keys.deleteCloudAutoSync();
+    await _keys.deleteCloudLastSync();
 
+    if (!mounted) return;
     setState(() {
       _isConnected = false;
       _login = null;
       _autoSync = false;
       _lastSync = null;
     });
-
     _showSnack('🔌 Отключено от облака');
   }
 
   Future<void> _toggleAutoSync(bool value) async {
-    await _storage.write(key: 'mailru_autosync', value: value.toString());
+    await _keys.saveCloudAutoSync(value);
     setState(() => _autoSync = value);
   }
 
@@ -120,9 +113,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
     setState(() => _isUploading = true);
 
     try {
-      final login = await _storage.read(key: 'mailru_login');
-      final password = await _storage.read(key: 'mailru_password');
-
+      final login = await _keys.getCloudLogin();
+      final password = await _keys.getCloudPassword();
       if (login == null || password == null) {
         _showSnack('❌ Нет данных для входа');
         return;
@@ -132,13 +124,13 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       final json = await ConfigService.buildConfigJson();
       final encrypted = ConfigService.encrypt(json);
       final success = await service.uploadBackup(encrypted);
-
       if (!mounted) return;
 
       if (success) {
         final now = DateTime.now();
         final dateStr = '${now.day}.${now.month}.${now.year} ${now.hour}:${now.minute}';
-        await _storage.write(key: 'mailru_last_sync', value: dateStr);
+        await _keys.saveCloudLastSync(dateStr);
+        if (!mounted) return;
         setState(() => _lastSync = dateStr);
         _showSnack('✅ Бекап загружен в облако');
       } else {
@@ -155,9 +147,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
     setState(() => _isDownloading = true);
 
     try {
-      final login = await _storage.read(key: 'mailru_login');
-      final password = await _storage.read(key: 'mailru_password');
-
+      final login = await _keys.getCloudLogin();
+      final password = await _keys.getCloudPassword();
       if (login == null || password == null) {
         _showSnack('❌ Нет данных для входа');
         return;
@@ -165,7 +156,6 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
 
       final service = MailruCloudService(login: login, password: password);
       final backups = await service.listBackups();
-
       if (!mounted) return;
 
       if (backups.isEmpty) {
@@ -197,7 +187,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
           json = encrypted;
         }
         await ConfigService.restoreFromJson(json);
-        _showSnack('✅ Бекап "$selected" восстановлен');
+        if (!mounted) return;
+        _showSnack('✅ Бекап "$selected" восстановлен. Перезапустите приложение.');
       } else {
         _showSnack('❌ Ошибка скачивания');
       }
@@ -216,6 +207,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ... UI остаётся как было
     return Scaffold(
       appBar: AppBar(
         title: const Text('☁️ Облачное хранилище'),

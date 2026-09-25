@@ -18,7 +18,6 @@ import '../local/entities/room_entity.dart';
 import '../local/entities/scene_entity.dart';
 import '../local/secure_storage/encrypted_keys.dart';
 import '../../domain/models/device_timer.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ConfigService {
@@ -121,13 +120,13 @@ class ConfigService {
 
     final keys = EncryptedKeys();
 
-    // VK-токен — из SecureStorage
+    // VK
     final vkToken = await keys.getVkToken() ?? '';
     final vkUserId = await keys.getVkUserId() ?? '';
 
-    const storage = FlutterSecureStorage();
-    final cloudLogin = await storage.read(key: 'mailru_login') ?? '';
-    final cloudPassword = await storage.read(key: 'mailru_password') ?? '';
+    // Cloud
+    final cloudLogin = await keys.getCloudLogin() ?? '';
+    final cloudPassword = await keys.getCloudPassword() ?? '';
 
     // Разворачиваем localKey устройств: sec:<uuid> → plaintext
     final expandedDevices = <Map<String, dynamic>>[];
@@ -254,7 +253,6 @@ class ConfigService {
       if (config['settings'] != null && config['settings'] is Map) {
         final settings = config['settings'] as Map<String, dynamic>;
         final prefs = await SharedPreferences.getInstance();
-        const storage = FlutterSecureStorage();
 
         final mqttBroker = settings['mqtt_broker']?.toString();
         final mqttPort = settings['mqtt_port']?.toString();
@@ -278,18 +276,15 @@ class ConfigService {
           await keys.saveVkUserId(vkUserId);
         }
 
-        // Облако Mail.ru → SecureStorage
+        // Cloud Mail.ru → SecureStorage через EncryptedKeys
         final cloudLogin = settings['cloud_login']?.toString();
         final cloudPassEnc = settings['cloud_password_encrypted']?.toString();
         if (cloudLogin != null && cloudLogin.isNotEmpty) {
-          await storage.write(key: 'mailru_login', value: cloudLogin);
+          await keys.saveCloudLogin(cloudLogin);
         }
         if (cloudPassEnc != null && cloudPassEnc.isNotEmpty) {
           try {
-            await storage.write(
-              key: 'mailru_password',
-              value: decrypt(cloudPassEnc),
-            );
+            await keys.saveCloudPassword(decrypt(cloudPassEnc));
           } catch (_) {}
         }
       }
