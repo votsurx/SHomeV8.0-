@@ -56,6 +56,18 @@ _$SceneTriggerImpl _$$SceneTriggerImplFromJson(Map<String, dynamic> json) =>
       sensorCondition: json['sensorCondition'] as String?,
       sensorThreshold: (json['sensorThreshold'] as num?)?.toDouble(),
       lastExecuted: json['lastExecuted'] as String?,
+      presenceEvent:
+          $enumDecodeNullable(_$PresenceEventEnumMap, json['presenceEvent']),
+      presencePhoneId: json['presencePhoneId'] as String?,
+      presenceChannel: $enumDecodeNullable(
+              _$PresenceChannelEnumMap, json['presenceChannel']) ??
+          PresenceChannel.any,
+      presenceDelayMin: (json['presenceDelayMin'] as num?)?.toInt() ?? 0,
+      presenceCooldownMin: (json['presenceCooldownMin'] as num?)?.toInt() ?? 1,
+      presenceConditions: json['presenceConditions'] == null
+          ? null
+          : PresenceConditions.fromJson(
+              json['presenceConditions'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$SceneTriggerImplToJson(_$SceneTriggerImpl instance) =>
@@ -70,12 +82,19 @@ Map<String, dynamic> _$$SceneTriggerImplToJson(_$SceneTriggerImpl instance) =>
       'sensorCondition': instance.sensorCondition,
       'sensorThreshold': instance.sensorThreshold,
       'lastExecuted': instance.lastExecuted,
+      'presenceEvent': _$PresenceEventEnumMap[instance.presenceEvent],
+      'presencePhoneId': instance.presencePhoneId,
+      'presenceChannel': _$PresenceChannelEnumMap[instance.presenceChannel]!,
+      'presenceDelayMin': instance.presenceDelayMin,
+      'presenceCooldownMin': instance.presenceCooldownMin,
+      'presenceConditions': instance.presenceConditions,
     };
 
 const _$TriggerTypeEnumMap = {
   TriggerType.time: 'time',
   TriggerType.deviceState: 'deviceState',
   TriggerType.manual: 'manual',
+  TriggerType.presence: 'presence',
 };
 
 const _$RepeatTypeEnumMap = {
@@ -83,4 +102,19 @@ const _$RepeatTypeEnumMap = {
   RepeatType.daily: 'daily',
   RepeatType.weekly: 'weekly',
   RepeatType.interval: 'interval',
+};
+
+const _$PresenceEventEnumMap = {
+  PresenceEvent.someoneHome: 'someoneHome',
+  PresenceEvent.nobodyHome: 'nobodyHome',
+  PresenceEvent.allHome: 'allHome',
+  PresenceEvent.phoneArrived: 'phoneArrived',
+  PresenceEvent.phoneLeft: 'phoneLeft',
+  PresenceEvent.phoneUnknown: 'phoneUnknown',
+};
+
+const _$PresenceChannelEnumMap = {
+  PresenceChannel.any: 'any',
+  PresenceChannel.wifi: 'wifi',
+  PresenceChannel.gps: 'gps',
 };

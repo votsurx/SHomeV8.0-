@@ -491,7 +491,7 @@ SceneTrigger _$SceneTriggerFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$SceneTrigger {
-  /// Тип триггера: time (по времени), deviceState (по состоянию), manual (вручную)
+  /// Тип триггера: time (по времени), deviceState (по состоянию), manual (вручную), presence (по присутствию)
   TriggerType get type => throw _privateConstructorUsedError;
 
   /// Время срабатывания в формате HH:mm (для time)
@@ -507,15 +507,29 @@ mixin _$SceneTrigger {
   RepeatType get repeat => throw _privateConstructorUsedError;
 
   /// Дни недели для weekly (1=Пн, 7=Вс)
-  List<int>? get repeatDays =>
-      throw _privateConstructorUsedError; // Новые поля для датчиков
-  String? get sensorDeviceId =>
-      throw _privateConstructorUsedError; // ID датчика
-  String? get sensorCondition =>
-      throw _privateConstructorUsedError; // temperature_above, temperature_below, humidity_above, humidity_below
-  double? get sensorThreshold =>
-      throw _privateConstructorUsedError; // Пороговое значение
-  String? get lastExecuted => throw _privateConstructorUsedError;
+  List<int>? get repeatDays => throw _privateConstructorUsedError; // Датчики
+  String? get sensorDeviceId => throw _privateConstructorUsedError;
+  String? get sensorCondition => throw _privateConstructorUsedError;
+  double? get sensorThreshold => throw _privateConstructorUsedError;
+  String? get lastExecuted => throw _privateConstructorUsedError; // Присутствие
+  /// Событие присутствия
+  PresenceEvent? get presenceEvent => throw _privateConstructorUsedError;
+
+  /// ID телефона (null = любой)
+  String? get presencePhoneId => throw _privateConstructorUsedError;
+
+  /// Канал определения: any, wifi, gps
+  PresenceChannel get presenceChannel => throw _privateConstructorUsedError;
+
+  /// Задержка перед запуском (минуты)
+  int get presenceDelayMin => throw _privateConstructorUsedError;
+
+  /// Антидребезг (минуты)
+  int get presenceCooldownMin => throw _privateConstructorUsedError;
+
+  /// Условия для присутствия
+  PresenceConditions? get presenceConditions =>
+      throw _privateConstructorUsedError;
 
   /// Serializes this SceneTrigger to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -543,7 +557,15 @@ abstract class $SceneTriggerCopyWith<$Res> {
       String? sensorDeviceId,
       String? sensorCondition,
       double? sensorThreshold,
-      String? lastExecuted});
+      String? lastExecuted,
+      PresenceEvent? presenceEvent,
+      String? presencePhoneId,
+      PresenceChannel presenceChannel,
+      int presenceDelayMin,
+      int presenceCooldownMin,
+      PresenceConditions? presenceConditions});
+
+  $PresenceConditionsCopyWith<$Res>? get presenceConditions;
 }
 
 /// @nodoc
@@ -571,6 +593,12 @@ class _$SceneTriggerCopyWithImpl<$Res, $Val extends SceneTrigger>
     Object? sensorCondition = freezed,
     Object? sensorThreshold = freezed,
     Object? lastExecuted = freezed,
+    Object? presenceEvent = freezed,
+    Object? presencePhoneId = freezed,
+    Object? presenceChannel = null,
+    Object? presenceDelayMin = null,
+    Object? presenceCooldownMin = null,
+    Object? presenceConditions = freezed,
   }) {
     return _then(_value.copyWith(
       type: null == type
@@ -613,7 +641,46 @@ class _$SceneTriggerCopyWithImpl<$Res, $Val extends SceneTrigger>
           ? _value.lastExecuted
           : lastExecuted // ignore: cast_nullable_to_non_nullable
               as String?,
+      presenceEvent: freezed == presenceEvent
+          ? _value.presenceEvent
+          : presenceEvent // ignore: cast_nullable_to_non_nullable
+              as PresenceEvent?,
+      presencePhoneId: freezed == presencePhoneId
+          ? _value.presencePhoneId
+          : presencePhoneId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      presenceChannel: null == presenceChannel
+          ? _value.presenceChannel
+          : presenceChannel // ignore: cast_nullable_to_non_nullable
+              as PresenceChannel,
+      presenceDelayMin: null == presenceDelayMin
+          ? _value.presenceDelayMin
+          : presenceDelayMin // ignore: cast_nullable_to_non_nullable
+              as int,
+      presenceCooldownMin: null == presenceCooldownMin
+          ? _value.presenceCooldownMin
+          : presenceCooldownMin // ignore: cast_nullable_to_non_nullable
+              as int,
+      presenceConditions: freezed == presenceConditions
+          ? _value.presenceConditions
+          : presenceConditions // ignore: cast_nullable_to_non_nullable
+              as PresenceConditions?,
     ) as $Val);
+  }
+
+  /// Create a copy of SceneTrigger
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $PresenceConditionsCopyWith<$Res>? get presenceConditions {
+    if (_value.presenceConditions == null) {
+      return null;
+    }
+
+    return $PresenceConditionsCopyWith<$Res>(_value.presenceConditions!,
+        (value) {
+      return _then(_value.copyWith(presenceConditions: value) as $Val);
+    });
   }
 }
 
@@ -635,7 +702,16 @@ abstract class _$$SceneTriggerImplCopyWith<$Res>
       String? sensorDeviceId,
       String? sensorCondition,
       double? sensorThreshold,
-      String? lastExecuted});
+      String? lastExecuted,
+      PresenceEvent? presenceEvent,
+      String? presencePhoneId,
+      PresenceChannel presenceChannel,
+      int presenceDelayMin,
+      int presenceCooldownMin,
+      PresenceConditions? presenceConditions});
+
+  @override
+  $PresenceConditionsCopyWith<$Res>? get presenceConditions;
 }
 
 /// @nodoc
@@ -661,6 +737,12 @@ class __$$SceneTriggerImplCopyWithImpl<$Res>
     Object? sensorCondition = freezed,
     Object? sensorThreshold = freezed,
     Object? lastExecuted = freezed,
+    Object? presenceEvent = freezed,
+    Object? presencePhoneId = freezed,
+    Object? presenceChannel = null,
+    Object? presenceDelayMin = null,
+    Object? presenceCooldownMin = null,
+    Object? presenceConditions = freezed,
   }) {
     return _then(_$SceneTriggerImpl(
       type: null == type
@@ -703,6 +785,30 @@ class __$$SceneTriggerImplCopyWithImpl<$Res>
           ? _value.lastExecuted
           : lastExecuted // ignore: cast_nullable_to_non_nullable
               as String?,
+      presenceEvent: freezed == presenceEvent
+          ? _value.presenceEvent
+          : presenceEvent // ignore: cast_nullable_to_non_nullable
+              as PresenceEvent?,
+      presencePhoneId: freezed == presencePhoneId
+          ? _value.presencePhoneId
+          : presencePhoneId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      presenceChannel: null == presenceChannel
+          ? _value.presenceChannel
+          : presenceChannel // ignore: cast_nullable_to_non_nullable
+              as PresenceChannel,
+      presenceDelayMin: null == presenceDelayMin
+          ? _value.presenceDelayMin
+          : presenceDelayMin // ignore: cast_nullable_to_non_nullable
+              as int,
+      presenceCooldownMin: null == presenceCooldownMin
+          ? _value.presenceCooldownMin
+          : presenceCooldownMin // ignore: cast_nullable_to_non_nullable
+              as int,
+      presenceConditions: freezed == presenceConditions
+          ? _value.presenceConditions
+          : presenceConditions // ignore: cast_nullable_to_non_nullable
+              as PresenceConditions?,
     ));
   }
 }
@@ -720,13 +826,19 @@ class _$SceneTriggerImpl implements _SceneTrigger {
       this.sensorDeviceId,
       this.sensorCondition,
       this.sensorThreshold,
-      this.lastExecuted})
+      this.lastExecuted,
+      this.presenceEvent,
+      this.presencePhoneId,
+      this.presenceChannel = PresenceChannel.any,
+      this.presenceDelayMin = 0,
+      this.presenceCooldownMin = 1,
+      this.presenceConditions})
       : _repeatDays = repeatDays;
 
   factory _$SceneTriggerImpl.fromJson(Map<String, dynamic> json) =>
       _$$SceneTriggerImplFromJson(json);
 
-  /// Тип триггера: time (по времени), deviceState (по состоянию), manual (вручную)
+  /// Тип триггера: time (по времени), deviceState (по состоянию), manual (вручную), presence (по присутствию)
   @override
   final TriggerType type;
 
@@ -760,22 +872,46 @@ class _$SceneTriggerImpl implements _SceneTrigger {
     return EqualUnmodifiableListView(value);
   }
 
-// Новые поля для датчиков
+// Датчики
   @override
   final String? sensorDeviceId;
-// ID датчика
   @override
   final String? sensorCondition;
-// temperature_above, temperature_below, humidity_above, humidity_below
   @override
   final double? sensorThreshold;
-// Пороговое значение
   @override
   final String? lastExecuted;
+// Присутствие
+  /// Событие присутствия
+  @override
+  final PresenceEvent? presenceEvent;
+
+  /// ID телефона (null = любой)
+  @override
+  final String? presencePhoneId;
+
+  /// Канал определения: any, wifi, gps
+  @override
+  @JsonKey()
+  final PresenceChannel presenceChannel;
+
+  /// Задержка перед запуском (минуты)
+  @override
+  @JsonKey()
+  final int presenceDelayMin;
+
+  /// Антидребезг (минуты)
+  @override
+  @JsonKey()
+  final int presenceCooldownMin;
+
+  /// Условия для присутствия
+  @override
+  final PresenceConditions? presenceConditions;
 
   @override
   String toString() {
-    return 'SceneTrigger(type: $type, time: $time, deviceId: $deviceId, condition: $condition, repeat: $repeat, repeatDays: $repeatDays, sensorDeviceId: $sensorDeviceId, sensorCondition: $sensorCondition, sensorThreshold: $sensorThreshold, lastExecuted: $lastExecuted)';
+    return 'SceneTrigger(type: $type, time: $time, deviceId: $deviceId, condition: $condition, repeat: $repeat, repeatDays: $repeatDays, sensorDeviceId: $sensorDeviceId, sensorCondition: $sensorCondition, sensorThreshold: $sensorThreshold, lastExecuted: $lastExecuted, presenceEvent: $presenceEvent, presencePhoneId: $presencePhoneId, presenceChannel: $presenceChannel, presenceDelayMin: $presenceDelayMin, presenceCooldownMin: $presenceCooldownMin, presenceConditions: $presenceConditions)';
   }
 
   @override
@@ -799,7 +935,19 @@ class _$SceneTriggerImpl implements _SceneTrigger {
             (identical(other.sensorThreshold, sensorThreshold) ||
                 other.sensorThreshold == sensorThreshold) &&
             (identical(other.lastExecuted, lastExecuted) ||
-                other.lastExecuted == lastExecuted));
+                other.lastExecuted == lastExecuted) &&
+            (identical(other.presenceEvent, presenceEvent) ||
+                other.presenceEvent == presenceEvent) &&
+            (identical(other.presencePhoneId, presencePhoneId) ||
+                other.presencePhoneId == presencePhoneId) &&
+            (identical(other.presenceChannel, presenceChannel) ||
+                other.presenceChannel == presenceChannel) &&
+            (identical(other.presenceDelayMin, presenceDelayMin) ||
+                other.presenceDelayMin == presenceDelayMin) &&
+            (identical(other.presenceCooldownMin, presenceCooldownMin) ||
+                other.presenceCooldownMin == presenceCooldownMin) &&
+            (identical(other.presenceConditions, presenceConditions) ||
+                other.presenceConditions == presenceConditions));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -815,7 +963,13 @@ class _$SceneTriggerImpl implements _SceneTrigger {
       sensorDeviceId,
       sensorCondition,
       sensorThreshold,
-      lastExecuted);
+      lastExecuted,
+      presenceEvent,
+      presencePhoneId,
+      presenceChannel,
+      presenceDelayMin,
+      presenceCooldownMin,
+      presenceConditions);
 
   /// Create a copy of SceneTrigger
   /// with the given fields replaced by the non-null parameter values.
@@ -844,12 +998,18 @@ abstract class _SceneTrigger implements SceneTrigger {
       final String? sensorDeviceId,
       final String? sensorCondition,
       final double? sensorThreshold,
-      final String? lastExecuted}) = _$SceneTriggerImpl;
+      final String? lastExecuted,
+      final PresenceEvent? presenceEvent,
+      final String? presencePhoneId,
+      final PresenceChannel presenceChannel,
+      final int presenceDelayMin,
+      final int presenceCooldownMin,
+      final PresenceConditions? presenceConditions}) = _$SceneTriggerImpl;
 
   factory _SceneTrigger.fromJson(Map<String, dynamic> json) =
       _$SceneTriggerImpl.fromJson;
 
-  /// Тип триггера: time (по времени), deviceState (по состоянию), manual (вручную)
+  /// Тип триггера: time (по времени), deviceState (по состоянию), manual (вручную), presence (по присутствию)
   @override
   TriggerType get type;
 
@@ -871,16 +1031,38 @@ abstract class _SceneTrigger implements SceneTrigger {
 
   /// Дни недели для weekly (1=Пн, 7=Вс)
   @override
-  List<int>? get repeatDays; // Новые поля для датчиков
+  List<int>? get repeatDays; // Датчики
   @override
-  String? get sensorDeviceId; // ID датчика
+  String? get sensorDeviceId;
   @override
-  String?
-      get sensorCondition; // temperature_above, temperature_below, humidity_above, humidity_below
+  String? get sensorCondition;
   @override
-  double? get sensorThreshold; // Пороговое значение
+  double? get sensorThreshold;
   @override
-  String? get lastExecuted;
+  String? get lastExecuted; // Присутствие
+  /// Событие присутствия
+  @override
+  PresenceEvent? get presenceEvent;
+
+  /// ID телефона (null = любой)
+  @override
+  String? get presencePhoneId;
+
+  /// Канал определения: any, wifi, gps
+  @override
+  PresenceChannel get presenceChannel;
+
+  /// Задержка перед запуском (минуты)
+  @override
+  int get presenceDelayMin;
+
+  /// Антидребезг (минуты)
+  @override
+  int get presenceCooldownMin;
+
+  /// Условия для присутствия
+  @override
+  PresenceConditions? get presenceConditions;
 
   /// Create a copy of SceneTrigger
   /// with the given fields replaced by the non-null parameter values.

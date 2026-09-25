@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/presence_detector.dart';
+import '../../di/injection.dart';
 import 'presence_provider.dart';
 import '../../application/models/presence_settings.dart';
 
 /// Глобальный провайдер PresenceDetector.
 /// Живёт всё время работы приложения.
+///
+/// Использует ТОТ ЖЕ экземпляр, что и AutomationEngine
+/// (берётся из getIt), чтобы callback onStatusChanged был единым.
 final presenceDetectorProvider =
 StateNotifierProvider<PresenceDetectorNotifier, PresenceDetector>((ref) {
   return PresenceDetectorNotifier(ref);
@@ -13,7 +17,7 @@ StateNotifierProvider<PresenceDetectorNotifier, PresenceDetector>((ref) {
 class PresenceDetectorNotifier extends StateNotifier<PresenceDetector> {
   final Ref ref;
 
-  PresenceDetectorNotifier(this.ref) : super(PresenceDetector()) {
+  PresenceDetectorNotifier(this.ref) : super(getIt<PresenceDetector>()) {
     _init();
   }
 

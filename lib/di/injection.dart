@@ -13,6 +13,7 @@ import '../data/repositories/device_repository_impl.dart';
 import '../data/repositories/room_repository_impl.dart';
 import '../data/repositories/scene_repository_impl.dart';
 import '../data/services/automation_engine.dart';
+import '../data/services/presence_detector.dart';
 import '../data/services/timer_engine.dart';
 
 final getIt = GetIt.instance;
@@ -57,6 +58,14 @@ void configureDependencies() {
   );
 
   // ============================================================
+  // 📍 ДЕТЕКТОР ПРИСУТСТВИЯ
+  // ============================================================
+
+  getIt.registerLazySingleton<PresenceDetector>(
+        () => PresenceDetector(),
+  );
+
+  // ============================================================
   // ⚙️ ДВИЖКИ
   // ============================================================
 
@@ -65,6 +74,10 @@ void configureDependencies() {
   );
 
   getIt.registerLazySingleton<AutomationEngine>(
-        () => AutomationEngine(getIt<SceneRepository>(), getIt<Talker>()),
+        () => AutomationEngine(
+      getIt<SceneRepository>(),
+      getIt<Talker>(),
+      presenceDetector: getIt<PresenceDetector>(),
+    ),
   );
 }

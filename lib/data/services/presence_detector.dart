@@ -46,6 +46,13 @@ class PresenceDetector {
   bool get isRunning => _running;
   Map<String, PhonePresence> get phones => _phones;
 
+  /// Callback при изменении статуса телефона.
+  void Function(
+      String phoneId,
+      PhonePresenceStatus oldStatus,
+      PhonePresenceStatus newStatus,
+      )? onStatusChanged;
+
   /// Общий статус дома
   bool get isAnyoneHome {
     return _phones.values.any((p) => p.status == PhonePresenceStatus.home);
@@ -88,12 +95,12 @@ class PresenceDetector {
   Future<void> _checkAll() async {
     if (_settings == null) return;
 
-    // Копируем список для безопасного обхода
     final entries = List<MapEntry<String, PhonePresence>>.from(_phones.entries);
 
     for (final entry in entries) {
-      if (!_running) return;  // ← выход, если остановлен
+      if (!_running) return;
       final phone = entry.value;
+      final oldStatus = phone.status;
       final settings = _settings!.phones.firstWhere(
             (p) => p.phoneId == phone.phoneId,
         orElse: () => PresencePhone(
@@ -102,10 +109,14 @@ class PresenceDetector {
         ),
       );
 
-      // Проверяем, что телефон всё ещё в _phones
       if (!_phones.containsKey(phone.phoneId)) continue;
 
       await _checkPhone(phone, settings);
+
+      // Уведомляем об изменении
+      if (phone.status != oldStatus) {
+        onStatusChanged?.call(phone.phoneId, oldStatus, phone.status);
+      }
     }
 
     _logStatus();
