@@ -45,36 +45,73 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/debug-info
 
-      - name: Get commits since last tag
-        id: commits
+      # ═══════════════════════════════════════════════════════════════
+      # 📄 Извлекаем секцию CHANGELOG.md для текущей версии
+      # ═══════════════════════════════════════════════════════════════
+      - name: Read CHANGELOG section
+        id: changelog
         run: |
-          CURRENT_TAG="${{ github.ref_name }}"
-          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^$CURRENT_TAG$" | head -1)
-
-          if [ -n "$PREV_TAG" ]; then
-            echo "📦 Предыдущий тег: $PREV_TAG"
-            echo "📦 Текущий тег: $CURRENT_TAG"
-            COMMITS=$(git log $PREV_TAG..HEAD --pretty=format:"- %s" --no-merges)
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          
+          echo "🔍 Ищем секцию для v$VERSION в CHANGELOG.md"
+          
+          # Извлекаем строки от "## vVERSION" до следующего "## v"
+          awk -v ver="## v$VERSION" '
+            $0 ~ ver {flag=1; next}
+            /^## v/ {flag=0}
+            flag
+          ' CHANGELOG.md > /tmp/changelog_section.txt
+          
+          if [ ! -s /tmp/changelog_section.txt ]; then
+            echo "⚠️ Секция v$VERSION не найдена в CHANGELOG.md"
+            echo "📦 Fallback: берём коммиты с прошлого тега"
+            PREV_TAG=$(git tag --sort=-v:refname | grep -v "^$TAG$" | head -1)
+            if [ -n "$PREV_TAG" ]; then
+              git log $PREV_TAG..HEAD --pretty=format:"- %s" --no-merges > /tmp/changelog_section.txt
+            else
+              git log --pretty=format:"- %s" --no-merges -10 > /tmp/changelog_section.txt
+            fi
           else
-            echo "⚠️ Предыдущий тег не найден, берём последние 10 коммитов"
-            COMMITS=$(git log --pretty=format:"- %s" --no-merges -10)
+            echo "✅ Секция найдена в CHANGELOG.md"
           fi
-
-          echo "commits<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMITS" >> $GITHUB_OUTPUT
+          
+          echo "📝 Содержимое:"
+          cat /tmp/changelog_section.txt
+          
+          # Экранируем для GITHUB_OUTPUT
+          echo "section<<EOF" >> $GITHUB_OUTPUT
+          cat /tmp/changelog_section.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      # ═══════════════════════════════════════════════════════════════
+      # 🚀 Публикуем релиз в публичном репо
+      # ═══════════════════════════════════════════════════════════════
       - name: Create Release in Public Repo
         uses: softprops/action-gh-release@v2
         with:
           repository: votsurx/SHome-Releases
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: SHome ${{ github.ref_name }}
           body: |
-            ## SHome ${{ github.ref_name }}
-            
-            ### Что нового:
-            ${{ steps.commits.outputs.commits }}
+            ## 🏠 SHome ${{ github.ref_name }}
+
+            ${{ steps.changelog.outputs.section }}
+
+            ---
+
+            ### 📦 Установка
+            Скачайте APK для вашего устройства:
+            - **arm64-v8a** — большинство современных телефонов
+            - **armeabi-v7a** — старые устройства (Android 7-9)
+            - **x86_64** — эмуляторы и планшеты Intel
+
+            ### 🔄 Обновление
+            Откройте SHome → Настройки → «Проверить обновления»
+
+            ---
+
+            © votsurX · ArchitectCO · 2026
           files: |
             build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
             build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk

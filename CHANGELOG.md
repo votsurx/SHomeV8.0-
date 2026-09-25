@@ -1,5 +1,68 @@
 # История изменений SHome
 
+## v8.1.40 — Security & Cleanup Release
+
+> Большой релиз с закрытием критичных дыр безопасности,
+> упрощением архитектуры и чисткой мёртвого кода.
+> Кодовая база та же, что в v8.1.38 + v8.1.39 — этот релиз
+> содержит корректное описание всех изменений за период.
+
+### 🔐 Безопасность
+- **Tuya `localKey`** перенесён из SQLite (plaintext) в **Android Keystore** (AES-256)
+  - В БД теперь только ссылка вида `sec:<uuid>`
+  - Автомиграция старых ключей при первом запуске
+- **VK-токен** перенесён из SharedPreferences в SecureStorage
+- **VK `user_id`** перенесён в SecureStorage
+- **VK API** переведён на **POST** — токен больше не попадает в URL и логи
+- **Облако Mail.ru** (логин + пароль) — единое хранилище через `EncryptedKeys`
+- **FileProvider** для установки APK и шаринга бекапов
+- **`usesCleartextTraffic`** — разрешение локальных HTTP-запросов к NVR/MyiSpy
+- **`<queries>`** — установщик APK виден на Android 11+
+- **`tools:replace`** — разрешён конфликт с `github_release_apk_updater`
+
+### 🐛 Исправления
+- **Облако Mail.ru** — логин и пароль теперь сохраняются в резервную копию
+- **VK User ID** — сохраняется в бекап (раньше читался, но UI не подхватывал)
+- **Диалог перезапуска** после импорта бекапа (данные применяются полностью)
+- **`fl_chart`** перенесён из `dev_dependencies` в `dependencies` (критично для release-сборки)
+- Убран `await` на не-Future в `nvr_sync_service.dart`
+- Исправлены int/String ключи в `energy_screen.dart`
+- `_devicesNotifier.state` → публичный геттер `devices`
+- Добавлены `context.mounted` в `menu_screen.dart`
+- `Geolocator.getCurrentPosition` обновлён на `LocationSettings` (deprecated → актуальный API)
+- Единый `_importConfig` (убран дубликат метода)
+- `Restart.restartApp()` — правильное имя класса из пакета `restart_app`
+
+### 🧹 Упрощение архитектуры
+- **Удалён локальный автобекап** — облако Mail.ru основной источник резервных копий
+- Убран триггер бекапа по `AppLifecycleState.inactive` (срабатывал при звонках/диалогах)
+- `settings_screen.dart` — 2 опции бекапа вместо 3 (без «Восстановить из локального»)
+- Все секреты через единый `EncryptedKeys`:
+  - `device_key_<uuid>` — Tuya localKey
+  - `vk_token` / `vk_user_id` — VK
+  - `mailru_login` / `mailru_password` — облако
+  - `mailru_autosync` / `mailru_last_sync` — синхронизация
+
+### 🗑️ Удалён мёртвый код
+- `lib/presentation/screens/video/video_screen.dart`
+- `lib/presentation/screens/video/alarms_tab.dart`
+- `lib/presentation/screens/video/local_camera_tab.dart`
+- `lib/presentation/screens/video/rtsp_cameras_tab.dart`
+- `lib/application/state/ispy_camera_provider.dart`
+- `lib/domain/events/device_event_bus.dart`
+- `lib/domain/events/device_events.dart`
+- `lib/data/services/test_data_generator.dart`
+- `lib/utils/constants.dart`
+- Убрана регистрация `DeviceEventBus` из DI
+
+### 📚 Документация
+- Обновлены `README.md`, `ARCHITECTURE.md`, `PROJECT_STRUCTURE.md`
+
+### 🔧 Технические метрики
+- `flutter analyze` — **0 errors, 0 warnings**
+- `flutter test` — **46/46 passed**
+- `versionCode` = 80140
+
 ## v8.1.38
 ### 🔐 Безопасность
 - **Tuya localKey** перенесён из SQLite в SecureStorage (Android Keystore, AES-256)
