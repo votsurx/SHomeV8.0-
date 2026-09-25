@@ -224,8 +224,8 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      ConfigService.autoBackup();
+    // Бекапим только когда приложение реально свернули (не при звонке/диалоге)
+    if (state == AppLifecycleState.paused) {
       ConfigService.buildConfigJson().then((json) {
         MailruCloudService.autoSync(json);
       });

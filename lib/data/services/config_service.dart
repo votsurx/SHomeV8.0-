@@ -1,7 +1,7 @@
 /// Сервис экспорта/импорта/автобекапа конфигурации.
 /// Экспорт: собирает все данные из БД в JSON, шарит через Share.
 /// Импорт: читает JSON через FilePicker.
-/// Автобекап: сохраняет копию локально.
+/// Автобекап в облако Mail.ru делается отдельно (MailruCloudService).
 /// Все бекапы шифруются (XOR + Base64).
 library;
 
@@ -16,14 +16,12 @@ import '../local/database.dart';
 import '../local/entities/device_entity.dart';
 import '../local/entities/room_entity.dart';
 import '../local/entities/scene_entity.dart';
+import '../local/secure_storage/encrypted_keys.dart';
 import '../../domain/models/device_timer.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../local/secure_storage/encrypted_keys.dart';
 
 class ConfigService {
-  static const String _backupFileName = 'auto_backup.json';
-  static const String _backupDirName = 'backups';
   static const String _encryptKey = 'SHomeBackup2026!';
 
   // ═══════════════════════════════════════════════════════
@@ -53,20 +51,21 @@ class ConfigService {
   }
 
   // ═══════════════════════════════════════════════════════
-  // ЭКСПОРТ
+  // ЭКСПОРТ (через Share Sheet)
   // ═══════════════════════════════════════════════════════
 
-  /// Экспорт: собирает JSON, шифрует, сохраняет локально и шарит.
+  /// Экспорт: собирает JSON, шифрует, шарит через Share Sheet.
+  /// Пользователь может сохранить куда угодно: облако, почту, Telegram.
   static Future<void> exportConfig() async {
     final json = await buildConfigJson();
     final encrypted = encrypt(json);
 
-    await _saveLocalBackup(encrypted);
-
     final dir = await getTemporaryDirectory();
     final now = DateTime.now();
-    final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
-        '_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+    final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}_'
+        '${now.hour.toString().padLeft(2, '0')}'
+        '${now.minute.toString().padLeft(2, '0')}';
     final file = File('${dir.path}/shome_backup_$dateStr.json');
     await file.writeAsString(encrypted);
 
@@ -77,7 +76,7 @@ class ConfigService {
   }
 
   // ═══════════════════════════════════════════════════════
-  // ИМПОРТ
+  // ИМПОРТ (через FilePicker)
   // ═══════════════════════════════════════════════════════
 
   /// Импорт через FilePicker. Поддерживает зашифрованные и обычные бекапы.
@@ -101,114 +100,6 @@ class ConfigService {
     }
 
     await restoreFromJson(json);
-    await _saveLocalBackup(encrypted);
-  }
-
-  /// Быстрый импорт из локального бекапа.
-  static Future<void> quickImport() async {
-    final encrypted = await _loadLocalBackup();
-    if (encrypted == null) {
-      throw Exception('Локальный бекап не найден.');
-    }
-
-    String json;
-    try {
-      json = decrypt(encrypted);
-    } catch (_) {
-      json = encrypted;
-    }
-
-    await restoreFromJson(json);
-  }
-
-  // ═══════════════════════════════════════════════════════
-  // ЛОКАЛЬНЫЙ АВТОБЕКАП
-  // ═══════════════════════════════════════════════════════
-
-  static Future<Directory> get _backupDir async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final backupDir = Directory('${appDir.path}/$_backupDirName');
-    if (!await backupDir.exists()) {
-      await backupDir.create(recursive: true);
-    }
-    return backupDir;
-  }
-
-  static Future<void> _saveLocalBackup(String encrypted) async {
-    try {
-      final dir = await _backupDir;
-      final file = File('${dir.path}/$_backupFileName');
-      await file.writeAsString(encrypted);
-      debugPrint('✅ Локальный бекап сохранён');
-    } catch (e) {
-      debugPrint('❌ Ошибка сохранения локального бекапа: $e');
-    }
-  }
-
-  static Future<String?> _loadLocalBackup() async {
-    try {
-      final dir = await _backupDir;
-      final file = File('${dir.path}/$_backupFileName');
-      if (!await file.exists()) return null;
-      return await file.readAsString();
-    } catch (e) {
-      debugPrint('❌ Ошибка загрузки локального бекапа: $e');
-      return null;
-    }
-  }
-
-  static Future<bool> hasLocalBackup() async {
-    try {
-      final dir = await _backupDir;
-      final file = File('${dir.path}/$_backupFileName');
-      return await file.exists();
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static Future<DateTime?> lastBackupDate() async {
-    try {
-      final dir = await _backupDir;
-      final file = File('${dir.path}/$_backupFileName');
-      if (!await file.exists()) return null;
-      return await file.lastModified();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Автобекап с ротацией (3 последние копии).
-  static Future<void> autoBackup() async {
-    try {
-      final json = await buildConfigJson();
-      final encrypted = encrypt(json);
-      final dir = await _backupDir;
-
-      final now = DateTime.now();
-      final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}'
-          '_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
-      final newBackup = File('${dir.path}/backup_$dateStr.json');
-      await newBackup.writeAsString(encrypted);
-
-      final files = await dir.list().toList();
-      final backups = files
-          .whereType<File>()
-          .where((f) => f.path.endsWith('.json'))
-          .toList()
-        ..sort((a, b) => b.path.compareTo(a.path));
-
-      if (backups.length > 3) {
-        for (final old in backups.skip(3)) {
-          await old.delete();
-        }
-      }
-
-      await _saveLocalBackup(encrypted);
-      debugPrint('✅ Автобекап выполнен (${backups.length} копий)');
-    } catch (e) {
-      debugPrint('❌ Ошибка автобекапа: $e');
-    }
   }
 
   // ═══════════════════════════════════════════════════════
@@ -216,15 +107,29 @@ class ConfigService {
   // ═══════════════════════════════════════════════════════
 
   /// Собирает все данные в JSON-строку.
+  /// LocalKey устройств разворачивается из SecureStorage.
+  /// VK-токен берётся из SecureStorage и шифруется XOR.
   static Future<String> buildConfigJson() async {
     final devices = await AppDatabase.getAllDevices();
     final rooms = await AppDatabase.getAllRooms();
     final scenes = await AppDatabase.getAllScenes();
     final timers = await AppDatabase.getActiveTimers();
 
-    final encryptedKeys = EncryptedKeys();
+    final prefs = await SharedPreferences.getInstance();
+    final mqttBroker = prefs.getString('mqtt_broker') ?? '';
+    final mqttPort = prefs.getString('mqtt_port') ?? '1883';
 
-    // Разворачиваем localKey: sec:<uuid> → plaintext
+    final keys = EncryptedKeys();
+
+    // VK-токен — из SecureStorage
+    final vkToken = await keys.getVkToken() ?? '';
+    final vkUserId = await keys.getVkUserId() ?? '';
+
+    const storage = FlutterSecureStorage();
+    final cloudLogin = await storage.read(key: 'mailru_login') ?? '';
+    final cloudPassword = await storage.read(key: 'mailru_password') ?? '';
+
+    // Разворачиваем localKey устройств: sec:<uuid> → plaintext
     final expandedDevices = <Map<String, dynamic>>[];
     for (final entity in devices) {
       final map = entity.toMap();
@@ -232,7 +137,7 @@ class ConfigService {
 
       if (stored != null && stored.startsWith('sec:')) {
         final uuid = stored.substring(4);
-        final key = await encryptedKeys.getDeviceKey(uuid);
+        final key = await keys.getDeviceKey(uuid);
         map['localKey'] = key ?? '';
       }
       // Иначе — оставляем как было (совместимость)
@@ -240,25 +145,15 @@ class ConfigService {
       expandedDevices.add(map);
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final mqttBroker = prefs.getString('mqtt_broker') ?? '';
-    final mqttPort = prefs.getString('mqtt_port') ?? '1883';
-
-    // VK-токен — из SecureStorage
-    final keys = EncryptedKeys();
-    final vkToken = await keys.getVkToken() ?? '';
-    final vkUserId = await keys.getVkUserId() ?? '';
-    const storage = FlutterSecureStorage();
-    final cloudLogin = await storage.read(key: 'mailru_login') ?? '';
-    final cloudPassword = await storage.read(key: 'mailru_password') ?? '';
-
-    final encryptedVkToken = vkToken.isNotEmpty ? encrypt(vkToken) : '';
-    final encryptedCloudPassword = cloudPassword.isNotEmpty ? encrypt(cloudPassword) : '';
+    final encryptedVkToken =
+    vkToken.isNotEmpty ? encrypt(vkToken) : '';
+    final encryptedCloudPassword =
+    cloudPassword.isNotEmpty ? encrypt(cloudPassword) : '';
 
     final config = {
       'version': '3.0',
       'exported_at': DateTime.now().toIso8601String(),
-      'devices': expandedDevices,   // ← используем развёрнутый список
+      'devices': expandedDevices,
       'rooms': rooms.map((r) => r.toMap()).toList(),
       'scenes': scenes.map((s) => s.toMap()).toList(),
       'timers': timers.map((t) => {
@@ -275,7 +170,7 @@ class ConfigService {
         'cloud_login': cloudLogin,
         'cloud_password_encrypted': encryptedCloudPassword,
         'vk_token_encrypted': encryptedVkToken,
-        'vk_user_id': vkUserId,   // ← ДОБАВЛЯЕМ (не секрет, но удобно)
+        'vk_user_id': vkUserId,
       },
     };
 
@@ -287,10 +182,14 @@ class ConfigService {
   // ═══════════════════════════════════════════════════════
 
   /// Восстанавливает все данные из JSON-строки.
+  /// LocalKey устройств сохраняется в SecureStorage, в БД пишется ссылка.
+  /// VK-токен сохраняется в SecureStorage.
   static Future<void> restoreFromJson(String jsonString) async {
     try {
       final config = jsonDecode(jsonString) as Map<String, dynamic>;
+      final keys = EncryptedKeys();
 
+      // ─── Комнаты ───
       if (config['rooms'] != null) {
         for (final room in (config['rooms'] as List)) {
           if (room is Map<String, dynamic>) {
@@ -299,21 +198,17 @@ class ConfigService {
         }
       }
 
+      // ─── Устройства ───
       if (config['devices'] != null) {
-        final encryptedKeys = EncryptedKeys();
-
         for (final device in (config['devices'] as List)) {
           if (device is! Map<String, dynamic>) continue;
 
           final localKey = device['localKey'] as String?;
-          final deviceId = device['id'] as String?;
 
-          if (localKey != null && localKey.isNotEmpty && deviceId != null) {
-            // Сохраняем в SecureStorage
+          if (localKey != null && localKey.isNotEmpty) {
+            // Сохраняем в SecureStorage, в БД — ссылку
             final uuid = const Uuid().v4();
-            await encryptedKeys.saveDeviceKey(uuid, localKey);
-
-            // В БД пишем ссылку
+            await keys.saveDeviceKey(uuid, localKey);
             device['localKey'] = 'sec:$uuid';
           }
 
@@ -321,6 +216,7 @@ class ConfigService {
         }
       }
 
+      // ─── Сцены ───
       if (config['scenes'] != null) {
         for (final scene in (config['scenes'] as List)) {
           if (scene is Map<String, dynamic>) {
@@ -329,6 +225,7 @@ class ConfigService {
         }
       }
 
+      // ─── Таймеры ───
       if (config['timers'] != null) {
         for (final timer in (config['timers'] as List)) {
           if (timer is! Map<String, dynamic>) continue;
@@ -353,6 +250,7 @@ class ConfigService {
         }
       }
 
+      // ─── Настройки ───
       if (config['settings'] != null && config['settings'] is Map) {
         final settings = config['settings'] as Map<String, dynamic>;
         final prefs = await SharedPreferences.getInstance();
@@ -367,8 +265,7 @@ class ConfigService {
           await prefs.setString('mqtt_port', mqttPort);
         }
 
-        final keys = EncryptedKeys();
-
+        // VK-токен → SecureStorage
         final vkEnc = settings['vk_token_encrypted']?.toString();
         if (vkEnc != null && vkEnc.isNotEmpty) {
           try {
@@ -381,6 +278,7 @@ class ConfigService {
           await keys.saveVkUserId(vkUserId);
         }
 
+        // Облако Mail.ru → SecureStorage
         final cloudLogin = settings['cloud_login']?.toString();
         final cloudPassEnc = settings['cloud_password_encrypted']?.toString();
         if (cloudLogin != null && cloudLogin.isNotEmpty) {
@@ -388,7 +286,10 @@ class ConfigService {
         }
         if (cloudPassEnc != null && cloudPassEnc.isNotEmpty) {
           try {
-            await storage.write(key: 'mailru_password', value: decrypt(cloudPassEnc));
+            await storage.write(
+              key: 'mailru_password',
+              value: decrypt(cloudPassEnc),
+            );
           } catch (_) {}
         }
       }

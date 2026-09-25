@@ -14,14 +14,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   int _pollInterval = 2;
-  bool _hasBackup = false;
-  DateTime? _lastBackup;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
-    _checkBackupStatus();
   }
 
   Future<void> _loadSettings() async {
@@ -32,16 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _checkBackupStatus() async {
-    final hasBackup = await ConfigService.hasLocalBackup();
-    final lastBackup = await ConfigService.lastBackupDate();
-    if (!mounted) return;
-    setState(() {
-      _hasBackup = hasBackup;
-      _lastBackup = lastBackup;
-    });
-  }
-
   Future<void> _exportConfig() async {
     try {
       await ConfigService.exportConfig();
@@ -49,7 +36,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Конфиг готов к отправке')),
       );
-      _checkBackupStatus();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +51,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Импорт выполнен!')),
       );
-      _checkBackupStatus();
       setState(() {});
     } catch (e) {
       if (!mounted) return;
@@ -73,28 +58,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SnackBar(content: Text('❌ Ошибка: $e')),
       );
     }
-  }
-
-  Future<void> _quickImport() async {
-    try {
-      await ConfigService.quickImport();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Восстановлено из бекапа')),
-      );
-      setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ ${e.toString().replaceFirst('Exception: ', '')}')),
-      );
-    }
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'никогда';
-    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} '
-        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   void _showBackupDialog(BuildContext context) {
@@ -127,19 +90,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               contentPadding: EdgeInsets.zero,
             ),
           ),
-          if (_hasBackup)
-            SimpleDialogOption(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _quickImport();
-              },
-              child: ListTile(
-                leading: const Icon(Icons.restore, color: Colors.teal),
-                title: const Text('Восстановить из бекапа'),
-                subtitle: Text('Локальный бекап от ${_formatDate(_lastBackup)}'),
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
         ],
       ),
     );
@@ -152,9 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ============================================================
-          // ⏱️ ИНТЕРВАЛ ОПРОСА
-          // ============================================================
+          // ⏱️ Интервал опроса
           Card(
             child: ListTile(
               leading: const Icon(Icons.timer, color: Colors.orange),
@@ -173,15 +121,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         .toList(),
                   ),
                 );
-                if (!context.mounted) return;  // ← ЗАМЕНИ mounted на context.mounted
+                if (!context.mounted) return;
                 if (selected != null) {
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setInt('poll_interval', selected);
-                  if (!context.mounted) return;  // ← И ЗДЕСЬ
+                  if (!context.mounted) return;
                   setState(() => _pollInterval = selected);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Интервал изменён на $selected сек. Перезапустите приложение.'),
+                      content: Text(
+                        'Интервал изменён на $selected сек. Перезапустите приложение.',
+                      ),
                     ),
                   );
                 }
@@ -190,26 +140,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ============================================================
-          // 💾 РЕЗЕРВНОЕ КОПИРОВАНИЕ
-          // ============================================================
+          // 💾 Резервное копирование
           Card(
             child: ListTile(
               leading: const Icon(Icons.backup, color: Colors.blue),
               title: const Text('Резервное копирование'),
-              subtitle: Text(
-                _hasBackup
-                    ? 'Последний бекап: ${_formatDate(_lastBackup)}'
-                    : 'Экспорт / Импорт / Восстановить',
-              ),
+              subtitle: const Text('Экспорт / Импорт'),
               onTap: () => _showBackupDialog(context),
             ),
           ),
           const SizedBox(height: 12),
 
-          // ============================================================
-          // 🖥️ NVR (НОВОЕ!)
-          // ============================================================
+          // 🖥️ NVR
           Card(
             child: ListTile(
               leading: const Icon(Icons.security, color: Colors.red),
@@ -220,9 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ============================================================
-          // 📡 MYISPY MQTT (НОВОЕ!)
-          // ============================================================
+          // 📡 MyiSpy MQTT
           Card(
             child: ListTile(
               leading: const Icon(Icons.wifi_tethering, color: Colors.orange),
@@ -233,9 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // ============================================================
           // ℹ️ Обновление
-          // ============================================================
           Card(
             child: ListTile(
               leading: const Icon(Icons.update, color: Colors.green),
@@ -244,10 +182,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => UpdateService.checkForUpdates(context),
             ),
           ),
+          const SizedBox(height: 12),
 
-          // ============================================================
-          // ℹ️ О ПРИЛОЖЕНИИ
-          // ============================================================
+          // ℹ️ О приложении
           Card(
             child: ListTile(
               leading: const Icon(Icons.gavel),
