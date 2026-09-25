@@ -65,7 +65,7 @@ class NvrSyncService {
         );
 
         if (!exists) {
-          final device = await _nvrToDevice(nvrCam);
+          final device = _nvrToDevice(nvrCam);
           await _deviceRepo.saveDevice(device);
           _talker.info('✅ Добавлена камера: ${nvrCam.name} (ID: ${nvrCam.id})');
         }
@@ -95,7 +95,7 @@ class NvrSyncService {
           await _deviceRepo.deleteDevice(device.id);
           _talker.info('🗑️ Удалена камера: ${device.name} (ID: $nvrId)');
         } else {
-          final updated = await _nvrToDevice(nvrCam);
+          final updated = _nvrToDevice(nvrCam);
           if (_hasChanges(device, updated)) {
             await _deviceRepo.saveDevice(updated);
             _talker.debug('🔄 Обновлена камера: ${nvrCam.name}');

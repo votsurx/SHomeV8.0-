@@ -14,7 +14,6 @@ class IspySyncService {
   final DeviceRepository _deviceRepo;
   final Talker _talker;
   final DevicesNotifier _devicesNotifier;
-  MqttBridge? _mqttBridge;
 
   // Кэш хэшей конфигов (cameraId -> hash)
   final Map<int, String> _configHashes = {};
@@ -29,7 +28,6 @@ class IspySyncService {
 
   /// Привязать MQTT мост и начать слушать события MyiSpy
   void attachMqttBridge(MqttBridge bridge) {
-    _mqttBridge = bridge;
 
     // При получении конфига камеры — создаём/обновляем с проверкой хэша
     bridge.onIspyCameraConfig = (config) {
@@ -199,7 +197,6 @@ class IspySyncService {
   // ============================================================
 
   Future<void> _onStatusUpdate(int cameraId, bool isOnline) async {
-    print('🔵 _onStatusUpdate: cameraId=$cameraId, isOnline=$isOnline');
     try {
       final deviceId = 'ispy_$cameraId';
       final devices = await _deviceRepo.getAllDevices();
@@ -215,9 +212,7 @@ class IspySyncService {
         // Обновляем UI напрямую!
         _devicesNotifier.updateOnlineState(existing.id, isOnline);
         if (DebugConfig.showDebug) {
-          print('🔵 updateOnlineState called for ${existing.id} -> $isOnline');
         }
-        print('🔵 State after update: ${_devicesNotifier.state.map((d) => "${d.id}=${d.isOnline}").join(", ")}');
 
         _talker.debug('📡 MyiSpy Camera $cameraId: ${isOnline ? "ONLINE" : "OFFLINE"}');
       }

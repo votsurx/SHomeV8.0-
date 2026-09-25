@@ -3,7 +3,6 @@ library;
 
 import 'package:get_it/get_it.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import '../domain/events/device_event_bus.dart';
 import '../domain/repositories/device_repository.dart';
 import '../domain/repositories/room_repository.dart';
 import '../domain/repositories/scene_repository.dart';
@@ -27,10 +26,11 @@ void configureDependencies() {
   getIt.registerLazySingleton<Talker>(() => talker);
 
   // ============================================================
-  // 🔌 СИНГЛТОНЫ
+  // 🔐 СИНГЛТОНЫ
   // ============================================================
 
-  getIt.registerLazySingleton<DeviceEventBus>(() => DeviceEventBus());
+  // EncryptedKeys регистрируется ПЕРВЫМ — его использует
+  // DeviceRepositoryImpl для безопасного хранения localKey Tuya.
   getIt.registerLazySingleton<EncryptedKeys>(() => EncryptedKeys());
 
   // ============================================================
@@ -46,7 +46,10 @@ void configureDependencies() {
   // ============================================================
 
   getIt.registerLazySingleton<DeviceRepository>(
-        () => DeviceRepositoryImpl(getIt<TuyaProtocol>()),
+        () => DeviceRepositoryImpl(
+      getIt<TuyaProtocol>(),
+      getIt<EncryptedKeys>(),   // ← ДОБАВЛЕНО: ключи в SecureStorage
+    ),
   );
 
   getIt.registerLazySingleton<RoomRepository>(

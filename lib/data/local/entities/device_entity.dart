@@ -78,4 +78,33 @@ class DeviceEntity {
       properties: map['properties'] as String,
     );
   }
+  DeviceEntity copyWith({
+    String? id,
+    String? name,
+    String? type,
+    String? roomId,
+    int? isOnline,
+    String? state,
+    String? deviceId,
+    String? localKey,
+    String? address,
+    double? version,
+    int? dpsIndex,
+    String? properties,
+  }) {
+    return DeviceEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      roomId: roomId ?? this.roomId,
+      isOnline: isOnline ?? this.isOnline,
+      state: state ?? this.state,
+      deviceId: deviceId ?? this.deviceId,
+      localKey: localKey ?? this.localKey,
+      address: address ?? this.address,
+      version: version ?? this.version,
+      dpsIndex: dpsIndex ?? this.dpsIndex,
+      properties: properties ?? this.properties,
+    );
+  }
 }

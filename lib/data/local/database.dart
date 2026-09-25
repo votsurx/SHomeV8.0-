@@ -299,21 +299,47 @@ class AppDatabase {
     final maps = await db.query('devices');
     return maps.map((map) => DeviceEntity.fromMap(map)).toList();
   }
+
+  /// Возвращает одно устройство по ID (или null, если не найдено).
+  static Future<DeviceEntity?> getDeviceById(String id) async {
+    final db = await database;
+    final maps = await db.query(
+      'devices',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isEmpty) return null;
+    return DeviceEntity.fromMap(maps.first);
+  }
+
   /// Вставляет новое устройство (или заменяет существующее).
   static Future<void> insertDevice(DeviceEntity device) async {
     final db = await database;
-    await db.insert('devices', device.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'devices',
+      device.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
+
   /// Обновляет существующее устройство.
   static Future<void> updateDevice(DeviceEntity device) async {
     final db = await database;
-    await db.update('devices', device.toMap(), where: 'id = ?', whereArgs: [device.id]);
+    await db.update(
+      'devices',
+      device.toMap(),
+      where: 'id = ?',
+      whereArgs: [device.id],
+    );
   }
+
   /// Удаляет устройство по ID.
   static Future<void> deleteDevice(String id) async {
     final db = await database;
     await db.delete('devices', where: 'id = ?', whereArgs: [id]);
   }
+
 
   // ============ Rooms CRUD ============
 

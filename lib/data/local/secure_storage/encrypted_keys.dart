@@ -1,34 +1,46 @@
 /// Синглтон для безопасного хранения ключей.
-/// Использует flutter_secure_storage для шифрованного хранения
-/// локальных ключей Tuya, токенов и других чувствительных данных.
-/// На Android данные хранятся в EncryptedSharedPreferences,
-/// на iOS — в Keychain.
+/// Использует flutter_secure_storage (EncryptedSharedPreferences на Android,
+/// Keychain на iOS) для шифрованного хранения.
 library;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class EncryptedKeys {
-  /// Синглтон — единственный экземпляр на всё приложение
   static final EncryptedKeys _instance = EncryptedKeys._();
   factory EncryptedKeys() => _instance;
   EncryptedKeys._();
 
-  /// Экземпляр FlutterSecureStorage для шифрованного хранения
-  final _storage = const FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,  // ← AES-256 через Keystore
+    ),
+  );
 
-  /// Сохраняет значение по ключу в защищённое хранилище.
-  /// Используется для localKey устройств Tuya.
+  /// Префикс для ключей устройств. Используется в БД как `sec:<uuid>`.
+  static const deviceKeyPrefix = 'device_key_';
+
   Future<void> save(String key, String value) async {
     await _storage.write(key: key, value: value);
   }
 
-  /// Читает значение по ключу из защищённого хранилища.
-  /// Возвращает null, если ключ не найден.
   Future<String?> get(String key) async {
     return await _storage.read(key: key);
   }
 
-  /// Удаляет значение по ключу из защищённого хранилища.
   Future<void> delete(String key) async {
     await _storage.delete(key: key);
   }
+
+  // ─── Удобные обёртки для ключей устройств ───
+
+  /// Сохраняет localKey устройства по UUID.
+  Future<void> saveDeviceKey(String uuid, String localKey) =>
+      save('$deviceKeyPrefix$uuid', localKey);
+
+  /// Читает localKey устройства по UUID.
+  Future<String?> getDeviceKey(String uuid) =>
+      get('$deviceKeyPrefix$uuid');
+
+  /// Удаляет localKey устройства.
+  Future<void> deleteDeviceKey(String uuid) =>
+      delete('$deviceKeyPrefix$uuid');
 }

@@ -142,7 +142,6 @@ class MqttBridge {
       } else if (topic.contains('/motion/')) {
         // Движение
         final data = jsonDecode(msg.payload) as Map<String, dynamic>;
-        final cameraId = data['camera_id'] as int? ?? 0;
         final cameraName = data['camera_name'] as String? ?? 'Unknown';
         _talker.info('🏃 MyiSpy Motion: $cameraName');
 

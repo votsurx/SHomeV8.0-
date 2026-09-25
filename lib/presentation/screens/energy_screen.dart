@@ -20,7 +20,7 @@ class _EnergyScreenState extends ConsumerState<EnergyScreen> {
   /// Таймер периодического опроса DPS
   Timer? _timer;
   /// Кэш DPS-данных по устройствам
-  Map<String, Map<String, dynamic>> _deviceDps = {};
+  final Map<String, Map<String, dynamic>> _deviceDps = {};
 
   @override
   void initState() {
@@ -90,10 +90,10 @@ class _EnergyScreenState extends ConsumerState<EnergyScreen> {
             Text(device.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const Divider(),
             if (dps != null) ...[
-              _buildDpsRow('Мощность', '${dps['9'] ?? dps[9] ?? "—"} W'),
-              _buildDpsRow('Напряжение', '${dps['10'] ?? dps[10] ?? "—"} V'),
-              _buildDpsRow('Ток', '${dps['11'] ?? dps[11] ?? "—"} mA'),
-              _buildDpsRow('Потреблено', '${dps['12'] ?? dps[12] ?? "—"} kWh'),
+              _buildDpsRow('Мощность',   '${dps['9']  ?? "—"} W'),
+              _buildDpsRow('Напряжение', '${dps['10'] ?? "—"} V'),
+              _buildDpsRow('Ток',        '${dps['11'] ?? "—"} mA'),
+              _buildDpsRow('Потреблено', '${dps['12'] ?? "—"} kWh'),
             ] else
               const Text('Нет данных DPS', style: TextStyle(color: Colors.grey)),
           ],

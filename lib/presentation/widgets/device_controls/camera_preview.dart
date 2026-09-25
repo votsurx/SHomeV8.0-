@@ -123,7 +123,6 @@ class _MjpegPreviewState extends State<_MjpegPreview> {
   }
 
   void _openLegion(BuildContext context) async {
-    final url = Uri.parse(_legionUrl);
     try {
       // Пробуем url_launcher если есть
       // await launchUrl(url, mode: LaunchMode.externalApplication);

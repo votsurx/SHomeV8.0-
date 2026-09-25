@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:shome/data/services/config_service.dart';
 import 'package:shome/data/local/database.dart';
@@ -7,14 +9,43 @@ import 'package:shome/data/local/entities/device_entity.dart';
 import 'package:shome/data/local/entities/room_entity.dart';
 
 void main() {
+  // 1. Биндинг — обязателен для SharedPreferences и MethodChannel
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('ConfigService', () {
     setUpAll(() {
+      // 2. sqflite FFI для тестов без эмулятора
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
+
+      // 3. Мокаем FlutterSecureStorage — иначе MissingPluginException
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+            (MethodCall call) async {
+          switch (call.method) {
+            case 'read':
+            case 'readAll':
+              return null;
+            case 'write':
+            case 'delete':
+            case 'deleteAll':
+              return null;
+            case 'containsKey':
+              return false;
+            default:
+              return null;
+          }
+        },
+      );
+    });
+
+    setUp(() async {
+      // 4. Мокаем SharedPreferences — пустые значения
+      SharedPreferences.setMockInitialValues({});
     });
 
     tearDown(() async {
-      // Чистим БД после каждого теста
       final db = await AppDatabase.database;
       await db.delete('devices');
       await db.delete('rooms');
@@ -31,7 +62,7 @@ void main() {
         DeviceEntity(
           id: 'test_device',
           name: 'Тестовое устройство',
-          type: 'switch',
+          type: 'switch1',
           roomId: 'test_room',
           isOnline: 1,
           state: 'online',
@@ -79,7 +110,7 @@ void main() {
     {
       "id": "dev1",
       "name": "Лампа",
-      "type": "switch",
+      "type": "switch1",
       "roomId": "",
       "isOnline": 1,
       "state": "online",
@@ -162,12 +193,10 @@ void main() {
 
       final exported = await ConfigService.buildConfigJson();
 
-      // Чистим БД
       final db = await AppDatabase.database;
       await db.delete('devices');
       await db.delete('rooms');
 
-      // Восстанавливаем
       await ConfigService.restoreFromJson(exported);
 
       final rooms = await AppDatabase.getAllRooms();

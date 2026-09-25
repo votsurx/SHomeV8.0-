@@ -70,8 +70,6 @@ void main() {
     setUp(() async {
       // Уникальная БД для каждого теста
       databaseFactory = databaseFactoryFfi;
-      final dbPath = '${DateTime.now().millisecondsSinceEpoch}_test.db';
-      // sqfliteFfiDatabaseFactory.setDatabasesPath(dbPath);
 
       mockTuya = MockTuyaProtocol();
       talker = Talker();

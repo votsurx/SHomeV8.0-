@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shome/domain/models/device.dart';
-import 'package:shome/application/state/devices_provider.dart';
 
 void main() {
   group('DevicesNotifier', () {

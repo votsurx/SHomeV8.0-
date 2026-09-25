@@ -121,16 +121,19 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                     final url = 'http://${nvrSettings.host}:${nvrSettings.port}';
                     try {
                       if (await canLaunchUrl(Uri.parse(url))) {
+                        if (!context.mounted) return;
                         await launchUrl(
                           Uri.parse(url),
                           mode: LaunchMode.externalApplication,
                         );
                       } else {
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('❌ Не удалось открыть LegionNVR')),
                         );
                       }
                     } catch (e) {
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('❌ Ошибка: $e')),
                       );

@@ -62,8 +62,6 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
   Timer? _nvrSyncTimer;
   MqttBridge? _mqttBridge;
 
-  /// Глобальный доступ к MQTT сервису
-  static MqttService? mqttService;
 
   @override
   void initState() {
@@ -114,8 +112,6 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
       final prefs = await SharedPreferences.getInstance();
       final mqttHost = prefs.getString('mqtt_host') ?? 'localhost';
       final mqttPort = prefs.getInt('mqtt_port') ?? 1883;
-
-      print('📡 Подключаюсь к MQTT (MyiSpy): $mqttHost:$mqttPort');
 
       // Создаём и сохраняем MQTT сервис глобально
       final service = MqttServiceImpl(getIt<Talker>());
@@ -192,13 +188,10 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
     try {
       final settings = await _getNvrSettings();
       if (settings.host.isEmpty) {
-        print('⚠️ NVR не настроен, синхронизация отложена');
         return;
       }
 
       if (!mounted) return;
-
-      print('🔄 Синхронизация с NVR...');
 
       final apiClient = NvrApiClient(
         host: settings.host,
@@ -212,7 +205,6 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
       );
 
       await syncService.sync();
-      print('✅ Синхронизация завершена');
     } catch (e) {
       debugPrint('❌ NVR sync error: $e');
     }
@@ -223,7 +215,6 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
     final savedHost = prefs.getString('nvr_host');
     final savedPort = prefs.getInt('nvr_port');
 
-    print('📡 _getNvrSettings: host=$savedHost, port=$savedPort');
 
     return NvrSettings(
       host: savedHost ?? '',  // ✅ ПУСТОЙ ДЕФОЛТ!

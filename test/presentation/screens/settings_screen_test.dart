@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shome/presentation/screens/settings_screen.dart';
+import 'package:shome/presentation/screens/documents/legal_documents_screen.dart';
 
 void main() {
+  // Инициализируем биндинг — нужен для SharedPreferences в тестах
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('SettingsScreen', () {
     setUp(() async {
       SharedPreferences.setMockInitialValues({'poll_interval': 5});
@@ -25,50 +29,62 @@ void main() {
       expect(find.text('Резервное копирование'), findsOneWidget);
     });
 
-    testWidgets('отображает О приложении', (tester) async {
+    testWidgets('отображает Информацию', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('О приложении'), findsOneWidget);
-      expect(find.textContaining('SHome v2'), findsOneWidget); // любая версия
+      // Плитка называется «Информация», а не «О приложении»
+      expect(find.text('Информация'), findsOneWidget);
     });
 
-    testWidgets('нажатие на Резервное копирование открывает SimpleDialog', (tester) async {
+    testWidgets('отображает NVR и MyiSpy', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
       await tester.pumpAndSettle();
 
-      // Нажимаем на карточку «Резервное копирование»
-      await tester.tap(find.text('Резервное копирование'));
-      await tester.pumpAndSettle();
-
-      // Должен открыться SimpleDialog
-      expect(find.text('Экспортировать'), findsOneWidget);
-      expect(find.text('Импортировать'), findsOneWidget);
+      expect(find.text('Видео NVR'), findsOneWidget);
+      expect(find.text('Видео MyiSpy'), findsOneWidget);
     });
 
-    testWidgets('нажатие на Интервал опроса открывает SimpleDialog с вариантами', (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-      await tester.pumpAndSettle();
+    testWidgets('нажатие на Резервное копирование открывает SimpleDialog',
+            (tester) async {
+          await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+          await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Интервал опроса'));
-      await tester.pumpAndSettle();
+          await tester.tap(find.text('Резервное копирование'));
+          await tester.pumpAndSettle();
 
-      // Проверяем что варианты появились
-      expect(find.text('2 секунд'), findsOneWidget);
-      expect(find.text('5 секунд'), findsOneWidget);
-      expect(find.text('10 секунд'), findsOneWidget);
-      expect(find.text('30 секунд'), findsOneWidget);
-    });
+          // В SimpleDialog должны быть пункты экспорта/импорта
+          expect(find.text('Экспортировать'), findsOneWidget);
+          expect(find.text('Импортировать'), findsOneWidget);
+        });
 
-    testWidgets('нажатие на О приложении открывает AboutDialog', (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-      await tester.pumpAndSettle();
+    testWidgets('нажатие на Интервал опроса открывает SimpleDialog с вариантами',
+            (tester) async {
+          await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+          await tester.pumpAndSettle();
 
-      await tester.tap(find.text('О приложении'));
-      await tester.pumpAndSettle();
+          await tester.tap(find.text('Интервал опроса'));
+          await tester.pumpAndSettle();
 
-      // Должен открыться AboutDialog
-      expect(find.text('SHome'), findsWidgets); // может быть несколько
-    });
+          expect(find.text('2 секунд'), findsOneWidget);
+          expect(find.text('5 секунд'), findsOneWidget);
+          expect(find.text('10 секунд'), findsOneWidget);
+          expect(find.text('30 секунд'), findsOneWidget);
+        });
+
+    testWidgets('нажатие на Информация открывает LegalDocumentsScreen',
+            (tester) async {
+          await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.text('Информация'));
+          await tester.pumpAndSettle();
+
+          // Проверяем, что открылся экран с юридическими документами
+          expect(find.byType(LegalDocumentsScreen), findsOneWidget);
+          expect(find.text('Лицензионное соглашение (EULA)'), findsOneWidget);
+          expect(find.text('Политика конфиденциальности'), findsOneWidget);
+          expect(find.text('Условия использования'), findsOneWidget);
+        });
   });
 }

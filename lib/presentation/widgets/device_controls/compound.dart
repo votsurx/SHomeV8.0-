@@ -169,18 +169,6 @@ class DeviceCompound extends ConsumerWidget {
     );
   }
 
-  IconData _actionIcon(String label, bool isOn) {
-    if (label.contains('Уборка')) return isOn ? Icons.stop : Icons.play_arrow;
-    if (label.contains('базу') || label.contains('Базу')) return Icons.home;
-    return Icons.circle;
-  }
-
-  IconData _toggleIcon(String label) {
-    if (label.contains('беспокоить')) return Icons.do_not_disturb;
-    if (label.contains('Влажная') || label.contains('Мытьё')) return Icons.water_drop;
-    return Icons.toggle_off;
-  }
-
   String _infoIcon(String? icon) {
     switch (icon) {
       case 'battery': return '🔋';

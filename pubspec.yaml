@@ -90,6 +90,8 @@ dependencies:
   open_filex: ^4.7.0
   crypto: ^3.0.7
   geolocator: ^14.0.2
+  fl_chart: ^0.68.0            # Графики для статистики
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -108,7 +110,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0        # Правила линтинга Flutter
 
   # ============ Statistics ============
-  fl_chart: ^0.68.0            # Графики для статистики
   flutter_native_splash: ^2.4.8
 
 flutter:

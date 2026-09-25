@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:uuid/uuid.dart';
 import '../local/database.dart';
 import '../local/entities/device_entity.dart';
 import '../local/entities/room_entity.dart';
@@ -18,6 +19,8 @@ import '../local/entities/scene_entity.dart';
 import '../../domain/models/device_timer.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../local/secure_storage/encrypted_keys.dart';
 
 class ConfigService {
   static const String _backupFileName = 'auto_backup.json';
@@ -220,6 +223,24 @@ class ConfigService {
     final scenes = await AppDatabase.getAllScenes();
     final timers = await AppDatabase.getActiveTimers();
 
+    final encryptedKeys = EncryptedKeys();
+
+    // Разворачиваем localKey: sec:<uuid> → plaintext
+    final expandedDevices = <Map<String, dynamic>>[];
+    for (final entity in devices) {
+      final map = entity.toMap();
+      final stored = entity.localKey;
+
+      if (stored != null && stored.startsWith('sec:')) {
+        final uuid = stored.substring(4);
+        final key = await encryptedKeys.getDeviceKey(uuid);
+        map['localKey'] = key ?? '';
+      }
+      // Иначе — оставляем как было (совместимость)
+
+      expandedDevices.add(map);
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final mqttBroker = prefs.getString('mqtt_broker') ?? '';
     final mqttPort = prefs.getString('mqtt_port') ?? '1883';
@@ -235,7 +256,7 @@ class ConfigService {
     final config = {
       'version': '3.0',
       'exported_at': DateTime.now().toIso8601String(),
-      'devices': devices.map((d) => d.toMap()).toList(),
+      'devices': expandedDevices,   // ← используем развёрнутый список
       'rooms': rooms.map((r) => r.toMap()).toList(),
       'scenes': scenes.map((s) => s.toMap()).toList(),
       'timers': timers.map((t) => {
@@ -276,10 +297,24 @@ class ConfigService {
       }
 
       if (config['devices'] != null) {
+        final encryptedKeys = EncryptedKeys();
+
         for (final device in (config['devices'] as List)) {
-          if (device is Map<String, dynamic>) {
-            await AppDatabase.insertDevice(DeviceEntity.fromMap(device));
+          if (device is! Map<String, dynamic>) continue;
+
+          final localKey = device['localKey'] as String?;
+          final deviceId = device['id'] as String?;
+
+          if (localKey != null && localKey.isNotEmpty && deviceId != null) {
+            // Сохраняем в SecureStorage
+            final uuid = const Uuid().v4();
+            await encryptedKeys.saveDeviceKey(uuid, localKey);
+
+            // В БД пишем ссылку
+            device['localKey'] = 'sec:$uuid';
           }
+
+          await AppDatabase.insertDevice(DeviceEntity.fromMap(device));
         }
       }
 
