@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Внутренняя папка приложения (getApplicationDocumentsDirectory) -->
+    <files-path name="documents" path="." />
+
+    <!-- Внешняя приватная папка (getExternalStorageDirectory) -->
     <external-files-path name="external_files" path="." />
-    <files-path name="internal_files" path="." />
+
+    <!-- Кеш-папка (getTemporaryDirectory) — для шаринга бекапов -->
+    <cache-path name="cache" path="." />
+
+    <!-- Внешняя кеш-папка -->
+    <external-cache-path name="external_cache" path="." />
 </paths>

@@ -1,5 +1,39 @@
 # История изменений SHome
 
+## v8.1.38
+### 🔐 Безопасность
+- **Tuya localKey** перенесён из SQLite в SecureStorage (Android Keystore, AES-256)
+- **VK-токен** перенесён из SharedPreferences в SecureStorage
+- **VK API** переведён на POST — токен больше не попадает в URL и логи
+- **FileProvider** для установки APK и шаринга бекапов
+- **`tools:replace`** для разрешения конфликта с `github_release_apk_updater`
+- Добавлен атрибут `usesCleartextTraffic` для локальных HTTP-запросов к NVR/MyiSpy
+- `<queries>` для установщика APK (Android 11+)
+
+### 🧹 Упрощение
+- **Удалён локальный автобекап** — облако Mail.ru основной источник резервных копий
+- Убран триггер бекапа по `AppLifecycleState.inactive` (срабатывал при звонках)
+- Удалены: `autoBackup()`, `quickImport()`, `hasLocalBackup()`, `lastBackupDate()`
+- Упрощён `settings_screen.dart` — вместо 3 опций бекапа осталось 2
+
+### 🗑️ Мёртвый код
+- Удалено 9 неиспользуемых файлов (`video_screen`, `alarms_tab`, `ispy_camera_provider`, `device_event_bus` и др.)
+- Убрана регистрация `DeviceEventBus` из DI
+
+### 🐛 Исправления
+- `fl_chart` перенесён из `dev_dependencies` в `dependencies`
+- Убран `await` на не-Future в `nvr_sync_service`
+- Исправлены int/String ключи в `energy_screen`
+- `_devicesNotifier.state` → публичный геттер `devices`
+- Добавлены `context.mounted` в `menu_screen`
+- Обновлён `Geolocator.getCurrentPosition` (deprecated → settings)
+
+### 📚 Документация
+- Обновлены `README.md`, `ARCHITECTURE.md`, `PROJECT_STRUCTURE.md`
+
+### 🔧 versionCode
+- `versionCode` = 80138
+
 ## v8.1.35
 ### 🔔 Уведомления
 - Раздельные экраны VK и SMS
