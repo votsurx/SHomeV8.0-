@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/local/secure_storage/encrypted_keys.dart';
 import '../models/notification_settings.dart';
 
 final notificationSettingsProvider =
@@ -10,16 +11,38 @@ StateNotifierProvider<NotificationSettingsNotifier, NotificationSettings>(
 );
 
 class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
+  final EncryptedKeys _keys = EncryptedKeys();
+
   NotificationSettingsNotifier() : super(NotificationSettings()) {
     _load();
   }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // ─── МИГРАЦИЯ: VK-токен из SharedPreferences → SecureStorage ───
+    final oldToken = prefs.getString('vk_token');
+    final oldUserId = prefs.getString('vk_user_id');
+
+    String token = await _keys.getVkToken() ?? '';
+    String userId = await _keys.getVkUserId() ?? '';
+
+    if (token.isEmpty && oldToken != null && oldToken.isNotEmpty) {
+      await _keys.saveVkToken(oldToken);
+      token = oldToken;
+      await prefs.remove('vk_token');   // убираем plaintext
+    }
+    if (userId.isEmpty && oldUserId != null && oldUserId.isNotEmpty) {
+      await _keys.saveVkUserId(oldUserId);
+      userId = oldUserId;
+      await prefs.remove('vk_user_id');
+    }
+
+    // ─── ОСТАЛЬНЫЕ НАСТРОЙКИ — в SharedPreferences ───
     state = NotificationSettings(
       enabled: prefs.getBool('notifications_enabled') ?? false,
-      vkToken: prefs.getString('vk_token') ?? '',
-      vkUserId: prefs.getString('vk_user_id') ?? '',
+      vkToken: token,
+      vkUserId: userId,
       notifyScenes: prefs.getBool('notify_scenes') ?? true,
       notifyDevices: prefs.getBool('notify_devices') ?? false,
       notifyAlarms: prefs.getBool('notify_alarms') ?? true,
@@ -40,9 +63,21 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
   Future<void> update(NotificationSettings settings) async {
     state = settings;
     final prefs = await SharedPreferences.getInstance();
+
+    // ─── Секреты — в SecureStorage ───
+    if (settings.vkToken.isNotEmpty) {
+      await _keys.saveVkToken(settings.vkToken);
+    } else {
+      await _keys.deleteVkToken();
+    }
+    if (settings.vkUserId.isNotEmpty) {
+      await _keys.saveVkUserId(settings.vkUserId);
+    } else {
+      await _keys.deleteVkUserId();
+    }
+
+    // ─── Остальное — в SharedPreferences ───
     await prefs.setBool('notifications_enabled', settings.enabled);
-    await prefs.setString('vk_token', settings.vkToken);
-    await prefs.setString('vk_user_id', settings.vkUserId);
     await prefs.setBool('notify_scenes', settings.notifyScenes);
     await prefs.setBool('notify_devices', settings.notifyDevices);
     await prefs.setBool('notify_alarms', settings.notifyAlarms);
@@ -53,12 +88,11 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     await prefs.setInt('notify_start_minute', settings.startMinute);
     await prefs.setInt('notify_end_hour', settings.endHour);
     await prefs.setInt('notify_end_minute', settings.endMinute);
-    await prefs.setBool('sms_enabled', settings.smsEnabled);
-    await prefs.setString('sms_phone', settings.smsPhoneNumber);
     await prefs.setStringList(
       'notify_days',
       settings.daysOfWeek.map((e) => e.toString()).toList(),
-
     );
+    await prefs.setBool('sms_enabled', settings.smsEnabled);
+    await prefs.setString('sms_phone', settings.smsPhoneNumber);
   }
 }

@@ -1,29 +1,34 @@
 /// Сервис отправки уведомлений через VK Bot API.
+/// Токен хранится в SecureStorage (Android Keystore).
+/// Отправка через POST — токен НЕ попадает в URL/логи.
 library;
 
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import '../local/secure_storage/encrypted_keys.dart';
 
 class VkNotificationService {
   static const String _apiVersion = '5.199';
   static const String _apiUrl = 'https://api.vk.com/method';
 
+  final EncryptedKeys _keys = EncryptedKeys();
+
   String? _token;
   int? _userId;
 
-  /// Загружает настройки из SharedPreferences.
+  /// Загружает токен и userId из SecureStorage.
   Future<void> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('vk_token');
-    _userId = int.tryParse(prefs.getString('vk_user_id') ?? '');
+    _token = await _keys.getVkToken();
+    _userId = int.tryParse(await _keys.getVkUserId() ?? '');
   }
 
   /// Проверяет, настроен ли сервис.
-  bool get isConfigured => _token != null && _userId != null;
+  bool get isConfigured =>
+      _token != null && _token!.isNotEmpty &&
+          _userId != null;
 
-  /// Отправляет текстовое уведомление.
+  /// Отправляет текстовое уведомление через POST.
   Future<bool> sendMessage(String message) async {
     if (!isConfigured) {
       debugPrint('❌ VK: не настроен');
@@ -32,16 +37,19 @@ class VkNotificationService {
 
     try {
       final randomId = DateTime.now().millisecondsSinceEpoch;
-      final url = Uri.parse(
-          '$_apiUrl/messages.send'
-              '?user_id=$_userId'
-              '&message=${Uri.encodeComponent(message)}'
-              '&random_id=$randomId'
-              '&access_token=$_token'
-              '&v=$_apiVersion'
-      );
+      final url = Uri.parse('$_apiUrl/messages.send');
 
-      final response = await http.get(url);
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'user_id': _userId!.toString(),
+          'message': message,
+          'random_id': randomId.toString(),
+          'access_token': _token!,
+          'v': _apiVersion,
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -89,7 +97,7 @@ class VkNotificationService {
     }
   }
 
-  /// Отправляет уведомление о сцене.
+  /// Уведомление о сцене.
   Future<bool> sendSceneNotification({
     required String sceneName,
     required bool success,
@@ -102,7 +110,7 @@ class VkNotificationService {
     return sendMessage(message);
   }
 
-  /// Отправляет уведомление об устройстве.
+  /// Уведомление об устройстве.
   Future<bool> sendDeviceNotification({
     required String deviceName,
     required String action,
@@ -116,7 +124,8 @@ class VkNotificationService {
 
     return sendMessage(message);
   }
-  /// Отправляет уведомление для составного устройства.
+
+  /// Уведомление для составного устройства.
   Future<bool> sendCompoundNotification({
     required String deviceName,
     required Map<String, String> changes,
@@ -131,4 +140,3 @@ class VkNotificationService {
     return sendMessage(message);
   }
 }
-

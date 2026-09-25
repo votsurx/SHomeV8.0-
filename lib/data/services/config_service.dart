@@ -19,7 +19,6 @@ import '../local/entities/scene_entity.dart';
 import '../../domain/models/device_timer.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../local/secure_storage/encrypted_keys.dart';
 
 class ConfigService {
@@ -244,8 +243,11 @@ class ConfigService {
     final prefs = await SharedPreferences.getInstance();
     final mqttBroker = prefs.getString('mqtt_broker') ?? '';
     final mqttPort = prefs.getString('mqtt_port') ?? '1883';
-    final vkToken = prefs.getString('vk_token') ?? '';
 
+    // VK-токен — из SecureStorage
+    final keys = EncryptedKeys();
+    final vkToken = await keys.getVkToken() ?? '';
+    final vkUserId = await keys.getVkUserId() ?? '';
     const storage = FlutterSecureStorage();
     final cloudLogin = await storage.read(key: 'mailru_login') ?? '';
     final cloudPassword = await storage.read(key: 'mailru_password') ?? '';
@@ -273,6 +275,7 @@ class ConfigService {
         'cloud_login': cloudLogin,
         'cloud_password_encrypted': encryptedCloudPassword,
         'vk_token_encrypted': encryptedVkToken,
+        'vk_user_id': vkUserId,   // ← ДОБАВЛЯЕМ (не секрет, но удобно)
       },
     };
 
@@ -364,11 +367,18 @@ class ConfigService {
           await prefs.setString('mqtt_port', mqttPort);
         }
 
+        final keys = EncryptedKeys();
+
         final vkEnc = settings['vk_token_encrypted']?.toString();
         if (vkEnc != null && vkEnc.isNotEmpty) {
           try {
-            await prefs.setString('vk_token', decrypt(vkEnc));
+            await keys.saveVkToken(decrypt(vkEnc));
           } catch (_) {}
+        }
+
+        final vkUserId = settings['vk_user_id']?.toString();
+        if (vkUserId != null && vkUserId.isNotEmpty) {
+          await keys.saveVkUserId(vkUserId);
         }
 
         final cloudLogin = settings['cloud_login']?.toString();
