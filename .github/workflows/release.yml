@@ -12,6 +12,32 @@ jobs:
       contents: write
 
     steps:
+      # ═══════════════════════════════════════════════════════════
+      # 🧹 ОСВОБОЖДАЕМ МЕСТО на runner (обычно ~30 GB свободного)
+      # ═══════════════════════════════════════════════════════════
+      - name: Free disk space
+        run: |
+          echo "=== Размер до очистки ==="
+          df -h
+          
+          # Удаляем тяжёлые SDK, которые не нужны для Android-сборки
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android/sdk/ndk
+          sudo rm -rf /usr/local/lib/android/sdk/emulator
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/lib/android/sdk/system-images
+          
+          # Очищаем apt cache
+          sudo apt-get clean
+          
+          echo "=== Размер после очистки ==="
+          df -h
+
+      # ═══════════════════════════════════════════════════════════
+      # 📥 Checkout
+      # ═══════════════════════════════════════════════════════════
       - name: Checkout code
         uses: actions/checkout@v4
         with:
