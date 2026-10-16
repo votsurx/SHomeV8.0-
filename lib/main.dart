@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker/talker.dart';
+import 'data/services/heartbeat_server.dart';
 import 'data/services/nvr_api_client.dart';
 import 'di/injection.dart';
 import 'domain/models/room.dart';
@@ -31,10 +32,16 @@ MqttService? globalMqttService;
 
 final globalContainer = ProviderContainer();
 
-void main() {
+void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
   ThemeNotifier.updateAutoCache();
+
+  // Запускаем HTTP-сервер для heartbeat
+  final serverStarted = await HeartbeatServer.start(port: 7777);
+  if (serverStarted) {
+    getIt<Talker>().info('📡 HeartbeatServer готов к приёму');
+  }
 
   getIt<TimerEngine>().start();
   getIt<AutomationEngine>().start();
@@ -77,6 +84,7 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
     _themeTimer?.cancel();
     _nvrSyncTimer?.cancel();
     _mqttBridge?.stop();
+    HeartbeatServer.stop();
     super.dispose();
   }
 

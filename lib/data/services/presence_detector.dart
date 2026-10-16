@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'heartbeat_server.dart';
 import 'mailru_cloud_service.dart';
 import '../../application/models/presence_settings.dart';
 import '../local/secure_storage/encrypted_keys.dart';
@@ -123,81 +123,63 @@ class PresenceDetector {
   }
 
   Future<void> _checkPhone(PhonePresence phone, PresencePhone settings) async {
-    // 1. Пробуем Wi-Fi ping
-    if (settings.ip.isNotEmpty) {
-      final wifiOk = await _ping(settings.ip);
-      if (wifiOk) {
-        phone.status = PhonePresenceStatus.home;
-        phone.viaWifi = true;
-        phone.lastSeen = DateTime.now();
-        debugPrint('🏠 ${phone.phoneName}: дома (Wi-Fi)');
-        return;
-      }
+    // ─── 1. Проверяем локальный heartbeat ───
+    if (HeartbeatServer.isAlive(phone.phoneId, maxAgeSec: 90)) {
+      final hb = HeartbeatServer.getHeartbeat(phone.phoneId);
+      phone.status = PhonePresenceStatus.home;
+      phone.viaWifi = true;
+      phone.battery = hb?.battery;
+      phone.lastSeen = DateTime.now();
+      debugPrint('🏠 ${phone.phoneName}: дома (HTTP heartbeat)');
+      return;
     }
 
-    // 2. Пробуем Mail.ru Cloud
-    final cloudData = await _checkCloud(phone.phoneId);
-    if (cloudData != null) {
-      final lat = (cloudData['lat'] as num?)?.toDouble();
-      final lng = (cloudData['lng'] as num?)?.toDouble();
-      final ts = cloudData['ts'] as int?;
-      final battery = cloudData['battery'] as int?;
+    // ─── 2. Нет локального heartbeat > 90 сек — читаем облако ───
+    final heartbeat = await _checkCloud(phone.phoneId);
 
-      phone.lat = lat;
-      phone.lng = lng;
-      phone.battery = battery;
+    if (heartbeat == null) {
+      phone.status = PhonePresenceStatus.unknown;
+      phone.viaWifi = false;
+      debugPrint('❓ ${phone.phoneName}: unknown (нет данных)');
+      return;
+    }
 
-      // Проверяем, свежие ли данные
-      if (ts != null) {
-        final age = DateTime.now().millisecondsSinceEpoch - ts;
-        final ageMin = age ~/ 60000;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final ts = (heartbeat['ts'] as num?)?.toInt() ?? 0;
+    final age = now - ts;
+    final status = heartbeat['status'] as String? ?? 'unknown';
 
-        if (ageMin > _settings!.awayTimeoutMin) {
-          phone.status = PhonePresenceStatus.away;
-          phone.viaWifi = false;
-          debugPrint('🚶 ${phone.phoneName}: ушёл (данные устарели: $ageMin мин)');
-          return;
-        }
-      }
+    // ─── 3. Данные старше 10 мин — unknown ───
+    if (age > 10 * 60 * 1000) {
+      phone.status = PhonePresenceStatus.unknown;
+      phone.viaWifi = false;
+      debugPrint('❓ ${phone.phoneName}: unknown (данные старше 10 мин)');
+      return;
+    }
 
-      // Проверяем координаты
-      if (lat != null &&
-          lng != null &&
-          _settings!.homeLat != 0 &&
-          _settings!.homeLng != 0) {
-        final distance = _distance(
-          lat,
-          lng,
-          _settings!.homeLat,
-          _settings!.homeLng,
-        );
-
-        if (distance <= _settings!.homeRadius) {
-          phone.status = PhonePresenceStatus.home;
-          phone.viaWifi = false;
-          phone.lastSeen = DateTime.now();
-          debugPrint('🏠 ${phone.phoneName}: дома (GPS, ${distance.round()} м)');
-          return;
-        } else {
-          phone.status = PhonePresenceStatus.away;
-          phone.viaWifi = false;
-          debugPrint('🚶 ${phone.phoneName}: ушёл (GPS, ${distance.round()} м)');
-          return;
-        }
-      } else {
-        // Нет координат — считаем, что дома (если данные свежие)
+    // ─── 4. Читаем статус от Companion ───
+    switch (status) {
+      case 'home':
         phone.status = PhonePresenceStatus.home;
         phone.viaWifi = false;
-        phone.lastSeen = DateTime.now();
-        debugPrint('🏠 ${phone.phoneName}: дома (по свежим данным)');
-        return;
-      }
-    }
+        debugPrint('🏠 ${phone.phoneName}: дома (heartbeat home)');
+        break;
 
-    // 3. Нет данных — неизвестно
-    phone.status = PhonePresenceStatus.unknown;
-    phone.viaWifi = false;
-    debugPrint('❓ ${phone.phoneName}: неизвестно');
+      case 'away':
+        final lat = (heartbeat['lat'] as num?)?.toDouble();
+        final lng = (heartbeat['lng'] as num?)?.toDouble();
+        phone.status = PhonePresenceStatus.away;
+        phone.viaWifi = false;
+        phone.lat = lat;
+        phone.lng = lng;
+        debugPrint('🚶 ${phone.phoneName}: ушёл (heartbeat away)');
+        break;
+
+      default:
+        phone.status = PhonePresenceStatus.unknown;
+        phone.viaWifi = false;
+        debugPrint('❓ ${phone.phoneName}: unknown (status=$status)');
+    }
   }
 
   Future<Map<String, dynamic>?> _checkCloud(String phoneId) async {
@@ -219,19 +201,7 @@ class PresenceDetector {
     }
   }
 
-  Future<bool> _ping(String ip) async {
-    try {
-      final result = await Process.run(
-        'ping',
-        ['-c', '1', '-W', '2', ip],
-      );
-      return result.exitCode == 0;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  double _distance(double lat1, double lng1, double lat2, double lng2) {
+  double distance(double lat1, double lng1, double lat2, double lng2) {
     const earthRadius = 6371000.0; // метры
     final dLat = _toRadians(lat2 - lat1);
     final dLng = _toRadians(lng2 - lng1);
