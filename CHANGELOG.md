@@ -1,5 +1,32 @@
 # История изменений SHome
 
+## v8.1.42 — Local HTTP Heartbeat
+
+### 🎯 Новая функция: локальный heartbeat
+
+- **HTTP-сервер в SHome** на порту 7777
+  - `POST /heartbeat?phoneId=xxx` — приём heartbeat от Companion
+  - `GET /status?phoneId=xxx` — запрос текущего статуса
+  - `GET /ping` — health check
+  - Автоочистка устаревших записей (90 сек)
+- **Companion → SHome** каждые 30 сек (без облака!)
+- **SHome читает локальный heartbeat первым** — 0 запросов в облако пока дома
+- **Fallback на Mail.ru Cloud** — если heartbeat старше 90 сек
+- **`unknown` ≠ `away`** — правильная семантика статусов
+- **Автоостановка сервера** при закрытии приложения
+
+### 🔧 Технические
+- Новый файл: `lib/data/services/heartbeat_server.dart`
+- Обновлён: `lib/main.dart` (запуск/остановка сервера)
+- Обновлён: `lib/data/services/presence_detector.dart` (чтение heartbeat)
+
+### 🔒 Безопасность
+- Companion получает VK User ID из SecureStorage (уже было)
+- Cloud credentials в SecureStorage (уже было)
+
+### 🔧 versionCode
+- `versionCode` = 80142
+
 ## v8.1.41
 ### 🐛 Исправления
 - **VK User ID** больше не пропадает при пересборке экрана
