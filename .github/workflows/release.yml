@@ -13,14 +13,12 @@ jobs:
 
     steps:
       # ═══════════════════════════════════════════════════════════
-      # 🧹 ОСВОБОЖДАЕМ МЕСТО на runner (обычно ~30 GB свободного)
+      # 🧹 ОСВОБОЖДАЕМ МЕСТО на runner
       # ═══════════════════════════════════════════════════════════
       - name: Free disk space
         run: |
           echo "=== Размер до очистки ==="
           df -h
-          
-          # Удаляем тяжёлые SDK, которые не нужны для Android-сборки
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android/sdk/ndk
           sudo rm -rf /usr/local/lib/android/sdk/emulator
@@ -28,16 +26,10 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf /opt/hostedtoolcache/CodeQL
           sudo rm -rf /usr/local/lib/android/sdk/system-images
-          
-          # Очищаем apt cache
           sudo apt-get clean
-          
           echo "=== Размер после очистки ==="
           df -h
 
-      # ═══════════════════════════════════════════════════════════
-      # 📥 Checkout
-      # ═══════════════════════════════════════════════════════════
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -55,7 +47,7 @@ jobs:
           channel: 'stable'
 
       - name: Get dependencies
-        run: flutter pub get
+        run: flutter pub get --offline || flutter pub get
 
       - name: Decode Keystore
         run: |
@@ -71,9 +63,9 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/debug-info
 
-      # ═══════════════════════════════════════════════════════════════
-      # 📄 Извлекаем секцию CHANGELOG.md для текущей версии
-      # ═══════════════════════════════════════════════════════════════
+      # ═══════════════════════════════════════════════════════════
+      # 📄 Извлекаем секцию CHANGELOG.md
+      # ═══════════════════════════════════════════════════════════
       - name: Read CHANGELOG section
         id: changelog
         run: |
@@ -82,7 +74,6 @@ jobs:
           
           echo "🔍 Ищем секцию для v$VERSION в CHANGELOG.md"
           
-          # Извлекаем строки от "## vVERSION" до следующего "## v"
           awk -v ver="## v$VERSION" '
             $0 ~ ver {flag=1; next}
             /^## v/ {flag=0}
@@ -90,8 +81,7 @@ jobs:
           ' CHANGELOG.md > /tmp/changelog_section.txt
           
           if [ ! -s /tmp/changelog_section.txt ]; then
-            echo "⚠️ Секция v$VERSION не найдена в CHANGELOG.md"
-            echo "📦 Fallback: берём коммиты с прошлого тега"
+            echo "⚠️ Секция v$VERSION не найдена — fallback на коммиты"
             PREV_TAG=$(git tag --sort=-v:refname | grep -v "^$TAG$" | head -1)
             if [ -n "$PREV_TAG" ]; then
               git log $PREV_TAG..HEAD --pretty=format:"- %s" --no-merges > /tmp/changelog_section.txt
@@ -99,20 +89,22 @@ jobs:
               git log --pretty=format:"- %s" --no-merges -10 > /tmp/changelog_section.txt
             fi
           else
-            echo "✅ Секция найдена в CHANGELOG.md"
+            echo "✅ Секция найдена"
           fi
           
-          echo "📝 Содержимое:"
-          cat /tmp/changelog_section.txt
+          # Экранируем через переменную окружения — надёжнее чем heredoc
+          {
+            echo "section<<EOF"
+            cat /tmp/changelog_section.txt
+            echo ""
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
           
-          # Экранируем для GITHUB_OUTPUT
-          echo "section<<EOF" >> $GITHUB_OUTPUT
-          cat /tmp/changelog_section.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "📝 Записано в output"
 
-      # ═══════════════════════════════════════════════════════════════
-      # 🚀 Публикуем релиз в публичном репо
-      # ═══════════════════════════════════════════════════════════════
+      # ═══════════════════════════════════════════════════════════
+      # 🚀 Публикуем релиз
+      # ═══════════════════════════════════════════════════════════
       - name: Create Release in Public Repo
         uses: softprops/action-gh-release@v2
         with:
@@ -127,17 +119,16 @@ jobs:
             ---
 
             ### 📦 Установка
-            Скачайте APK для вашего устройства:
             - **arm64-v8a** — большинство современных телефонов
             - **armeabi-v7a** — старые устройства (Android 7-9)
-            - **x86_64** — эмуляторы и планшеты Intel
+            - **x86_64** — эмуляторы
 
             ### 🔄 Обновление
             Откройте SHome → Настройки → «Проверить обновления»
 
             ---
 
-            © votsurX · ArchitectCO · 2026
+            © votsurx · ArchitectCO · 2026
           files: |
             build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
             build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk

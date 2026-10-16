@@ -1,6 +1,6 @@
 # История изменений SHome
 
-## v8.1.42 — Local HTTP Heartbeat
+## v8.1.44 — Local HTTP Heartbeat
 
 ### 🎯 Новая функция: локальный heartbeat
 
