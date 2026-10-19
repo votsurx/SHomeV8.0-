@@ -7,36 +7,46 @@ import 'mailru_cloud_service.dart';
 import '../../application/models/presence_settings.dart';
 import '../local/secure_storage/encrypted_keys.dart';
 
-/// Статус присутствия для одного телефона
+/// Статус присутствия для одного телефона.
 enum PhonePresenceStatus {
-  home,     // дома (Wi-Fi или GPS)
+  home,     // дома
   away,     // ушёл
   unknown,  // неизвестно
+}
+
+/// Источник определения статуса.
+enum PresenceSource {
+  heartbeat,   // HTTP heartbeat (Wi-Fi, точно дома)
+  cloud,       // Mail.ru Cloud (может быть дома/рядом/ушёл)
+  unknown,     // нет данных
 }
 
 class PhonePresence {
   final String phoneId;
   final String phoneName;
   PhonePresenceStatus status;
+  PresenceSource source;        // ← источник данных
   double? lat;
   double? lng;
   int? battery;
   DateTime? lastSeen;
   bool viaWifi;
+  double? distanceFromHome;     // ← расстояние до дома в метрах
 
   PhonePresence({
     required this.phoneId,
     required this.phoneName,
     this.status = PhonePresenceStatus.unknown,
+    this.source = PresenceSource.unknown,
     this.lat,
     this.lng,
     this.battery,
     this.lastSeen,
     this.viaWifi = false,
+    this.distanceFromHome,
   });
 }
 
-/// Определяет присутствие телефонов дома
 class PresenceDetector {
   Timer? _timer;
   final Map<String, PhonePresence> _phones = {};
@@ -46,14 +56,12 @@ class PresenceDetector {
   bool get isRunning => _running;
   Map<String, PhonePresence> get phones => _phones;
 
-  /// Callback при изменении статуса телефона.
   void Function(
       String phoneId,
       PhonePresenceStatus oldStatus,
       PhonePresenceStatus newStatus,
       )? onStatusChanged;
 
-  /// Общий статус дома
   bool get isAnyoneHome {
     return _phones.values.any((p) => p.status == PhonePresenceStatus.home);
   }
@@ -63,7 +71,6 @@ class PresenceDetector {
         _phones.values.every((p) => p.status == PhonePresenceStatus.away);
   }
 
-  /// Запускает отслеживание
   Future<void> start(PresenceSettings settings) async {
     if (_running) {
       debugPrint('⚠️ PresenceDetector уже запущен');
@@ -91,7 +98,6 @@ class PresenceDetector {
     debugPrint('👁 PresenceDetector запущен (${_phones.length} телефонов)');
   }
 
-  /// Проверяет все телефоны
   Future<void> _checkAll() async {
     if (_settings == null) return;
 
@@ -101,19 +107,11 @@ class PresenceDetector {
       if (!_running) return;
       final phone = entry.value;
       final oldStatus = phone.status;
-      final settings = _settings!.phones.firstWhere(
-            (p) => p.phoneId == phone.phoneId,
-        orElse: () => PresencePhone(
-          phoneId: phone.phoneId,
-          phoneName: phone.phoneName,
-        ),
-      );
 
       if (!_phones.containsKey(phone.phoneId)) continue;
 
-      await _checkPhone(phone, settings);
+      await _checkPhone(phone);
 
-      // Уведомляем об изменении
       if (phone.status != oldStatus) {
         onStatusChanged?.call(phone.phoneId, oldStatus, phone.status);
       }
@@ -122,24 +120,30 @@ class PresenceDetector {
     _logStatus();
   }
 
-  Future<void> _checkPhone(PhonePresence phone, PresencePhone settings) async {
-    // ─── 1. Проверяем локальный heartbeat ───
+  Future<void> _checkPhone(PhonePresence phone) async {
+    // ═══ 1. Локальный heartbeat — Companion в Wi-Fi сети ═══
     if (HeartbeatServer.isAlive(phone.phoneId, maxAgeSec: 90)) {
       final hb = HeartbeatServer.getHeartbeat(phone.phoneId);
       phone.status = PhonePresenceStatus.home;
+      phone.source = PresenceSource.heartbeat;
       phone.viaWifi = true;
       phone.battery = hb?.battery;
       phone.lastSeen = DateTime.now();
+      phone.distanceFromHome = 0;
+      phone.lat = null;
+      phone.lng = null;
       debugPrint('🏠 ${phone.phoneName}: дома (HTTP heartbeat)');
       return;
     }
 
-    // ─── 2. Нет локального heartbeat > 90 сек — читаем облако ───
+    // ═══ 2. Нет heartbeat — читаем облако ═══
     final heartbeat = await _checkCloud(phone.phoneId);
 
     if (heartbeat == null) {
       phone.status = PhonePresenceStatus.unknown;
+      phone.source = PresenceSource.unknown;
       phone.viaWifi = false;
+      phone.distanceFromHome = null;
       debugPrint('❓ ${phone.phoneName}: unknown (нет данных)');
       return;
     }
@@ -148,36 +152,76 @@ class PresenceDetector {
     final ts = (heartbeat['ts'] as num?)?.toInt() ?? 0;
     final age = now - ts;
     final status = heartbeat['status'] as String? ?? 'unknown';
+    final battery = (heartbeat['battery'] as num?)?.toInt();
+    phone.battery = battery;
 
-    // ─── 3. Данные старше 10 мин — unknown ───
+    // ═══ 3. Данные старше 10 мин → unknown ═══
     if (age > 10 * 60 * 1000) {
       phone.status = PhonePresenceStatus.unknown;
+      phone.source = PresenceSource.cloud;
       phone.viaWifi = false;
+      phone.distanceFromHome = null;
       debugPrint('❓ ${phone.phoneName}: unknown (данные старше 10 мин)');
       return;
     }
 
-    // ─── 4. Читаем статус от Companion ───
+    // ═══ 4. Читаем статус от Companion ═══
     switch (status) {
       case 'home':
+      // Companion говорит "дома", но без Wi-Fi (возможно, GPS)
         phone.status = PhonePresenceStatus.home;
+        phone.source = PresenceSource.cloud;
         phone.viaWifi = false;
-        debugPrint('🏠 ${phone.phoneName}: дома (heartbeat home)');
+        phone.distanceFromHome = 0;
+        debugPrint('🏠 ${phone.phoneName}: дома (cloud)');
         break;
 
       case 'away':
         final lat = (heartbeat['lat'] as num?)?.toDouble();
         final lng = (heartbeat['lng'] as num?)?.toDouble();
-        phone.status = PhonePresenceStatus.away;
-        phone.viaWifi = false;
         phone.lat = lat;
         phone.lng = lng;
-        debugPrint('🚶 ${phone.phoneName}: ушёл (heartbeat away)');
+        phone.source = PresenceSource.cloud;
+        phone.viaWifi = false;
+
+        // Проверяем GPS в радиусе
+        if (lat != null &&
+            lng != null &&
+            _settings!.homeLat != 0 &&
+            _settings!.homeLng != 0) {
+          final dist = distance(
+            lat, lng, _settings!.homeLat, _settings!.homeLng,
+          );
+          phone.distanceFromHome = dist;
+
+          if (dist <= _settings!.homeRadius) {
+            // Companion сказал "away", но GPS в радиусе
+            // Это "рядом с домом" — на границе зоны
+            phone.status = PhonePresenceStatus.home;
+            debugPrint(
+              '🏠 ${phone.phoneName}: рядом с домом '
+                  '(GPS, ${dist.round()} м)',
+            );
+          } else {
+            phone.status = PhonePresenceStatus.away;
+            debugPrint(
+              '🚶 ${phone.phoneName}: ушёл '
+                  '(GPS, ${dist.round()} м)',
+            );
+          }
+        } else {
+          // Нет координат → доверяем Companion
+          phone.status = PhonePresenceStatus.away;
+          phone.distanceFromHome = null;
+          debugPrint('🚶 ${phone.phoneName}: ушёл (без GPS)');
+        }
         break;
 
       default:
         phone.status = PhonePresenceStatus.unknown;
+        phone.source = PresenceSource.cloud;
         phone.viaWifi = false;
+        phone.distanceFromHome = null;
         debugPrint('❓ ${phone.phoneName}: unknown (status=$status)');
     }
   }
@@ -202,7 +246,7 @@ class PresenceDetector {
   }
 
   double distance(double lat1, double lng1, double lat2, double lng2) {
-    const earthRadius = 6371000.0; // метры
+    const earthRadius = 6371000.0;
     final dLat = _toRadians(lat2 - lat1);
     final dLng = _toRadians(lng2 - lng1);
     final a = (0.5 -
@@ -220,13 +264,12 @@ class PresenceDetector {
         _phones.values.where((p) => p.status == PhonePresenceStatus.home).length;
     final awayCount =
         _phones.values.where((p) => p.status == PhonePresenceStatus.away).length;
-    final unknownCount =
-        _phones.values.where((p) => p.status == PhonePresenceStatus.unknown).length;
+    final unknownCount = _phones.values
+        .where((p) => p.status == PhonePresenceStatus.unknown)
+        .length;
 
     debugPrint(
         '📊 Статус: дома=$homeCount, ушёл=$awayCount, неизвестно=$unknownCount');
-    debugPrint('🏠 Дома кто-то есть: $isAnyoneHome');
-    debugPrint('🚫 Дома никого: $isNobodyHome');
   }
 
   void stop() {

@@ -119,7 +119,11 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
     try {
       final prefs = await SharedPreferences.getInstance();
       final mqttHost = prefs.getString('mqtt_host') ?? 'localhost';
-      final mqttPort = prefs.getInt('mqtt_port') ?? 1883;
+    // Универсальное чтение: может быть int или String
+      final mqttPortRaw = prefs.get('mqtt_port');
+      final mqttPort = mqttPortRaw is int
+          ? mqttPortRaw
+          : int.tryParse(mqttPortRaw?.toString() ?? '') ?? 1883;
 
       // Создаём и сохраняем MQTT сервис глобально
       final service = MqttServiceImpl(getIt<Talker>());
@@ -221,12 +225,16 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
   Future<NvrSettings> _getNvrSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final savedHost = prefs.getString('nvr_host');
-    final savedPort = prefs.getInt('nvr_port');
 
+    // Универсальное чтение: может быть int или String
+    final nvrPortRaw = prefs.get('nvr_port');
+    final nvrPort = nvrPortRaw is int
+        ? nvrPortRaw
+        : int.tryParse(nvrPortRaw?.toString() ?? '') ?? 8080;
 
     return NvrSettings(
-      host: savedHost ?? '',  // ✅ ПУСТОЙ ДЕФОЛТ!
-      port: savedPort ?? 8080,
+      host: savedHost ?? '',
+      port: nvrPort,
     );
   }
 

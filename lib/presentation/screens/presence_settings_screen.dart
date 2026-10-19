@@ -63,7 +63,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
           // ─── Домашняя зона ───
           _buildCard(
             context: context,
-            ref: ref,
             icon: Icons.my_location,
             color: Colors.blue,
             title: 'Домашняя зона',
@@ -76,7 +75,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
           // ─── Радиус ───
           _buildCard(
             context: context,
-            ref: ref,
             icon: Icons.circle_outlined,
             color: Colors.orange,
             title: 'Радиус',
@@ -87,7 +85,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
           // ─── Таймаут "ушёл" ───
           _buildCard(
             context: context,
-            ref: ref,
             icon: Icons.timer,
             color: Colors.red,
             title: 'Таймаут "ушёл"',
@@ -101,7 +98,10 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  // ─── Карточка телефона ───
+  // ═══════════════════════════════════════════════════════════════
+  // КАРТОЧКА ТЕЛЕФОНА
+  // ═══════════════════════════════════════════════════════════════
+
   Widget _buildPhoneCard(
       BuildContext context,
       WidgetRef ref,
@@ -110,21 +110,47 @@ class PresenceSettingsScreen extends ConsumerWidget {
       PhonePresence? presence,
       ) {
     final status = presence?.status ?? PhonePresenceStatus.unknown;
-    final icon = status == PhonePresenceStatus.home
-        ? Icons.home
-        : status == PhonePresenceStatus.away
-        ? Icons.directions_walk
-        : Icons.help_outline;
-    final color = status == PhonePresenceStatus.home
-        ? Colors.green
-        : status == PhonePresenceStatus.away
-        ? Colors.orange
-        : Colors.grey;
-    final statusText = status == PhonePresenceStatus.home
-        ? 'Дома${presence?.viaWifi == true ? " (Wi-Fi)" : " (GPS)"}'
-        : status == PhonePresenceStatus.away
-        ? 'Ушёл'
-        : 'Неизвестно';
+    final source = presence?.source ?? PresenceSource.unknown;
+
+    // ─── Определяем иконку, цвет, текст ───
+    IconData icon;
+    Color color;
+    String statusText;
+    String? subtitle;
+
+    if (status == PhonePresenceStatus.home) {
+      if (source == PresenceSource.heartbeat) {
+        // 🟢 Дома по Wi-Fi — точно дома
+        icon = Icons.wifi;
+        color = Colors.green;
+        statusText = 'Дома (Wi-Fi)';
+        subtitle = 'Heartbeat активен';
+      } else if (source == PresenceSource.cloud) {
+        // 🟡 Дома по облаку — Companion сказал "home" без Wi-Fi
+        icon = Icons.cloud_done;
+        color = Colors.lightGreen;
+        statusText = 'Дома (облако)';
+        subtitle = 'Wi-Fi не активен, но Companion дома';
+      } else {
+        icon = Icons.home;
+        color = Colors.green;
+        statusText = 'Дома';
+        subtitle = null;
+      }
+    } else if (status == PhonePresenceStatus.away) {
+      final dist = presence?.distanceFromHome;
+      icon = Icons.directions_walk;
+      color = Colors.orange;
+      statusText = 'Ушёл';
+      subtitle = dist != null
+          ? 'Расстояние: ${dist.round()} м'
+          : null;
+    } else {
+      icon = Icons.help_outline;
+      color = Colors.grey;
+      statusText = 'Неизвестно';
+      subtitle = null;
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
@@ -173,6 +199,16 @@ class PresenceSettingsScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 2),
                     Text(
                       'ID: ${phone.phoneId}',
@@ -180,13 +216,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
-                    if (phone.ip.isNotEmpty)
-                      Text(
-                        'IP: ${phone.ip}',
-                        style: const TextStyle(fontSize: 10, color: Colors.grey),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
                   ],
                 ),
               ),
@@ -206,10 +235,12 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  // ─── Карточка настройки ───
+  // ═══════════════════════════════════════════════════════════════
+  // КАРТОЧКА НАСТРОЙКИ
+  // ═══════════════════════════════════════════════════════════════
+
   Widget _buildCard({
     required BuildContext context,
-    required WidgetRef ref,
     required IconData icon,
     required Color color,
     required String title,
@@ -231,17 +262,20 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  // ─── ДИАЛОГИ ───
+  // ═══════════════════════════════════════════════════════════════
+  // ДИАЛОГИ
+  // ═══════════════════════════════════════════════════════════════
 
   void _showPhoneDialog(
-      BuildContext context, WidgetRef ref, PresencePhone? existingPhone) {
+      BuildContext context,
+      WidgetRef ref,
+      PresencePhone? existingPhone,
+      ) {
     final isEditing = existingPhone != null;
     final nameController =
     TextEditingController(text: existingPhone?.phoneName ?? '');
     final idController =
     TextEditingController(text: existingPhone?.phoneId ?? '');
-    final ipController =
-    TextEditingController(text: existingPhone?.ip ?? '');
 
     showDialog(
       context: context,
@@ -264,17 +298,8 @@ class PresenceSettingsScreen extends ConsumerWidget {
                 enabled: !isEditing,
                 decoration: const InputDecoration(
                   labelText: 'Phone ID',
-                  hintText: 'phone_1',
+                  hintText: '89533309330',
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: ipController,
-                decoration: const InputDecoration(
-                  labelText: 'IP (необязательно)',
-                  hintText: '192.168.1.50',
-                ),
-                keyboardType: TextInputType.number,
               ),
             ],
           ),
@@ -306,7 +331,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
               final newPhone = PresencePhone(
                 phoneId: idController.text.trim(),
                 phoneName: nameController.text.trim(),
-                ip: ipController.text.trim(),
                 enabled: existingPhone?.enabled ?? true,
               );
 
@@ -329,12 +353,21 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // ДОМАШНЯЯ ЗОНА — с исправленным GPS
+  // ═══════════════════════════════════════════════════════════════
+
   void _showHomeZoneDialog(
-      BuildContext context, WidgetRef ref, PresenceSettings settings) {
-    final latController =
-    TextEditingController(text: settings.homeLat.toStringAsFixed(6));
-    final lngController =
-    TextEditingController(text: settings.homeLng.toStringAsFixed(6));
+      BuildContext context,
+      WidgetRef ref,
+      PresenceSettings settings,
+      ) {
+    final latController = TextEditingController(
+      text: settings.homeLat == 0 ? '' : settings.homeLat.toStringAsFixed(6),
+    );
+    final lngController = TextEditingController(
+      text: settings.homeLng == 0 ? '' : settings.homeLng.toStringAsFixed(6),
+    );
 
     showDialog(
       context: context,
@@ -365,30 +398,11 @@ class PresenceSettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
-                onPressed: () async {
-                  try {
-                    LocationPermission permission =
-                    await Geolocator.checkPermission();
-                    if (permission == LocationPermission.denied) {
-                      permission = await Geolocator.requestPermission();
-                    }
-                    if (permission == LocationPermission.deniedForever) {
-                      return;
-                    }
-
-                    final pos = await Geolocator.getCurrentPosition(
-                      locationSettings: const LocationSettings(
-                        accuracy: LocationAccuracy.high,
-                        timeLimit: Duration(seconds: 15),
-                      ),
-                    );
-
-                    latController.text = pos.latitude.toStringAsFixed(6);
-                    lngController.text = pos.longitude.toStringAsFixed(6);
-                  } catch (e) {
-                    debugPrint('❌ Ошибка GPS: $e');
-                  }
-                },
+                onPressed: () => _getCurrentLocation(
+                  context,
+                  latController,
+                  lngController,
+                ),
                 icon: const Icon(Icons.my_location),
                 label: const Text('Определить мои координаты'),
                 style: OutlinedButton.styleFrom(
@@ -421,10 +435,158 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
+  /// Получает GPS с увеличенным timeout + fallback.
+  Future<void> _getCurrentLocation(
+      BuildContext context,
+      TextEditingController latController,
+      TextEditingController lngController,
+      ) async {
+    // 1. Проверяем сервис GPS
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ GPS выключен в системе. Включите в настройках.'),
+        ),
+      );
+      return;
+    }
+
+    // 2. Проверяем/запрашиваем разрешение
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) {
+      if (!context.mounted) return;
+      // Предлагаем открыть настройки
+      final open = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Нет разрешения'),
+          content: const Text(
+            'Разрешение на GPS отклонено навсегда.\n'
+                'Откройте настройки и разрешите вручную.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Открыть настройки'),
+            ),
+          ],
+        ),
+      );
+      if (open == true) {
+        await Geolocator.openAppSettings();
+      }
+      return;
+    }
+    if (permission == LocationPermission.denied) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Разрешение на GPS не выдано')),
+      );
+      return;
+    }
+
+    // 3. Показываем диалог «Получаем GPS...»
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Получаем GPS...\n'
+                    'Может занять до 60 секунд',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Position? position;
+
+    // 4. Пытаемся получить свежие координаты (timeout 60 сек)
+    try {
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 60),   // ← 60 сек!
+        ),
+      );
+    } catch (e) {
+      debugPrint('⚠️ Fresh GPS timeout: $e');
+    }
+
+    // 5. Fallback на последнюю известную позицию
+    if (position == null) {
+      try {
+        position = await Geolocator.getLastKnownPosition();
+        if (position != null) {
+          debugPrint('📍 Используем last known: '
+              '${position.latitude}, ${position.longitude}');
+        }
+      } catch (e) {
+        debugPrint('❌ Last known error: $e');
+      }
+    }
+
+    // 6. Закрываем прогресс-диалог
+    if (context.mounted) Navigator.pop(context);
+
+    // 7. Обновляем контроллеры
+    if (position != null) {
+      latController.text = position.latitude.toStringAsFixed(6);
+      lngController.text = position.longitude.toStringAsFixed(6);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '✅ Координаты получены:\n'
+                  '${position.latitude.toStringAsFixed(6)}, '
+                  '${position.longitude.toStringAsFixed(6)}',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '❌ Не удалось получить GPS.\n'
+                  'Попробуйте выйти на открытое место.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // РАДИУС И ТАЙМАУТ
+  // ═══════════════════════════════════════════════════════════════
+
   void _showRadiusDialog(
-      BuildContext context, WidgetRef ref, PresenceSettings settings) {
-    final ctrl =
-    TextEditingController(text: settings.homeRadius.toString());
+      BuildContext context,
+      WidgetRef ref,
+      PresenceSettings settings,
+      ) {
+    final ctrl = TextEditingController(text: settings.homeRadius.toString());
 
     showDialog(
       context: context,
@@ -461,7 +623,10 @@ class PresenceSettingsScreen extends ConsumerWidget {
   }
 
   void _showTimeoutDialog(
-      BuildContext context, WidgetRef ref, PresenceSettings settings) {
+      BuildContext context,
+      WidgetRef ref,
+      PresenceSettings settings,
+      ) {
     final ctrl =
     TextEditingController(text: settings.awayTimeoutMin.toString());
 

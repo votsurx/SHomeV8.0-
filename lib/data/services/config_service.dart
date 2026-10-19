@@ -255,9 +255,13 @@ class ConfigService {
         final prefs = await SharedPreferences.getInstance();
 
         final mqttBroker = settings['mqtt_broker']?.toString();
-        final mqttPort = settings['mqtt_port']?.toString();
-        if (mqttBroker != null && mqttBroker.isNotEmpty) {
-          await prefs.setString('mqtt_broker', mqttBroker);
+        final mqttPort = settings['mqtt_port'];
+        if (mqttPort != null) {
+          // Сохраняем как int — это то, что ожидает main.dart
+          final portInt = mqttPort is int
+              ? mqttPort
+              : int.tryParse(mqttPort.toString()) ?? 1883;
+          await prefs.setInt('mqtt_port', portInt);
         }
         if (mqttPort != null && mqttPort.isNotEmpty) {
           await prefs.setString('mqtt_port', mqttPort);
