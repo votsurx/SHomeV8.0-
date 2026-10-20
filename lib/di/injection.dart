@@ -14,6 +14,10 @@ import '../data/repositories/scene_repository_impl.dart';
 import '../data/services/automation_engine.dart';
 import '../data/services/presence_detector.dart';
 import '../data/services/timer_engine.dart';
+import '../data/services/zigbee_bridge.dart';
+import '../data/protocols/zigbee_protocol.dart';
+import '../domain/services/mqtt_service_interface.dart';
+import '../data/services/mqtt_service_impl.dart';
 
 final getIt = GetIt.instance;
 
@@ -24,6 +28,30 @@ void configureDependencies() {
 
   final talker = TalkerFlutter.init();
   getIt.registerLazySingleton<Talker>(() => talker);
+
+
+  // ============================================================
+  // 📡 MQTT
+  // ============================================================
+
+  getIt.registerLazySingleton<MqttService>(
+        () => MqttServiceImpl(getIt<Talker>()),
+  );
+
+  // ============================================================
+  // 🐝 ZIGBEE
+  // ============================================================
+
+  getIt.registerLazySingleton<ZigbeeBridge>(
+        () => ZigbeeBridge(
+      mqttService: getIt<MqttService>(),
+      talker: getIt<Talker>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<ZigbeeProtocol>(
+        () => ZigbeeProtocol(getIt<MqttService>(), getIt<Talker>()),
+  );
 
   // ============================================================
   // 🔐 СИНГЛТОНЫ
@@ -48,7 +76,7 @@ void configureDependencies() {
   getIt.registerLazySingleton<DeviceRepository>(
         () => DeviceRepositoryImpl(
       getIt<TuyaProtocol>(),
-      getIt<EncryptedKeys>(),   // ← ДОБАВЛЕНО: ключи в SecureStorage
+      getIt<EncryptedKeys>(),
     ),
   );
 

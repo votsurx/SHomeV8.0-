@@ -41,6 +41,18 @@ class EncryptedKeys {
   Future<String?> getVkUserId() => get(_vkUserIdKey);
   Future<void> deleteVkUserId() => delete(_vkUserIdKey);
 
+  // ─── MQTT ───
+  static const _mqttPasswordKey = 'mqtt_password';
+  static const _mqttUsernameKey = 'mqtt_username';
+
+  Future<void> saveMqttUsername(String username) => save(_mqttUsernameKey, username);
+  Future<String?> getMqttUsername() => get(_mqttUsernameKey);
+  Future<void> deleteMqttUsername() => delete(_mqttUsernameKey);
+
+  Future<void> saveMqttPassword(String password) => save(_mqttPasswordKey, password);
+  Future<String?> getMqttPassword() => get(_mqttPasswordKey);
+  Future<void> deleteMqttPassword() => delete(_mqttPasswordKey);
+
   // ─── Cloud Mail.ru ───
   Future<void> saveCloudLogin(String login) => save(_cloudLoginKey, login);
   Future<String?> getCloudLogin() => get(_cloudLoginKey);

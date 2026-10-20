@@ -7,6 +7,7 @@ library;
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/protocols/zigbee_protocol.dart';
 import '../../domain/models/device.dart';
 import '../../domain/repositories/device_repository.dart';
 import '../../data/protocols/tuya_protocol.dart';
@@ -181,6 +182,29 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<bool> turnOn(String id) async {
     final device = state.firstWhere((d) => d.id == id);
+
+    // ═══════════════════════════════════════════════════════════
+    // 🐝 ZIGBEE — через MQTT
+    // ═══════════════════════════════════════════════════════════
+    if (device.properties['source'] == 'zigbee') {
+      try {
+        final friendlyName = device.properties['friendly_name'] as String?
+            ?? device.name;
+        final protocol = getIt<ZigbeeProtocol>();
+        await protocol.turnOn(friendlyName);
+        _updateLocalState(id, true);
+        EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOn');
+        _sendDeviceNotification(device.name, 'Включено', true);
+        return true;
+      } catch (e) {
+        debugPrint('❌ Zigbee turnOn error: $e');
+        return false;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔌 TUYA — как раньше
+    // ═══════════════════════════════════════════════════════════
     EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOn');
     onCommandSent?.call(id);
     _updateLocalState(id, true);
@@ -198,6 +222,29 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<bool> turnOff(String id) async {
     final device = state.firstWhere((d) => d.id == id);
+
+    // ═══════════════════════════════════════════════════════════
+    // 🐝 ZIGBEE — через MQTT
+    // ═══════════════════════════════════════════════════════════
+    if (device.properties['source'] == 'zigbee') {
+      try {
+        final friendlyName = device.properties['friendly_name'] as String?
+            ?? device.name;
+        final protocol = getIt<ZigbeeProtocol>();
+        await protocol.turnOff(friendlyName);
+        _updateLocalState(id, false);
+        EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOff');
+        _sendDeviceNotification(device.name, 'Выключено', true);
+        return true;
+      } catch (e) {
+        debugPrint('❌ Zigbee turnOff error: $e');
+        return false;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔌 TUYA — как раньше
+    // ═══════════════════════════════════════════════════════════
     EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOff');
     onCommandSent?.call(id);
     _updateLocalState(id, false);
@@ -232,17 +279,28 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<bool> setSwitchChannel(String id, int channel, bool value) async {
     final device = state.firstWhere((d) => d.id == id);
+
+    // 🐝 Zigbee
+    if (device.properties['source'] == 'zigbee') {
+      try {
+        final friendlyName = device.properties['friendly_name'] as String?
+            ?? device.name;
+        final protocol = getIt<ZigbeeProtocol>();
+        // Для многоканальных: state_l1, state_l2, ...
+        await protocol.setState(friendlyName, {'state_l$channel': value ? 'ON' : 'OFF'});
+        _updateChannelState(id, channel, value);
+        return true;
+      } catch (e) {
+        debugPrint('❌ Zigbee setSwitchChannel error: $e');
+        return false;
+      }
+    }
+
+    // 🔌 Tuya
     onCommandSent?.call(id);
     _updateChannelState(id, channel, value);
     final success = await _tuyaProtocol.setSwitchChannel(device, channel, value);
     if (!success) _updateChannelState(id, channel, !value);
-    if (success) {
-      _sendDeviceNotification(
-        device.name,
-        'Канал $channel: ${value ? 'Включен' : 'Выключен'}',
-        true,
-      );
-    }
     return success;
   }
 
@@ -288,10 +346,38 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<bool> setBrightness(String id, int brightness) async {
     final device = state.firstWhere((d) => d.id == id);
+
+    // 🐝 Zigbee
+    if (device.properties['source'] == 'zigbee') {
+      try {
+        final friendlyName = device.properties['friendly_name'] as String?
+            ?? device.name;
+        final protocol = getIt<ZigbeeProtocol>();
+        await protocol.setBrightness(friendlyName, brightness);
+        final updated = device.copyWith(
+          properties: {
+            ...device.properties,
+            'brightness': brightness,
+            'isOn': brightness > 0,
+          },
+        );
+        state = state.map((d) => d.id == id ? updated : d).toList();
+        return true;
+      } catch (e) {
+        debugPrint('❌ Zigbee setBrightness error: $e');
+        return false;
+      }
+    }
+
+    // 🔌 Tuya
     final success = await _tuyaProtocol.setBrightness(device, brightness);
     if (success) {
       final updated = device.copyWith(
-        properties: {...device.properties, 'brightness': brightness, 'isOn': brightness > 0},
+        properties: {
+          ...device.properties,
+          'brightness': brightness,
+          'isOn': brightness > 0,
+        },
       );
       state = state.map((d) => d.id == id ? updated : d).toList();
     }

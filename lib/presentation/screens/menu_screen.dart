@@ -3,9 +3,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../application/state/theme_provider.dart';
-import '../../application/state/nvr_provider.dart';
 
 class MenuScreen extends ConsumerStatefulWidget {
   const MenuScreen({super.key});
@@ -20,7 +18,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
     final themeNotifier = ref.watch(themeProvider.notifier);
     final themeMode = ref.watch(themeProvider);
     final isDark = themeMode == ThemeMode.dark;
-    final nvrSettings = ref.watch(nvrSettingsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -67,9 +64,16 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                 // ============================================================
                 _buildTile(
                   icon: Icons.search,
-                  label: 'Сканировать',
+                  label: 'Сканировать TUYA',
                   color: Colors.teal,
                   onTap: () => context.push('/scan'),
+                ),
+                // 🆕 ZIGBEE
+                _buildTile(
+                  icon: Icons.hub,
+                  label: 'Zigbee',
+                  color: Colors.purple,
+                  onTap: () => context.push('/zigbee_scan'),
                 ),
 
                 // ============================================================
@@ -110,36 +114,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   onTap: () => context.push('/events'),
                 ),
 
-                // ============================================================
-                // 🎥 ВИДЕО (НОВОЕ!)
-                // ============================================================
-                _buildTile(
-                  icon: Icons.security,
-                  label: 'Видео NVR',
-                  color: Colors.red,
-                  onTap: () async {
-                    final url = 'http://${nvrSettings.host}:${nvrSettings.port}';
-                    try {
-                      if (await canLaunchUrl(Uri.parse(url))) {
-                        if (!context.mounted) return;
-                        await launchUrl(
-                          Uri.parse(url),
-                          mode: LaunchMode.externalApplication,
-                        );
-                      } else {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('❌ Не удалось открыть LegionNVR')),
-                        );
-                      }
-                    } catch (e) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('❌ Ошибка: $e')),
-                      );
-                    }
-                  },
-                ),
 
                 // ============================================================
                 // ☁️ ОБЛАКО

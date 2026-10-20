@@ -6,7 +6,6 @@ import 'application/navigation/router.dart';
 import 'application/state/presence_detector_provider.dart';
 import 'application/state/theme_provider.dart';
 import 'presentation/theme/app_theme.dart';
-import 'application/state/nvr_provider.dart';
 
 class SHomeApp extends StatelessWidget {
   const SHomeApp({super.key});
@@ -15,7 +14,6 @@ class SHomeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, child) {
-        ref.watch(nvrSettingsProvider);
         ref.watch(presenceDetectorProvider);
         final themeMode = ref.watch(themeProvider);
 

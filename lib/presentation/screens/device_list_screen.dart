@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../../domain/models/device.dart';
 import '../../application/state/devices_provider.dart';
 import '../widgets/device_card.dart';
-import '../widgets/myispy_camera_card.dart';
 import '../widgets/room_selector.dart';
 import '../../data/services/adaptive_poller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +18,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import '../../application/onboarding_manager.dart';
-import '../widgets/nvr_camera_card.dart';
 import 'package:http/http.dart' as http;
 class DeviceListScreen extends ConsumerStatefulWidget {
   const DeviceListScreen({super.key});
@@ -137,23 +135,6 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
                   childAspectRatio: 0.85,
                   padding: const EdgeInsets.all(12),
                   children: devices.map((device) {
-                    final cameraType = device.properties['cameraType'] as String? ?? '';
-
-                    // MyiSpy камеры — своя карточка
-                    if (device.type == DeviceType.camera && cameraType == 'ispy') {
-                      return MyiSpyCameraCard(
-                        key: ValueKey(device.id),
-                        device: device,
-                      );
-                    }
-
-                    // LegionNVR камеры — своя карточка
-                    if (device.type == DeviceType.camera && cameraType == 'nvr') {
-                      return NvrCameraCard(
-                        key: ValueKey(device.id),
-                        device: device,
-                      );
-                    }
 
                     // Остальные устройства
                     return DeviceCard(

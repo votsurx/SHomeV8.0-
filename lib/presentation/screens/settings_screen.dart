@@ -190,24 +190,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // 🖥️ NVR
+          // ⚙️ НАСТРОЙКИ MQTT
           Card(
             child: ListTile(
-              leading: const Icon(Icons.security, color: Colors.red),
-              title: const Text('Видео NVR'),
-              subtitle: const Text('Настройка подключения к LegionNVR'),
-              onTap: () => context.push('/nvr_settings'),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // 📡 MyiSpy MQTT
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.wifi_tethering, color: Colors.orange),
-              title: const Text('Видео MyiSpy'),
-              subtitle: const Text('Настройка подключения к MQTT брокеру MyiSpy'),
-              onTap: () => context.push('/mqtt_settings'),
+              leading: const Icon(Icons.settings_ethernet, color: Colors.teal),
+              title: const Text('Настройки MQTT'),
+              subtitle: const Text('Брокер для Zigbee2MQTT'),
+              onTap: () => context.push('/mqtt_broker_settings'),
             ),
           ),
           const SizedBox(height: 12),

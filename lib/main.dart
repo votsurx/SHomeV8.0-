@@ -7,32 +7,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker/talker.dart';
 import 'data/services/heartbeat_server.dart';
-import 'data/services/nvr_api_client.dart';
 import 'di/injection.dart';
 import 'domain/models/room.dart';
-import 'domain/repositories/device_repository.dart';
 import 'domain/repositories/room_repository.dart';
 import 'data/services/automation_engine.dart';
 import 'data/services/timer_engine.dart';
 import 'data/services/config_service.dart';
 import 'data/services/mailru_cloud_service.dart';
 import 'app.dart';
-import 'data/services/mqtt_bridge.dart';
 import 'data/services/mqtt_service_impl.dart';
-import 'data/services/nvr_sync_service.dart';
 import 'application/state/theme_provider.dart';
-import 'application/state/nvr_provider.dart';
-import 'data/services/ispy_sync_service.dart';
 import 'domain/services/mqtt_service_interface.dart';
-import 'application/state/devices_provider.dart';
-import 'data/services/vk_notification_service.dart';
 
-/// Глобальный доступ к MQTT сервису
+/// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
 
 final globalContainer = ProviderContainer();
 
-void main() async  {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
   ThemeNotifier.updateAutoCache();
@@ -66,24 +58,19 @@ class SHomeAppObserver extends StatefulWidget {
 
 class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBindingObserver {
   Timer? _themeTimer;
-  Timer? _nvrSyncTimer;
-  MqttBridge? _mqttBridge;
-
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _startAutoThemeTimer();
-    _initNvrServices();
+    _connectMqtt();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _themeTimer?.cancel();
-    _nvrSyncTimer?.cancel();
-    _mqttBridge?.stop();
     HeartbeatServer.stop();
     super.dispose();
   }
@@ -108,139 +95,33 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> with WidgetsBinding
     }
   }
 
-  void _initNvrServices() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _connectMqttAndStartBridge();
-      _startNvrSync();
-    });
-  }
-
-  Future<void> _connectMqttAndStartBridge() async {
+  /// Подключаемся к MQTT-брокеру (для Zigbee и Frigate)
+  Future<void> _connectMqtt() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final mqttHost = prefs.getString('mqtt_host') ?? 'localhost';
-    // Универсальное чтение: может быть int или String
+      final mqttHost = prefs.getString('mqtt_host') ?? '';
       final mqttPortRaw = prefs.get('mqtt_port');
       final mqttPort = mqttPortRaw is int
           ? mqttPortRaw
           : int.tryParse(mqttPortRaw?.toString() ?? '') ?? 1883;
 
-      // Создаём и сохраняем MQTT сервис глобально
-      final service = MqttServiceImpl(getIt<Talker>());
-      globalMqttService = service;   // ← Сохраняем для доступа из любого места!
-      await service.connect(mqttHost, port: mqttPort);
-
-      _mqttBridge = MqttBridge(
-        mqttService: service,
-        talker: getIt<Talker>(),
-      );
-      await _mqttBridge!.start();
-
-      // ============================================================
-      // 🧠 MYISPY — СЕРВИС СИНХРОНИЗАЦИИ КАМЕР
-      // ============================================================
-      final ispySyncService = IspySyncService(
-        deviceRepo: getIt<DeviceRepository>(),
-        talker: getIt<Talker>(),
-        devicesNotifier: globalContainer.read(devicesProvider.notifier),  // ← ПЕРЕДАЁМ!
-      );
-      ispySyncService.attachMqttBridge(_mqttBridge!);
-
-      // ============================================================
-      // 🔴 LEGION NVR — КОЛБЭКИ ДВИЖЕНИЯ
-      // ============================================================
-      _mqttBridge!.onMotionEvent = (event) async {
-        debugPrint('🔴 LegionNVR Motion: ${event.cameraName} → ${event.event}');
-
-        // Отправляем уведомление только при НАЧАЛЕ движения
-        if (event.event != 'motion_start') return;
-
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          final enabled = prefs.getBool('notifications_enabled') ?? false;
-          final notifyAlarms = prefs.getBool('notify_alarms') ?? true;
-          final token = prefs.getString('vk_token') ?? '';
-          final userId = prefs.getString('vk_user_id') ?? '';
-
-          if (enabled && notifyAlarms && token.isNotEmpty && userId.isNotEmpty) {
-            final vk = VkNotificationService();
-            await vk.loadSettings();
-            await vk.sendAlarm(
-              cameraName: event.cameraName,
-              label: 'motion',
-              score: (event.percent ?? 90) / 100,
-            );
-            debugPrint('✅ VK: тревога отправлена');
-          }
-        } catch (e) {
-          debugPrint('❌ Ошибка отправки VK-тревоги: $e');
-        }
-      };
-
-      ///_mqttBridge!.onStatusEvent = (cameraId, isOnline) {
-        ///debugPrint('📡 Camera $cameraId: ${isOnline ? "ONLINE" : "OFFLINE"}');
-      ///};
-
-      _mqttBridge!.onRecordingEvent = (cameraId, isRecording) {
-        debugPrint('📼 Camera $cameraId recording: $isRecording');
-      };
-
-      debugPrint('✅ MQTT Bridge started (MyiSpy + LegionNVR)');
-    } catch (e) {
-      debugPrint('❌ MQTT init error: $e');
-    }
-  }
-
-  void _startNvrSync() {
-    // ✅ ТОЛЬКО ПРИ СТАРТЕ, БЕЗ ПЕРИОДИЧЕСКОЙ СИНХРОНИЗАЦИИ
-    Future.delayed(const Duration(seconds: 2), _syncNvrCameras);
-  }
-
-  Future<void> _syncNvrCameras() async {
-    try {
-      final settings = await _getNvrSettings();
-      if (settings.host.isEmpty) {
+      if (mqttHost.isEmpty) {
+        getIt<Talker>().info('⚠️ MQTT host не настроен — пропускаем подключение');
         return;
       }
 
-      if (!mounted) return;
-
-      final apiClient = NvrApiClient(
-        host: settings.host,
-        port: settings.port,
-      );
-
-      final syncService = NvrSyncService(
-        deviceRepo: getIt<DeviceRepository>(),
-        talker: getIt<Talker>(),
-        apiClient: apiClient,
-      );
-
-      await syncService.sync();
+      final service = MqttServiceImpl(getIt<Talker>());
+      globalMqttService = service;
+      await service.connect(mqttHost, port: mqttPort);
+      getIt<Talker>().info('✅ MQTT подключён: $mqttHost:$mqttPort');
     } catch (e) {
-      debugPrint('❌ NVR sync error: $e');
+      getIt<Talker>().error('❌ MQTT init error: $e');
     }
-  }
-
-  Future<NvrSettings> _getNvrSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedHost = prefs.getString('nvr_host');
-
-    // Универсальное чтение: может быть int или String
-    final nvrPortRaw = prefs.get('nvr_port');
-    final nvrPort = nvrPortRaw is int
-        ? nvrPortRaw
-        : int.tryParse(nvrPortRaw?.toString() ?? '') ?? 8080;
-
-    return NvrSettings(
-      host: savedHost ?? '',
-      port: nvrPort,
-    );
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Бекапим только когда приложение реально свернули (не при звонке/диалоге)
+    // Бекапим только когда приложение реально свернули
     if (state == AppLifecycleState.paused) {
       ConfigService.buildConfigJson().then((json) {
         MailruCloudService.autoSync(json);

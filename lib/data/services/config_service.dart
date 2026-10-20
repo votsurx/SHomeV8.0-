@@ -120,6 +120,10 @@ class ConfigService {
 
     final keys = EncryptedKeys();
 
+    // MQTT
+    final mqttUsername = await keys.getMqttUsername() ?? '';
+    final mqttPassword = await keys.getMqttPassword() ?? '';
+
     // VK
     final vkToken = await keys.getVkToken() ?? '';
     final vkUserId = await keys.getVkUserId() ?? '';
@@ -150,7 +154,7 @@ class ConfigService {
     cloudPassword.isNotEmpty ? encrypt(cloudPassword) : '';
 
     final config = {
-      'version': '3.0',
+      'version': '8.1',
       'exported_at': DateTime.now().toIso8601String(),
       'devices': expandedDevices,
       'rooms': rooms.map((r) => r.toMap()).toList(),
@@ -166,6 +170,8 @@ class ConfigService {
       'settings': {
         'mqtt_broker': mqttBroker,
         'mqtt_port': mqttPort,
+        'mqtt_username': mqttUsername,
+        'mqtt_password_encrypted': mqttPassword.isNotEmpty ? encrypt(mqttPassword) : '',
         'cloud_login': cloudLogin,
         'cloud_password_encrypted': encryptedCloudPassword,
         'vk_token_encrypted': encryptedVkToken,
@@ -255,16 +261,29 @@ class ConfigService {
         final prefs = await SharedPreferences.getInstance();
 
         final mqttBroker = settings['mqtt_broker']?.toString();
+        if (mqttBroker != null && mqttBroker.isNotEmpty) {
+          await prefs.setString('mqtt_host', mqttBroker);
+        }
+
         final mqttPort = settings['mqtt_port'];
         if (mqttPort != null) {
-          // Сохраняем как int — это то, что ожидает main.dart
           final portInt = mqttPort is int
               ? mqttPort
               : int.tryParse(mqttPort.toString()) ?? 1883;
           await prefs.setInt('mqtt_port', portInt);
         }
-        if (mqttPort != null && mqttPort.isNotEmpty) {
-          await prefs.setString('mqtt_port', mqttPort);
+
+        // MQTT username/password
+        final mqttUsername = settings['mqtt_username']?.toString();
+        if (mqttUsername != null && mqttUsername.isNotEmpty) {
+          await keys.saveMqttUsername(mqttUsername);
+        }
+
+        final mqttPassEnc = settings['mqtt_password_encrypted']?.toString();
+        if (mqttPassEnc != null && mqttPassEnc.isNotEmpty) {
+          try {
+            await keys.saveMqttPassword(decrypt(mqttPassEnc));
+          } catch (_) {}
         }
 
         // VK-токен → SecureStorage

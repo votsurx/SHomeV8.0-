@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import '../../../domain/models/device.dart';
-import '../../widgets/myispy_camera_card.dart';
 
 class DeviceCameraPreview extends StatelessWidget {
   final Device device;
@@ -12,17 +11,7 @@ class DeviceCameraPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final cameraType = device.properties['cameraType'] as String? ?? 'device';
 
-    // MyiSpy AI камера
-    if (cameraType == 'ispy') {
-      return MyiSpyCameraCard(device: device);  // ← используй device (не camera!)
-    }
-
-    // MJPEG из Legion NVR
-    if (cameraType == 'mjpeg') {
-      return _MjpegPreview(device: device);
-    }
-
-    // RTSP (старый)
+        // RTSP (старый)
     if (cameraType == 'rtsp') {
       return _RtspPreview(device: device);
     }

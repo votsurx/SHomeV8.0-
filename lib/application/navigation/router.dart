@@ -14,10 +14,11 @@ import '../../presentation/screens/timers_screen.dart';
 import '../../presentation/screens/statistics_screen.dart';
 import '../../presentation/screens/settings_screen.dart';
 import '../../presentation/screens/cloud_settings_screen.dart';
-import '../../presentation/screens/nvr_settings_screen.dart';
-import '../../presentation/screens/myispy_settings_screen.dart';
 import '../../presentation/screens/notification_channels_screen.dart';
 import '../../presentation/screens/presence_settings_screen.dart';
+import '../../presentation/screens/mqtt_broker_settings_screen.dart';
+import '../../presentation/screens/zigbee_scan_screen.dart';
+
 
 final router = GoRouter(
   initialLocation: '/',
@@ -45,17 +46,6 @@ final router = GoRouter(
       builder: (context, state) => const SettingsScreen(),
     ),
 
-    // NVR настройки
-    GoRoute(
-      path: '/nvr_settings',
-      builder: (context, state) => const NvrSettingsScreen(),
-    ),
-    // MyiSpy настройки
-    GoRoute(
-      path: '/mqtt_settings',
-      builder: (context, state) => const MyiSpySettingsScreen(),
-    ),
-
     // Облако
     GoRoute(
       path: '/cloud',
@@ -72,6 +62,17 @@ final router = GoRouter(
     GoRoute(
       path: '/rooms',
       builder: (context, state) => const RoomsManageScreen(),
+    ),
+
+    // Zigbee сканер
+    GoRoute(
+      path: '/zigbee_scan',
+      builder: (context, state) => const ZigbeeScanScreen(),
+    ),
+
+    GoRoute(
+      path: '/mqtt_broker_settings',
+      builder: (context, state) => const MqttBrokerSettingsScreen(),
     ),
 
     // Сцены
