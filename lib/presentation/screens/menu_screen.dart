@@ -76,6 +76,14 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
                   onTap: () => context.push('/zigbee_scan'),
                 ),
 
+                // 🎥 FRIGATE
+                _buildTile(
+                  icon: Icons.videocam,
+                  label: 'Frigate',
+                  color: Colors.red,
+                  onTap: () => context.push('/frigate'),
+                ),
+
                 // ============================================================
                 // 🎨 ТЕМА
                 // ============================================================

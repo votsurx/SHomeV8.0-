@@ -18,7 +18,9 @@ import '../../presentation/screens/notification_channels_screen.dart';
 import '../../presentation/screens/presence_settings_screen.dart';
 import '../../presentation/screens/mqtt_broker_settings_screen.dart';
 import '../../presentation/screens/zigbee_scan_screen.dart';
-
+import '../../presentation/screens/frigate_screen.dart';
+import '../../presentation/screens/frigate_settings_screen.dart';
+// import '../../presentation/screens/frigate_player_screen.dart';  // TODO
 
 final router = GoRouter(
   initialLocation: '/',
@@ -50,6 +52,15 @@ final router = GoRouter(
     GoRoute(
       path: '/cloud',
       builder: (context, state) => const CloudSettingsScreen(),
+    ),
+
+    GoRoute(
+      path: '/frigate',
+      builder: (context, state) => const FrigateScreen(),
+    ),
+    GoRoute(
+      path: '/frigate_settings',
+      builder: (context, state) => const FrigateSettingsScreen(),
     ),
 
     // Уведомления

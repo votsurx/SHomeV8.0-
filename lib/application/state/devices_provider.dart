@@ -183,6 +183,11 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
   Future<bool> turnOn(String id) async {
     final device = state.firstWhere((d) => d.id == id);
 
+    // 🎥 Frigate-камера — не управляется через turnOn
+    if (device.properties['source'] == 'frigate') {
+      return false;
+    }
+
     // ═══════════════════════════════════════════════════════════
     // 🐝 ZIGBEE — через MQTT
     // ═══════════════════════════════════════════════════════════
@@ -222,6 +227,11 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   Future<bool> turnOff(String id) async {
     final device = state.firstWhere((d) => d.id == id);
+
+    // 🎥 Frigate-камера — не управляется через turnOff
+    if (device.properties['source'] == 'frigate') {
+      return false;
+    }
 
     // ═══════════════════════════════════════════════════════════
     // 🐝 ZIGBEE — через MQTT

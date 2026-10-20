@@ -21,6 +21,8 @@ class EncryptedKeys {
   static const _cloudPasswordKey = 'mailru_password';
   static const _cloudAutoSyncKey = 'mailru_autosync';
   static const _cloudLastSyncKey = 'mailru_last_sync';
+  // ─── Frigate ───
+  static const _frigateRtspPasswordKey = 'frigate_rtsp_password';
 
   // ─── Базовые ───
   Future<void> save(String key, String value) => _storage.write(key: key, value: value);
@@ -73,4 +75,13 @@ class EncryptedKeys {
   Future<void> saveCloudLastSync(String value) => save(_cloudLastSyncKey, value);
   Future<String?> getCloudLastSync() => get(_cloudLastSyncKey);
   Future<void> deleteCloudLastSync() => delete(_cloudLastSyncKey);
+  // ─── Frigate RTSP ───  ← ДОБАВИТЬ
+  Future<void> saveFrigateRtspPassword(String password) =>
+      save(_frigateRtspPasswordKey, password);
+
+  Future<String?> getFrigateRtspPassword() =>
+      get(_frigateRtspPasswordKey);
+
+  Future<void> deleteFrigateRtspPassword() =>
+      delete(_frigateRtspPasswordKey);
 }

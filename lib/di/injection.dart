@@ -18,6 +18,8 @@ import '../data/services/zigbee_bridge.dart';
 import '../data/protocols/zigbee_protocol.dart';
 import '../domain/services/mqtt_service_interface.dart';
 import '../data/services/mqtt_service_impl.dart';
+import '../data/services/frigate_service.dart';
+import '../data/services/frigate_bridge.dart';
 
 final getIt = GetIt.instance;
 
@@ -51,6 +53,21 @@ void configureDependencies() {
 
   getIt.registerLazySingleton<ZigbeeProtocol>(
         () => ZigbeeProtocol(getIt<MqttService>(), getIt<Talker>()),
+  );
+
+  // ============================================================
+  // 🎥 FRIGATE
+  // ============================================================
+
+  getIt.registerLazySingleton<FrigateService>(
+        () => FrigateService(getIt<Talker>()),
+  );
+
+  getIt.registerLazySingleton<FrigateBridge>(
+        () => FrigateBridge(
+      mqttService: getIt<MqttService>(),
+      talker: getIt<Talker>(),
+    ),
   );
 
   // ============================================================

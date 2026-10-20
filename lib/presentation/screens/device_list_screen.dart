@@ -18,6 +18,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import '../../application/onboarding_manager.dart';
+import '../widgets/frigate_camera_card.dart';
 import 'package:http/http.dart' as http;
 class DeviceListScreen extends ConsumerStatefulWidget {
   const DeviceListScreen({super.key});
@@ -135,8 +136,16 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
                   childAspectRatio: 0.85,
                   padding: const EdgeInsets.all(12),
                   children: devices.map((device) {
+                    // 🎥 Frigate-камера — своя карточка
+                    if (device.type == DeviceType.camera &&
+                        device.properties['source'] == 'frigate') {
+                      return FrigateCameraCard(
+                        key: ValueKey(device.id),
+                        device: device,
+                      );
+                    }
 
-                    // Остальные устройства
+                    // Остальные устройства (Tuya, Zigbee)
                     return DeviceCard(
                       key: ValueKey(device.id),
                       device: device,

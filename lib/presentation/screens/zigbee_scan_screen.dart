@@ -76,7 +76,7 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
       mqttTopic: 'zigbee2mqtt/${zb.friendlyName}',
       properties: {
         'source': 'zigbee',
-        'friendly_name': zb.friendlyName,  
+        'friendly_name': zb.friendlyName,
         'ieee_address': zb.ieeeAddress,
         'model': zb.model,
         'vendor': zb.vendor,
