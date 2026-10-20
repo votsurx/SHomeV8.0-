@@ -43,7 +43,15 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
     final keys = EncryptedKeys();
 
     final host = prefs.getString('mqtt_host') ?? '';
-    final port = prefs.getInt('mqtt_port') ?? 1883;
+
+    // ═══════════════════════════════════════════════════════════
+    // УНИВЕРСАЛЬНОЕ ЧТЕНИЕ ПОРТА (может быть int или String)
+    // ═══════════════════════════════════════════════════════════
+    final portRaw = prefs.get('mqtt_port');
+    final port = portRaw is int
+        ? portRaw
+        : int.tryParse(portRaw?.toString() ?? '') ?? 1883;
+
     final username = await keys.getMqttUsername() ?? '';
     final password = await keys.getMqttPassword() ?? '';
 
@@ -184,7 +192,7 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -208,8 +216,8 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: _isConnected!
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(

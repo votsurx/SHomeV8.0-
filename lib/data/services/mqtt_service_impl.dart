@@ -32,13 +32,19 @@ class MqttServiceImpl implements MqttService {
   Future<void> connect(String broker, {int port = 1883}) async {
     try {
       _talker.info('Connecting to MQTT broker: $broker:$port');
-      _client = MqttServerClient(broker, 'shome_client');
+
+      _client = MqttServerClient(broker, 'shome_client_01');  // ← ФИКСИРОВАННЫЙ ID
       _client!.port = port;
       _client!.keepAlivePeriod = 20;
+      _client!.logging(on: false);
+      _client!.setProtocolV311();  // ← MQTT 3.1.1 (поддержка больших сообщений)
+      _client!.onDisconnected = _onDisconnected;
+      _client!.onConnected = _onConnected;
 
       final connMessage = MqttConnectMessage()
-          .withClientIdentifier('shome_flutter_${DateTime.now().millisecondsSinceEpoch}')
-          .startClean();
+          .withClientIdentifier('shome_client_01')
+      // ❌ НЕ ВЫЗЫВАЕМ .startClean() → сессия сохраняется
+          .withWillQos(MqttQos.atMostOnce);
       _client!.connectionMessage = connMessage;
 
       await _client!.connect();
@@ -47,7 +53,9 @@ class MqttServiceImpl implements MqttService {
       _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>> messages) {
         for (final msg in messages) {
           final recMessage = msg.payload as MqttPublishMessage;
-          final payload = MqttPublishPayload.bytesToStringAsString(recMessage.payload.message);
+          final payload = MqttPublishPayload.bytesToStringAsString(
+            recMessage.payload.message,
+          );
           final mqttMessage = MqttMessageData(topic: msg.topic, payload: payload);
           _messageController.add(mqttMessage);
         }
@@ -57,6 +65,14 @@ class MqttServiceImpl implements MqttService {
     } catch (e, stackTrace) {
       _talker.error('Failed to connect to MQTT broker', e, stackTrace);
     }
+  }
+
+  void _onDisconnected() {
+    _talker.warning('⚠️ MQTT disconnected');
+  }
+
+  void _onConnected() {
+    _talker.info('✅ MQTT reconnected');
   }
 
   /// Отключается от MQTT брокера.
@@ -69,7 +85,10 @@ class MqttServiceImpl implements MqttService {
   @override
   Future<void> subscribe(String topic) async {
     if (_client != null && isConnected) {
-      _client!.subscribe(topic, MqttQos.atLeastOnce);
+      _client!.subscribe(topic, MqttQos.atMostOnce);  // ← QoS 0
+      // Ждём, пока брокер подтвердит подписку
+      await Future.delayed(const Duration(milliseconds: 200));
+      _talker.info('Subscribed to topic: $topic (QoS 0)');
       _talker.info('Subscribed to topic: $topic');
     }
   }

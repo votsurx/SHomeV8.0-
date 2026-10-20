@@ -25,17 +25,12 @@ class ZigbeeDevicesNotifier extends StateNotifier<List<ZigbeeDevice>> {
     _bridge.onDevicesList = (devices) {
       state = devices.where((d) => !d.isCoordinator).toList();
     };
+
+    if (_bridge.lastDevices.isNotEmpty) {
+      state = _bridge.lastDevices.where((d) => !d.isCoordinator).toList();
+    }
   }
 
-  /// Обновляет состояние одного устройства (по friendly_name).
-  void updateDeviceState(String friendlyName, Map<String, dynamic> newState) {
-    state = state.map((d) {
-      if (d.friendlyName != friendlyName) return d;
-      return d; // состояние хранится отдельно, в Device.properties
-    }).toList();
-  }
-
-  /// Находит устройство по friendly_name.
   ZigbeeDevice? findByName(String friendlyName) {
     try {
       return state.firstWhere((d) => d.friendlyName == friendlyName);

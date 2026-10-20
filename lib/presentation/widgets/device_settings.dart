@@ -65,6 +65,9 @@ class DeviceSettings {
             orElse: () => device,
           );
 
+          final isZigbee = latestDevice.properties['source'] == 'zigbee';
+          final isTuya = !isZigbee && latestDevice.type != DeviceType.camera;
+
           return Padding(
             padding: EdgeInsets.only(
               left: 24,
@@ -116,9 +119,86 @@ class DeviceSettings {
                   ],
 
                   // ╔══════════════════════════════════════════╗
-                  // ║  СТАНДАРТНЫЕ ПОЛЯ TUYA (кроме камер)     ║
+                  // ║   ZIGBEE-ПОЛЯ (только для Zigbee)        ║
+                  // ║   IEEE, модель, производитель, батарея   ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type != DeviceType.camera) ...[
+                  if (isZigbee) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Zigbee-устройство',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple[700], fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+
+                    // IEEE-адрес (только чтение)
+                    TextField(
+                      controller: TextEditingController(text: latestDevice.properties['ieee_address'] ?? ''),
+                      decoration: const InputDecoration(
+                        labelText: 'IEEE-адрес',
+                        prefixIcon: Icon(Icons.fingerprint),
+                      ),
+                      readOnly: true,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Модель (только чтение)
+                    TextField(
+                      controller: TextEditingController(text: latestDevice.properties['model'] ?? ''),
+                      decoration: const InputDecoration(
+                        labelText: 'Модель',
+                        prefixIcon: Icon(Icons.devices),
+                      ),
+                      readOnly: true,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Производитель (только чтение)
+                    TextField(
+                      controller: TextEditingController(text: latestDevice.properties['vendor'] ?? ''),
+                      decoration: const InputDecoration(
+                        labelText: 'Производитель',
+                        prefixIcon: Icon(Icons.business),
+                      ),
+                      readOnly: true,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Батарея (только чтение)
+                    if (latestDevice.properties['battery'] != null) ...[
+                      TextField(
+                        controller: TextEditingController(text: '${latestDevice.properties['battery']}%'),
+                        decoration: const InputDecoration(
+                          labelText: 'Батарея',
+                          prefixIcon: Icon(Icons.battery_full),
+                        ),
+                        readOnly: true,
+                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+
+                    // Linkquality (только чтение)
+                    if (latestDevice.properties['linkquality'] != null) ...[
+                      TextField(
+                        controller: TextEditingController(text: '${latestDevice.properties['linkquality']} lqi'),
+                        decoration: const InputDecoration(
+                          labelText: 'Качество связи',
+                          prefixIcon: Icon(Icons.signal_cellular_alt),
+                        ),
+                        readOnly: true,
+                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+
+                  // ╔══════════════════════════════════════════╗
+                  // ║  СТАНДАРТНЫЕ ПОЛЯ TUYA (только для Tuya) ║
+                  // ╚══════════════════════════════════════════╝
+                  if (isTuya) ...[
                     const SizedBox(height: 8),
 
                     // Device ID (только чтение)
@@ -161,10 +241,10 @@ class DeviceSettings {
                   ],
 
                   // ╔══════════════════════════════════════════╗
-                  // ║  DPS ИНДЕКСЫ (выключатели и обычные)     ║
+                  // ║  DPS ИНДЕКСЫ (только для Tuya, не Zigbee)║
                   // ║  Скрыто: камеры, пылесосы (dps_map)      ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type != DeviceType.camera && latestDevice.type != DeviceType.compound) ...[
+                  if (isTuya && latestDevice.type != DeviceType.compound) ...[
                     const SizedBox(height: 8),
                     if (latestDevice.type == DeviceType.switch1 ||
                         latestDevice.type == DeviceType.switch2 ||
@@ -182,10 +262,10 @@ class DeviceSettings {
                   ],
 
                   // ╔══════════════════════════════════════════╗
-                  // ║ DPS КАРТА (для универсального устройства)║
-                  // ║   Редактор составных устройств           ║
+                  // ║ DPS КАРТА (только для Tuya compound/hvac)║
+                  // ║   НЕ для Zigbee (у него exposes)         ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac) ...[
+                  if (!isZigbee && (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac)) ...[
                     const SizedBox(height: 8),
                     Text('DPS карта:',
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
@@ -205,9 +285,9 @@ class DeviceSettings {
 
                   // ╔══════════════════════════════════════════╗
                   // ║    ОТОБРАЖЕНИЕ НА КАРТОЧКЕ              ║
-                  // ║   (только для устройств с dps_map)      ║
+                  // ║   (только для Tuya compound/hvac)       ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac) ...[
+                  if (!isZigbee && (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac)) ...[
                     const SizedBox(height: 12),
                     _buildDisplaySettings(ref, latestDevice, () => setModalState(() {})),
                   ],
@@ -220,6 +300,7 @@ class DeviceSettings {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
+                          // Копируем properties как есть (battery/linkquality сохраняются)
                           Map<String, dynamic> newProperties = {...latestDevice.properties};
 
                           // Обновляем RTSP URL для камер
@@ -231,16 +312,16 @@ class DeviceSettings {
                           final updated = latestDevice.copyWith(
                             name: nameController.text,
                             roomId: selectedRoomId,
-                            address: latestDevice.type != DeviceType.camera && addressController.text.isNotEmpty
+                            address: isTuya && addressController.text.isNotEmpty
                                 ? addressController.text
                                 : latestDevice.address,
-                            localKey: latestDevice.type != DeviceType.camera && localKeyController.text.isNotEmpty
+                            localKey: isTuya && localKeyController.text.isNotEmpty
                                 ? localKeyController.text
                                 : latestDevice.localKey,
-                            dpsIndex: latestDevice.type != DeviceType.camera && latestDevice.type != DeviceType.compound
+                            dpsIndex: isTuya && latestDevice.type != DeviceType.compound
                                 ? (int.tryParse(dpsControllers.first.text) ?? latestDevice.dpsIndex)
                                 : latestDevice.dpsIndex,
-                            version: latestDevice.type != DeviceType.camera ? selectedVersion : latestDevice.version,
+                            version: isTuya ? selectedVersion : latestDevice.version,
                             properties: newProperties,
                           );
                           ref.read(devicesProvider.notifier).updateDevice(updated);
@@ -281,10 +362,11 @@ class DeviceSettings {
                   ]),
 
                   // ╔══════════════════════════════════════════╗
-                  // ║  СОЗДАТЬ ДАТЧИК (не для камер/датчиков/  ║
-                  // ║  универсальных устройств                 ║
+                  // ║  СОЗДАТЬ ДАТЧИК (только для Tuya,        ║
+                  // ║  не для камер/датчиков/compound/Zigbee)  ║
                   // ╚══════════════════════════════════════════╝
-                  if (latestDevice.type != DeviceType.sensor &&
+                  if (isTuya &&
+                      latestDevice.type != DeviceType.sensor &&
                       latestDevice.type != DeviceType.camera &&
                       latestDevice.type != DeviceType.compound) ...[
                     const SizedBox(height: 8),
