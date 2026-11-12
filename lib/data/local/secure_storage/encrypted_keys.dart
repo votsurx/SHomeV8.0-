@@ -10,7 +10,6 @@ class EncryptedKeys {
   EncryptedKeys._();
 
   final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
   // ─── Префиксы ───

@@ -37,12 +37,16 @@ void main() {
       expect(find.text('Информация'), findsOneWidget);
     });
 
-    testWidgets('отображает NVR и MyiSpy', (tester) async {
+    testWidgets('отображает основные пункты настроек', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Видео NVR'), findsOneWidget);
-      expect(find.text('Видео MyiSpy'), findsOneWidget);
+      expect(find.text('Настройки'), findsOneWidget);
+      expect(find.text('Интервал опроса'), findsOneWidget);
+      expect(find.text('Резервное копирование'), findsOneWidget);
+      expect(find.text('Настройки MQTT'), findsOneWidget);
+      expect(find.text('Проверить обновления'), findsOneWidget);
+      expect(find.text('Информация'), findsOneWidget);
     });
 
     testWidgets('нажатие на Резервное копирование открывает SimpleDialog',

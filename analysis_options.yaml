@@ -30,3 +30,9 @@ analyzer:
   exclude:
     - lib/packages/tinytuya/test/**
     - lib/packages/tinytuya/example/**
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - macos/**
+    - linux/**

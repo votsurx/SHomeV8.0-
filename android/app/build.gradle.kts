@@ -1,11 +1,11 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    // id("org.jetbrains.kotlin.android")  // не нужен при Built-in Kotlin
     id("dev.flutter.flutter-gradle-plugin")
 }
-
-import java.util.Properties
-        import java.io.FileInputStream
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -24,13 +24,9 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     defaultConfig {
         applicationId = "com.example.shome"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 36
         versionCode = 80145
         versionName = "8.1.45"
@@ -52,6 +48,12 @@ android {
         release {
             signingConfig = signingConfigs.getByName("release")
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

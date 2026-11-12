@@ -68,9 +68,12 @@ class ConfigService {
     final file = File('${dir.path}/shome_backup_$dateStr.json');
     await file.writeAsString(encrypted);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'Резервная копия SHome (зашифрована)',
+    // Новый API share_plus 13.x
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        text: 'Резервная копия SHome (зашифрована)',
+      ),
     );
   }
 
@@ -80,16 +83,17 @@ class ConfigService {
 
   /// Импорт через FilePicker. Поддерживает зашифрованные и обычные бекапы.
   static Future<void> importConfig() async {
-    final result = await FilePicker.platform.pickFiles(
+    // 13.x: статический метод pickFile() для одного файла
+    final PlatformFile? picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['json'],
-      allowMultiple: false,
     );
 
-    if (result == null || result.files.isEmpty) return;
+    if (picked == null) return;
 
-    final file = File(result.files.single.path!);
-    final encrypted = await file.readAsString();
+    // 13.x: readAsBytes() вместо File(path).readAsString()
+    final bytes = await picked.readAsBytes();
+    final encrypted = utf8.decode(bytes);
 
     String json;
     try {
