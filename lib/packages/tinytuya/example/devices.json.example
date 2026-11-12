@@ -1,0 +1,28 @@
+{
+  "devices": [
+    {
+      "name": "My Device v3.3",
+      "device_id": "YOUR_DEVICE_ID_HERE",
+      "local_key": "YOUR_LOCAL_KEY_HERE",
+      "ip": "192.168.1.100",
+      "version": 3.3,
+      "type": "outlet"
+    },
+    {
+      "name": "My Device v3.4",
+      "device_id": "YOUR_DEVICE_ID_HERE",
+      "local_key": "YOUR_LOCAL_KEY_HERE",
+      "ip": "192.168.1.101",
+      "version": 3.4,
+      "type": "outlet"
+    },
+    {
+      "name": "My Device v3.5",
+      "device_id": "YOUR_DEVICE_ID_HERE",
+      "local_key": "YOUR_LOCAL_KEY_HERE",
+      "ip": "192.168.1.102",
+      "version": 3.5,
+      "type": "bulb"
+    }
+  ]
+}
