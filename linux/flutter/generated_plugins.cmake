@@ -7,7 +7,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   restart_app
   sqlite3_flutter_libs
   url_launcher_linux
-  vlc_player
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

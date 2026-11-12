@@ -17,7 +17,6 @@ import sqflite_darwin
 import sqlite3_flutter_libs
 import url_launcher_macos
 import video_player_avfoundation
-import vlc_player
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
@@ -32,5 +31,4 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   Sqlite3FlutterLibsPlugin.register(with: registry.registrar(forPlugin: "Sqlite3FlutterLibsPlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))
   VideoPlayerPlugin.register(with: registry.registrar(forPlugin: "VideoPlayerPlugin"))
-  VlcPlayerPlugin.register(with: registry.registrar(forPlugin: "VlcPlayerPlugin"))
 }
