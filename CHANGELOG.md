@@ -1,6 +1,6 @@
 # История изменений SHome
 
-## v8.1.45 — AGP 9 + Built-in Kotlin
+## v8.1.46 — AGP 9 + Built-in Kotlin
 
 > Миграция инструментов сборки на актуальные версии. Цель — убрать
 > предупреждение Flutter о Kotlin Gradle Plugin (KGP) и подготовить
@@ -10,7 +10,7 @@
 
 ### 🔧 Сборка
 - **Flutter** 3.44.0 → **3.50.0**
-- **Gradle** 8.14 → **9.5.0**
+- **Gradle** 8.14 → **9.6.0**
 - **AGP** 8.11.1 → **9.3.1**
 - **KGP** в `app/build.gradle.kts` **удалён**, включён **Built-in Kotlin** (`android.builtInKotlin=true`, `android.newDsl=false`)
 - Предупреждение `applies the Kotlin Gradle Plugin, which will cause build failures` — **исчезло**
@@ -42,7 +42,7 @@
 - Приложение запускается на устройстве (BNE LX1)
 
 ### 🔧 versionCode
-- `versionCode` = 80145
+- `versionCode` = 80146
 
 ### 📝 Осталось на потом
 - `package:flutter/material.dart` → `material_ui` (80 `info`-предупреждений, не блокирует сборку)
