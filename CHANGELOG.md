@@ -1,5 +1,54 @@
 # История изменений SHome
 
+## v8.1.45 — AGP 9 + Built-in Kotlin
+
+> Миграция инструментов сборки на актуальные версии. Цель — убрать
+> предупреждение Flutter о Kotlin Gradle Plugin (KGP) и подготовить
+> проект к будущим версиям Flutter, где KGP в приложении запрещён.
+> Функционал приложения не менялся, но обновлены мажорные версии
+> нескольких плагинов (file_picker, share_plus, secure_storage и др.).
+
+### 🔧 Сборка
+- **Flutter** 3.44.0 → **3.50.0**
+- **Gradle** 8.14 → **9.5.0**
+- **AGP** 8.11.1 → **9.3.1**
+- **KGP** в `app/build.gradle.kts` **удалён**, включён **Built-in Kotlin** (`android.builtInKotlin=true`, `android.newDsl=false`)
+- Предупреждение `applies the Kotlin Gradle Plugin, which will cause build failures` — **исчезло**
+
+### 📦 Обновления зависимостей
+- **`win32`** 5.15.0 → **6.4.0** (ключевое условие для AGP 9)
+- **`file_picker`** 8.3.7 → **13.3.3** — новый API: `FilePicker.pickFile()` + `PlatformFile.readAsBytes()` (вместо `FilePickerResult` и `File.readAsString`)
+- **`share_plus`** 10.1.4 → **13.3.1** — новый API: `SharePlus.instance.share(ShareParams(...))` (вместо `Share.shareXFiles`)
+- **`flutter_secure_storage`** 9.2.4 → **11.2.0** — удалён `AndroidOptions(encryptedSharedPreferences: true)` (бэкенд Jetpack Security больше не поддерживается)
+- **`network_info_plus`** 6.1.4 → **8.2.2**
+- **`package_info_plus`** 9.0.1 → **10.2.2**
+- **`talker_flutter`** / **`talker`** / **`talker_logger`** 4.x → **5.2.0**
+- **`github_release_apk_updater`** 1.0.5 → **1.0.11** (AGP 9-совместимость)
+- **`flutter_vlc_player`** 7.4.4 — **удалён** (мёртвая зависимость, в коде не использовался; тянул ~124 MB нативных VLC-библиотек)
+
+### 🛠️ Технические
+- `pubspec.yaml`: добавлен `dependency_overrides: dbus: ^0.8.0` — обход конфликта `geolocator_linux` ↔ `network_info_plus 8.x`
+- `config_service.dart`: `importConfig` переписан под `file_picker 13.x`; `exportConfig` — под `share_plus 13.x`
+- `encrypted_keys.dart`: убран `AndroidOptions(encryptedSharedPreferences: true)`
+- `settings_screen_test.dart`: устаревший тест «NVR/MyiSpy» заменён на актуальный «основные пункты настроек»
+
+### 📉 Размер APK
+- Release APK: **198.6 MB → 71.1 MB** (после удаления `flutter_vlc_player` и VLC-библиотек)
+
+### ✅ Проверено
+- Debug-сборка — проходит
+- Release-сборка — проходит (`app-release.apk`, 71.1 MB)
+- Тесты — **45/45 passed**
+- Приложение запускается на устройстве (BNE LX1)
+
+### 🔧 versionCode
+- `versionCode` = 80145
+
+### 📝 Осталось на потом
+- `package:flutter/material.dart` → `material_ui` (80 `info`-предупреждений, не блокирует сборку)
+- Мажорные обновления `riverpod 2→3`, `go_router 14→18`, `freezed 2→4` — отдельная задача
+- `sqlite3_flutter_libs 0.6.0+eol` — пакет EOL, стоит заменить
+
 ## v8.1.44 — Local HTTP Heartbeat
 
 ### 🎯 Новая функция: локальный heartbeat
