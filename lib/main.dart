@@ -10,30 +10,35 @@ import 'package:talker/talker.dart';
 import 'data/services/heartbeat_server.dart';
 import 'di/injection.dart';
 import 'domain/models/device.dart';
+import 'domain/models/frigate_models.dart';
 import 'domain/models/room.dart';
+import 'domain/models/scene.dart';
 import 'domain/repositories/room_repository.dart';
+import 'domain/repositories/scene_repository.dart';
 import 'data/services/automation_engine.dart';
 import 'data/services/timer_engine.dart';
+import 'data/services/event_logger.dart';
+import 'data/services/notification_coordinator.dart';
 import 'app.dart';
 import 'application/state/theme_provider.dart';
+import 'application/state/notification_settings_provider.dart';
+import 'application/state/sms_settings_provider.dart';
 import 'domain/services/mqtt_service_interface.dart';
 import 'data/services/zigbee_bridge.dart';
 import 'data/services/frigate_bridge.dart';
 import 'data/services/frigate_service.dart';
 import 'data/local/secure_storage/encrypted_keys.dart';
 import 'application/state/devices_provider.dart';
+import 'di/global_container.dart';
 
 /// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
-
-final globalContainer = ProviderContainer();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
   ThemeNotifier.updateAutoCache();
 
-  // Запускаем HTTP-сервер для heartbeat
   final serverStarted = await HeartbeatServer.start(port: 7777);
   if (serverStarted) {
     getIt<Talker>().info('📡 HeartbeatServer готов к приёму');
@@ -60,21 +65,19 @@ class SHomeAppObserver extends StatefulWidget {
   State<SHomeAppObserver> createState() => _SHomeAppObserverState();
 }
 
-class _SHomeAppObserverState extends State<SHomeAppObserver>
-    with WidgetsBindingObserver {
+class _SHomeAppObserverState extends State<SHomeAppObserver> {
   Timer? _themeTimer;
+  final NotificationCoordinator _notifier = NotificationCoordinator();
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _startAutoThemeTimer();
     _connectMqtt();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _themeTimer?.cancel();
     HeartbeatServer.stop();
     super.dispose();
@@ -119,11 +122,10 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
           : int.tryParse(mqttPortRaw?.toString() ?? '') ?? 1883;
 
       if (mqttHost.isEmpty) {
-        getIt<Talker>().info('⚠️ MQTT host не настроен — пропускаем подключение');
+        getIt<Talker>().info('⚠️ MQTT host не настроен — пропускаем');
         return;
       }
 
-      // ✅ ОДИН экземпляр MqttService для всех
       final service = getIt<MqttService>();
       await service.connect(mqttHost, port: mqttPort);
       getIt<Talker>().info('✅ MQTT подключён: $mqttHost:$mqttPort');
@@ -135,12 +137,10 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
       await zigbeeBridge.start();
       getIt<Talker>().info('🐝 ZigbeeBridge запущен');
 
-      // Привязываем onState → devicesProvider
       zigbeeBridge.onState = (friendlyName, newState) {
         _updateZigbeeDeviceState(friendlyName, newState);
       };
 
-      // ✅ НОВОЕ: привязываем onAvailability → devicesProvider
       zigbeeBridge.onAvailability = (friendlyName, isOnline) {
         _updateZigbeeAvailability(friendlyName, isOnline);
       };
@@ -154,7 +154,11 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
       await frigateBridge.start();
       getIt<Talker>().info('🎥 FrigateBridge запущен');
 
-      // Настраиваем FrigateService
+      frigateBridge.onEvent = (event) {
+        _onFrigateEvent(event);
+      };
+      getIt<Talker>().info('🎥 onEvent привязан');
+
       final frigateHost = prefs.getString('frigate_host') ?? mqttHost;
       final frigatePort = prefs.getInt('frigate_port') ?? 5000;
       final rtspPassword =
@@ -173,8 +177,10 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
     }
   }
 
-  /// Обновляет `properties` Zigbee-устройства в `devicesProvider`.
-  /// Пришли данные → устройство точно online.
+  // ═══════════════════════════════════════════════════════════
+  // ZIGBEE STATE
+  // ═══════════════════════════════════════════════════════════
+
   void _updateZigbeeDeviceState(
       String friendlyName,
       Map<String, dynamic> newState,
@@ -189,15 +195,12 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
             d.properties['friendly_name'] == friendlyName,
       );
 
-      // Мержим новые значения (battery, linkquality, water_leak...)
       final updatedProperties = <String, dynamic>{
         ...device.properties,
         ...newState,
-        // ✅ Сохраняем timestamp последнего контакта
         'last_seen': DateTime.now().toIso8601String(),
       };
 
-      // ✅ Пришли данные → устройство точно online
       final updatedDevice = device.copyWith(
         properties: updatedProperties,
         isOnline: true,
@@ -206,16 +209,16 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
 
       devicesNotifier.updateDeviceLocal(updatedDevice);
 
+      _checkZigbeeSensorTriggers(updatedDevice, newState);
+
       getIt<Talker>().debug(
         '🐝 onState: $friendlyName → ${newState.keys.join(", ")}',
       );
     } catch (_) {
-      // Устройство ещё не добавлено в SHome — игнорируем
+      // Устройство ещё не добавлено — игнорируем
     }
   }
 
-  /// Обновляет `isOnline` Zigbee-устройства по `availability`.
-  /// Zigbee2MQTT шлёт `online` / `offline` на `zigbee2mqtt/<name>/availability`.
   void _updateZigbeeAvailability(String friendlyName, bool isOnline) {
     try {
       final devicesNotifier = globalContainer.read(devicesProvider.notifier);
@@ -234,23 +237,208 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
 
       devicesNotifier.updateDeviceLocal(updatedDevice);
 
+      EventLogger.log(
+        event: isOnline ? 'online' : 'offline',
+        deviceId: device.id,
+        deviceName: device.name,
+      );
+
+      // ✅ Уведомления для offline — через Coordinator
+      if (!isOnline) {
+        final vkSettings = globalContainer.read(notificationSettingsProvider);
+        final smsSettings = globalContainer.read(smsSettingsProvider);
+
+        _notifier.notifyDevice(
+          device: updatedDevice,
+          type: 'offline',
+          title: '📡 Устройство offline',
+          message: device.name,
+          vkSettings: vkSettings,
+          smsSettings: smsSettings,
+        );
+      }
+
       getIt<Talker>().info(
         '🐝 Availability: $friendlyName → ${isOnline ? "online" : "offline"}',
       );
-    } catch (_) {
-      // Устройство ещё не добавлено — игнорируем
+    } catch (_) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ZIGBEE TRIGGERS
+  // ═══════════════════════════════════════════════════════════
+
+  Future<void> _checkZigbeeSensorTriggers(
+      Device sensorDevice,
+      Map<String, dynamic> newState,
+      ) async {
+    try {
+      final sceneRepo = getIt<SceneRepository>();
+      final scenes = await sceneRepo.getAllScenes();
+      final now = DateTime.now();
+
+      for (final scene in scenes) {
+        final trigger = scene.trigger;
+        if (trigger == null ||
+            trigger.type != TriggerType.deviceState ||
+            trigger.sensorDeviceId != sensorDevice.id) {
+          continue;
+        }
+
+        bool shouldExecute = false;
+        final condition = trigger.sensorCondition;
+
+        switch (condition) {
+          case 'water_leak':
+            shouldExecute = newState['water_leak'] == true;
+            break;
+          case 'motion':
+            shouldExecute = newState['motion'] == true;
+            break;
+          case 'contact_open':
+            shouldExecute = newState['contact'] == false;
+            break;
+          case 'contact_closed':
+            shouldExecute = newState['contact'] == true;
+            break;
+          case 'smoke':
+            shouldExecute = newState['smoke'] == true;
+            break;
+          case 'gas':
+            shouldExecute = newState['gas'] == true;
+            break;
+          case 'temperature_above':
+            final temp = newState['temperature'];
+            if (temp is num) {
+              shouldExecute = temp > (trigger.sensorThreshold ?? 30);
+            }
+            break;
+          case 'temperature_below':
+            final temp = newState['temperature'];
+            if (temp is num) {
+              shouldExecute = temp < (trigger.sensorThreshold ?? 18);
+            }
+            break;
+          case 'humidity_above':
+            final hum = newState['humidity'];
+            if (hum is num) {
+              shouldExecute = hum > (trigger.sensorThreshold ?? 80);
+            }
+            break;
+          case 'humidity_below':
+            final hum = newState['humidity'];
+            if (hum is num) {
+              shouldExecute = hum < (trigger.sensorThreshold ?? 40);
+            }
+            break;
+        }
+
+        if (shouldExecute) {
+          final lastExecuted = trigger.lastExecuted != null
+              ? DateTime.tryParse(trigger.lastExecuted!)
+              : null;
+          if (lastExecuted != null &&
+              now.difference(lastExecuted).inMinutes < 5) {
+            continue;
+          }
+
+          await EventLogger.log(
+            event: 'alarm_$condition',
+            deviceId: sensorDevice.id,
+            deviceName: sensorDevice.name,
+            value: condition,
+          );
+
+          getIt<Talker>().info(
+            '🐝 Zigbee trigger: ${scene.name} (${sensorDevice.name} → $condition)',
+          );
+
+          await sceneRepo.executeScene(scene);
+
+          // ✅ Уведомления — через Coordinator
+          final vkSettings = globalContainer.read(notificationSettingsProvider);
+          final smsSettings = globalContainer.read(smsSettingsProvider);
+
+          _notifier.notifyDevice(
+            device: sensorDevice,
+            type: condition ?? '',
+            title: _zigbeeConditionLabel(condition ?? ''),
+            message: sensorDevice.name,
+            vkSettings: vkSettings,
+            smsSettings: smsSettings,
+          );
+
+          final updatedScene = scene.copyWith(
+            trigger: scene.trigger?.copyWith(
+              lastExecuted: now.toIso8601String(),
+            ),
+          );
+          await sceneRepo.saveScene(updatedScene);
+        }
+      }
+    } catch (e, st) {
+      getIt<Talker>().error('❌ Zigbee trigger error', e, st);
     }
   }
 
   // ═══════════════════════════════════════════════════════════
-  // ЖИЗНЕННЫЙ ЦИКЛ
+  // FRIGATE EVENTS
   // ═══════════════════════════════════════════════════════════
 
-  @override
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Автосинхронизация облака отключена.
-    // Бекап — только вручную через «Облако → Загрузить в облако».
+  void _onFrigateEvent(FrigateEvent event) {
+    try {
+      if (!event.isActive) return;
+
+      EventLogger.log(
+        event: 'frigate_${event.label}',
+        deviceId: 'frigate_${event.camera}',
+        deviceName: event.camera,
+        value: '${event.label} (${(event.score * 100).toStringAsFixed(0)}%)',
+      );
+
+      getIt<Talker>().info(
+        '🎥 Frigate: ${event.camera} → ${event.label} (${(event.score * 100).toStringAsFixed(0)}%)',
+      );
+
+      // ✅ Уведомления — через Coordinator
+      final devices = globalContainer.read(devicesProvider);
+      final camera = devices.where((d) =>
+      d.properties['source'] == 'frigate' &&
+          d.properties['camera_name'] == event.camera).firstOrNull;
+
+      if (camera == null) return;
+
+      final vkSettings = globalContainer.read(notificationSettingsProvider);
+      final smsSettings = globalContainer.read(smsSettingsProvider);
+
+      _notifier.notifyFrigateEvent(
+        camera: camera,
+        event: event,
+        vkSettings: vkSettings,
+        smsSettings: smsSettings,
+      );
+    } catch (e) {
+      getIt<Talker>().error('❌ Frigate event error', e);
+    }
+  }
+
+  String _zigbeeConditionLabel(String condition) {
+    switch (condition) {
+      case 'water_leak':
+        return '💧 Протечка';
+      case 'smoke':
+        return '🔥 Дым';
+      case 'gas':
+        return '💨 Газ';
+      case 'motion':
+        return '🏃 Движение';
+      case 'contact_open':
+        return '🚪 Открыто';
+      case 'contact_closed':
+        return '🚪 Закрыто';
+      default:
+        return condition;
+    }
   }
 
   @override
