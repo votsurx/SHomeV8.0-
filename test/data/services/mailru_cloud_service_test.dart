@@ -43,12 +43,5 @@ void main() {
       final result = await service.uploadBackup('{"test": true}');
       expect(result, false);
     });
-
-    test('статический autoSync не падает без сохранённых данных', () async {
-      // Не должен бросать исключений
-      await MailruCloudService.autoSync('{"test": true}');
-      // Если дошли сюда — тест пройден
-      expect(true, true);
-    });
   });
 }

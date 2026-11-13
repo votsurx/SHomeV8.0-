@@ -8,7 +8,25 @@ class SmsSettings {
   final bool notifyAlarms;
   final bool notifyErrors;
 
-  // Расписание (отдельное от VK)
+  // Zigbee alerts
+  final bool notifyZigbeeWaterLeak;
+  final bool notifyZigbeeSmoke;
+  final bool notifyZigbeeGas;
+  final bool notifyZigbeeMotion;
+  final bool notifyZigbeeContact;
+
+  // Frigate
+  final bool notifyFrigatePerson;
+  final bool notifyFrigateCar;
+
+  // Availability
+  final bool notifyZigbeeOffline;
+  final bool notifyFrigateOffline;
+
+  // Cooldown SMS
+  final int smsCooldownMin;
+
+  // Расписание
   final bool useSchedule;
   final bool scheduleOnlyAlarms;
   final int startHour;
@@ -24,6 +42,21 @@ class SmsSettings {
     this.notifyDevices = false,
     this.notifyAlarms = true,
     this.notifyErrors = false,
+    // Zigbee alerts
+    this.notifyZigbeeWaterLeak = true,
+    this.notifyZigbeeSmoke = true,
+    this.notifyZigbeeGas = true,
+    this.notifyZigbeeMotion = false,
+    this.notifyZigbeeContact = false,
+    // Frigate
+    this.notifyFrigatePerson = false,
+    this.notifyFrigateCar = false,
+    // Availability
+    this.notifyZigbeeOffline = false,
+    this.notifyFrigateOffline = false,
+    // Cooldown
+    this.smsCooldownMin = 1,
+    // Schedule
     this.useSchedule = false,
     this.scheduleOnlyAlarms = true,
     this.startHour = 9,
@@ -42,6 +75,21 @@ class SmsSettings {
     bool? notifyDevices,
     bool? notifyAlarms,
     bool? notifyErrors,
+    // Zigbee alerts
+    bool? notifyZigbeeWaterLeak,
+    bool? notifyZigbeeSmoke,
+    bool? notifyZigbeeGas,
+    bool? notifyZigbeeMotion,
+    bool? notifyZigbeeContact,
+    // Frigate
+    bool? notifyFrigatePerson,
+    bool? notifyFrigateCar,
+    // Availability
+    bool? notifyZigbeeOffline,
+    bool? notifyFrigateOffline,
+    // Cooldown
+    int? smsCooldownMin,
+    // Schedule
     bool? useSchedule,
     bool? scheduleOnlyAlarms,
     int? startHour,
@@ -57,6 +105,22 @@ class SmsSettings {
       notifyDevices: notifyDevices ?? this.notifyDevices,
       notifyAlarms: notifyAlarms ?? this.notifyAlarms,
       notifyErrors: notifyErrors ?? this.notifyErrors,
+      // Zigbee alerts
+      notifyZigbeeWaterLeak:
+      notifyZigbeeWaterLeak ?? this.notifyZigbeeWaterLeak,
+      notifyZigbeeSmoke: notifyZigbeeSmoke ?? this.notifyZigbeeSmoke,
+      notifyZigbeeGas: notifyZigbeeGas ?? this.notifyZigbeeGas,
+      notifyZigbeeMotion: notifyZigbeeMotion ?? this.notifyZigbeeMotion,
+      notifyZigbeeContact: notifyZigbeeContact ?? this.notifyZigbeeContact,
+      // Frigate
+      notifyFrigatePerson: notifyFrigatePerson ?? this.notifyFrigatePerson,
+      notifyFrigateCar: notifyFrigateCar ?? this.notifyFrigateCar,
+      // Availability
+      notifyZigbeeOffline: notifyZigbeeOffline ?? this.notifyZigbeeOffline,
+      notifyFrigateOffline: notifyFrigateOffline ?? this.notifyFrigateOffline,
+      // Cooldown
+      smsCooldownMin: smsCooldownMin ?? this.smsCooldownMin,
+      // Schedule
       useSchedule: useSchedule ?? this.useSchedule,
       scheduleOnlyAlarms: scheduleOnlyAlarms ?? this.scheduleOnlyAlarms,
       startHour: startHour ?? this.startHour,

@@ -13,22 +13,21 @@ import '../../domain/repositories/device_repository.dart';
 import '../../data/protocols/tuya_protocol.dart';
 import '../../di/injection.dart';
 import '../../data/services/event_logger.dart';
-import '../../application/constants/debug_config.dart';
-import '../../data/services/vk_notification_service.dart';
+import '../../data/services/notification_coordinator.dart';
 import 'package:flutter/foundation.dart';
-import '../../application/services/notification_settings_service.dart';
+import '../../application/state/notification_settings_provider.dart';
+import '../../application/state/sms_settings_provider.dart';
+import '../../di/global_container.dart';
 
 /// Глобальный провайдер списка устройств.
-/// Все виджеты, подписанные через ref.watch, перестраиваются при изменении state.
 final devicesProvider = StateNotifierProvider<DevicesNotifier, List<Device>>((ref) {
   return DevicesNotifier();
 });
 
-/// Управляет списком устройств: загрузка, добавление, удаление, вкл/выкл, перестановка.
-/// Поддерживает многоканальные устройства и датчики.
 class DevicesNotifier extends StateNotifier<List<Device>> {
   final DeviceRepository _repository = getIt<DeviceRepository>();
   final TuyaProtocol _tuyaProtocol = getIt<TuyaProtocol>();
+  final NotificationCoordinator _notifier = NotificationCoordinator();
 
   void Function(String)? onCommandSent;
 
@@ -45,7 +44,6 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     state = devices.map((d) {
       final props = Map<String, dynamic>.from(d.properties);
 
-      // Добавляем dps_map для многоканальных устройств, если его нет
       if (d.type == DeviceType.switch1 ||
           d.type == DeviceType.switch2 ||
           d.type == DeviceType.switch3) {
@@ -73,7 +71,6 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     _restoreOrder();
   }
 
-  /// Переставляет устройства и сохраняет порядок.
   void reorderDevices(int oldIndex, int newIndex) {
     final list = [...state];
     if (oldIndex < newIndex) newIndex--;
@@ -137,16 +134,18 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
   }
 
   void updateOnlineState(String id, bool isOnline) {
-    if (DebugConfig.showDebug) {
-    }
-    if (DebugConfig.showDebug) {
-    }
     final device = state.firstWhere((d) => d.id == id);
+    final wasOnline = device.isOnline;
     final updated = device.copyWith(
       isOnline: isOnline,
       state: isOnline ? DeviceState.online : DeviceState.offline,
     );
     state = state.map((d) => d.id == id ? updated : d).toList();
+
+    // 🔔 Уведомление при transition online → offline
+    if (wasOnline && !isOnline) {
+      _notifyOffline(updated);
+    }
   }
 
   void updateDeviceProperties(String id, Map<String, dynamic> properties) {
@@ -183,14 +182,9 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
   Future<bool> turnOn(String id) async {
     final device = state.firstWhere((d) => d.id == id);
 
-    // 🎥 Frigate-камера — не управляется через turnOn
-    if (device.properties['source'] == 'frigate') {
-      return false;
-    }
+    if (device.properties['source'] == 'frigate') return false;
 
-    // ═══════════════════════════════════════════════════════════
-    // 🐝 ZIGBEE — через MQTT
-    // ═══════════════════════════════════════════════════════════
+    // 🐝 Zigbee
     if (device.properties['source'] == 'zigbee') {
       try {
         final friendlyName = device.properties['friendly_name'] as String?
@@ -199,7 +193,7 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
         await protocol.turnOn(friendlyName);
         _updateLocalState(id, true);
         EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOn');
-        _sendDeviceNotification(device.name, 'Включено', true);
+        _notifyStateChanged(device, 'Включено', true);
         return true;
       } catch (e) {
         debugPrint('❌ Zigbee turnOn error: $e');
@@ -207,35 +201,23 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
       }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 🔌 TUYA — как раньше
-    // ═══════════════════════════════════════════════════════════
+    // 🔌 Tuya
     EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOn');
     onCommandSent?.call(id);
     _updateLocalState(id, true);
     final success = await _tuyaProtocol.turnOn(device);
     if (!success) _updateLocalState(id, false);
 
-    if (success) {
-      _sendDeviceNotification(device.name, 'Включено', true);
-    } else {
-      _sendDeviceNotification(device.name, 'Включено', false);
-    }
-
+    _notifyStateChanged(device, 'Включено', success);
     return success;
   }
 
   Future<bool> turnOff(String id) async {
     final device = state.firstWhere((d) => d.id == id);
 
-    // 🎥 Frigate-камера — не управляется через turnOff
-    if (device.properties['source'] == 'frigate') {
-      return false;
-    }
+    if (device.properties['source'] == 'frigate') return false;
 
-    // ═══════════════════════════════════════════════════════════
-    // 🐝 ZIGBEE — через MQTT
-    // ═══════════════════════════════════════════════════════════
+    // 🐝 Zigbee
     if (device.properties['source'] == 'zigbee') {
       try {
         final friendlyName = device.properties['friendly_name'] as String?
@@ -244,7 +226,7 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
         await protocol.turnOff(friendlyName);
         _updateLocalState(id, false);
         EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOff');
-        _sendDeviceNotification(device.name, 'Выключено', true);
+        _notifyStateChanged(device, 'Выключено', true);
         return true;
       } catch (e) {
         debugPrint('❌ Zigbee turnOff error: $e');
@@ -252,51 +234,25 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
       }
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 🔌 TUYA — как раньше
-    // ═══════════════════════════════════════════════════════════
+    // 🔌 Tuya
     EventLogger.log(deviceId: id, deviceName: device.name, event: 'turnOff');
     onCommandSent?.call(id);
     _updateLocalState(id, false);
     final success = await _tuyaProtocol.turnOff(device);
     if (!success) _updateLocalState(id, true);
 
-    if (success) {
-      _sendDeviceNotification(device.name, 'Выключено', true);
-    } else {
-      _sendDeviceNotification(device.name, 'Выключено', false);
-    }
-
+    _notifyStateChanged(device, 'Выключено', success);
     return success;
-  }
-
-  Future<void> _sendDeviceNotification(String deviceName, String action, bool success) async {
-    try {
-      final shouldSend = await NotificationSettingsService.shouldSendDeviceNotification();
-      if (shouldSend) {
-        final vk = VkNotificationService();
-        await vk.loadSettings();
-        await vk.sendDeviceNotification(
-          deviceName: deviceName,
-          action: action,
-          success: success,
-        );
-      }
-    } catch (e) {
-      debugPrint('❌ VK device notification error: $e');
-    }
   }
 
   Future<bool> setSwitchChannel(String id, int channel, bool value) async {
     final device = state.firstWhere((d) => d.id == id);
 
-    // 🐝 Zigbee
     if (device.properties['source'] == 'zigbee') {
       try {
         final friendlyName = device.properties['friendly_name'] as String?
             ?? device.name;
         final protocol = getIt<ZigbeeProtocol>();
-        // Для многоканальных: state_l1, state_l2, ...
         await protocol.setState(friendlyName, {'state_l$channel': value ? 'ON' : 'OFF'});
         _updateChannelState(id, channel, value);
         return true;
@@ -306,7 +262,6 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
       }
     }
 
-    // 🔌 Tuya
     onCommandSent?.call(id);
     _updateChannelState(id, channel, value);
     final success = await _tuyaProtocol.setSwitchChannel(device, channel, value);
@@ -357,7 +312,6 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
   Future<bool> setBrightness(String id, int brightness) async {
     final device = state.firstWhere((d) => d.id == id);
 
-    // 🐝 Zigbee
     if (device.properties['source'] == 'zigbee') {
       try {
         final friendlyName = device.properties['friendly_name'] as String?
@@ -379,7 +333,6 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
       }
     }
 
-    // 🔌 Tuya
     final success = await _tuyaProtocol.setBrightness(device, brightness);
     if (success) {
       final updated = device.copyWith(
@@ -399,8 +352,44 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     return await _tuyaProtocol.getStatus(device);
   }
 
-  /// Возвращает свойства по умолчанию для указанного типа устройства.
-  /// Используется при добавлении нового устройства вручную или через сканер.
+  // ═══════════ УВЕДОМЛЕНИЯ ═══════════
+
+  Future<void> _notifyStateChanged(Device device, String action, bool success) async {
+    try {
+      final vkSettings = globalContainer.read(notificationSettingsProvider);
+      final smsSettings = globalContainer.read(smsSettingsProvider);
+
+      await _notifier.notifyDevice(
+        device: device,
+        type: 'state_changed',
+        title: success ? '✅ Устройство' : '❌ Устройство',
+        message: '${device.name}: $action',
+        vkSettings: vkSettings,
+        smsSettings: smsSettings,
+      );
+    } catch (e) {
+      debugPrint('❌ Notification error: $e');
+    }
+  }
+
+  Future<void> _notifyOffline(Device device) async {
+    try {
+      final vkSettings = globalContainer.read(notificationSettingsProvider);
+      final smsSettings = globalContainer.read(smsSettingsProvider);
+
+      await _notifier.notifyDevice(
+        device: device,
+        type: 'offline',
+        title: '📡 Устройство offline',
+        message: device.name,
+        vkSettings: vkSettings,
+        smsSettings: smsSettings,
+      );
+    } catch (e) {
+      debugPrint('❌ Notification offline error: $e');
+    }
+  }
+
   static Map<String, dynamic> defaultProperties(DeviceType type) {
     switch (type) {
       case DeviceType.switch1:

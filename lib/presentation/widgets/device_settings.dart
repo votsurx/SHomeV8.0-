@@ -1,18 +1,9 @@
 /// Настройки устройства — bottom sheet с полным набором полей.
-///
-/// Поддерживает все типы устройств:
-/// - Обычные (outlet, light) — стандартные поля Tuya + DPS индекс
-/// - Выключатели (switch1/2/3) — DPS для каждого канала
-/// - Камеры (camera) — без Tuya-полей, для RTSP — поле URL
-/// - Датчики (sensor) — без кнопки «Создать датчик»
-/// - Универсальное устройство — dps_map редактор, без DPS индекса
-///
-/// dps_map позволяет гибко настраивать составные устройства:
-/// каждый DPS имеет номер, название, тип, роль и иконку.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../domain/models/device.dart';
 import '../../application/state/devices_provider.dart';
 import '../../application/state/rooms_provider.dart';
@@ -23,43 +14,32 @@ class DeviceSettings {
   // ===================================================================
 
   static void show(BuildContext context, WidgetRef ref, Device device) {
-    // ──────────────────────────────────────────────────────────
-    // КОНТРОЛЛЕРЫ
-    // ──────────────────────────────────────────────────────────
     final nameController = TextEditingController(text: device.name);
     final rooms = ref.watch(roomsProvider);
     String selectedRoomId = device.roomId;
 
-    // Проверяем что комната существует в списке
     final roomIds = rooms.map((r) => r.id).toList();
     if (!roomIds.contains(selectedRoomId) && rooms.isNotEmpty) {
       selectedRoomId = rooms.first.id;
     }
 
-    // Поля для устройств Tuya (кроме камер)
     final localKeyController = TextEditingController(text: device.localKey ?? '');
     final addressController = TextEditingController(text: device.address ?? '');
     double selectedVersion = device.version ?? 3.3;
 
-    // Поля для RTSP камер
     final rtspUrlController = TextEditingController(text: device.properties['rtspUrl'] as String? ?? '');
 
-    // DPS контроллеры для многоканальных выключателей
     final channelCount = device.type == DeviceType.switch3 ? 3 : (device.type == DeviceType.switch2 ? 2 : 1);
     final dpsControllers = List.generate(
       channelCount,
           (i) => TextEditingController(text: '${(device.dpsIndex ?? 1) + i}'),
     );
 
-    // ──────────────────────────────────────────────────────────
-    // BOTTOM SHEET
-    // ──────────────────────────────────────────────────────────
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          // Берём актуальное устройство из провайдера
           final latestDevice = ref.watch(devicesProvider).firstWhere(
                 (d) => d.id == device.id,
             orElse: () => device,
@@ -120,7 +100,6 @@ class DeviceSettings {
 
                   // ╔══════════════════════════════════════════╗
                   // ║   ZIGBEE-ПОЛЯ (только для Zigbee)        ║
-                  // ║   IEEE, модель, производитель, батарея   ║
                   // ╚══════════════════════════════════════════╝
                   if (isZigbee) ...[
                     const SizedBox(height: 8),
@@ -130,7 +109,6 @@ class DeviceSettings {
                     ),
                     const SizedBox(height: 4),
 
-                    // IEEE-адрес (только чтение)
                     TextField(
                       controller: TextEditingController(text: latestDevice.properties['ieee_address'] ?? ''),
                       decoration: const InputDecoration(
@@ -142,7 +120,6 @@ class DeviceSettings {
                     ),
                     const SizedBox(height: 8),
 
-                    // Модель (только чтение)
                     TextField(
                       controller: TextEditingController(text: latestDevice.properties['model'] ?? ''),
                       decoration: const InputDecoration(
@@ -154,7 +131,6 @@ class DeviceSettings {
                     ),
                     const SizedBox(height: 8),
 
-                    // Производитель (только чтение)
                     TextField(
                       controller: TextEditingController(text: latestDevice.properties['vendor'] ?? ''),
                       decoration: const InputDecoration(
@@ -166,7 +142,6 @@ class DeviceSettings {
                     ),
                     const SizedBox(height: 8),
 
-                    // Батарея (только чтение)
                     if (latestDevice.properties['battery'] != null) ...[
                       TextField(
                         controller: TextEditingController(text: '${latestDevice.properties['battery']}%'),
@@ -180,7 +155,6 @@ class DeviceSettings {
                       const SizedBox(height: 8),
                     ],
 
-                    // Linkquality (только чтение)
                     if (latestDevice.properties['linkquality'] != null) ...[
                       TextField(
                         controller: TextEditingController(text: '${latestDevice.properties['linkquality']} lqi'),
@@ -193,6 +167,52 @@ class DeviceSettings {
                       ),
                       const SizedBox(height: 8),
                     ],
+
+                    // 🔔 Уведомления (для Zigbee-датчиков)
+                    if (isZigbee && latestDevice.properties['exposes'] != null) ...[
+                      const SizedBox(height: 8),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.notifications_active, color: Colors.orange),
+                          title: const Text('Уведомления'),
+                          subtitle: Text(
+                            _getNotifySummary(latestDevice),
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            context.push('/device_notifications?id=${latestDevice.id}');
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
+                  // ╔══════════════════════════════════════════╗
+                  // ║  🔔 УВЕДОМЛЕНИЯ (только для Tuya)        ║
+                  // ╚══════════════════════════════════════════╝
+                  if (isTuya) ...[
+                    const SizedBox(height: 8),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(
+                          Icons.notifications_active,
+                          color: Colors.orange,
+                        ),
+                        title: const Text('Уведомления'),
+                        subtitle: Text(
+                          _getNotifySummary(latestDevice),
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          context.push(
+                            '/device_notifications?id=${latestDevice.id}',
+                          );
+                        },
+                      ),
+                    ),
                   ],
 
                   // ╔══════════════════════════════════════════╗
@@ -201,7 +221,6 @@ class DeviceSettings {
                   if (isTuya) ...[
                     const SizedBox(height: 8),
 
-                    // Device ID (только чтение)
                     TextField(
                       controller: TextEditingController(text: latestDevice.deviceId ?? ''),
                       decoration: const InputDecoration(labelText: 'Device ID', prefixIcon: Icon(Icons.fingerprint)),
@@ -209,21 +228,18 @@ class DeviceSettings {
                     ),
                     const SizedBox(height: 8),
 
-                    // IP Адрес
                     TextField(
                       controller: addressController,
                       decoration: const InputDecoration(labelText: 'IP Адрес', prefixIcon: Icon(Icons.wifi)),
                     ),
                     const SizedBox(height: 8),
 
-                    // Local Key
                     TextField(
                       controller: localKeyController,
                       decoration: const InputDecoration(labelText: 'Local Key', prefixIcon: Icon(Icons.vpn_key)),
                     ),
                     const SizedBox(height: 8),
 
-                    // Версия протокола Tuya
                     DropdownButtonFormField<double>(
                       initialValue: selectedVersion,
                       decoration:
@@ -242,7 +258,6 @@ class DeviceSettings {
 
                   // ╔══════════════════════════════════════════╗
                   // ║  DPS ИНДЕКСЫ (только для Tuya, не Zigbee)║
-                  // ║  Скрыто: камеры, пылесосы (dps_map)      ║
                   // ╚══════════════════════════════════════════╝
                   if (isTuya && latestDevice.type != DeviceType.compound) ...[
                     const SizedBox(height: 8),
@@ -263,7 +278,6 @@ class DeviceSettings {
 
                   // ╔══════════════════════════════════════════╗
                   // ║ DPS КАРТА (только для Tuya compound/hvac)║
-                  // ║   НЕ для Zigbee (у него exposes)         ║
                   // ╚══════════════════════════════════════════╝
                   if (!isZigbee && (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac)) ...[
                     const SizedBox(height: 8),
@@ -271,7 +285,6 @@ class DeviceSettings {
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
                     const SizedBox(height: 4),
                     ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref),
-                    // Кнопка добавления нового DPS
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
                       onPressed: () => _showDpsEditor(ctx, setModalState, latestDevice, null, ref),
@@ -285,7 +298,6 @@ class DeviceSettings {
 
                   // ╔══════════════════════════════════════════╗
                   // ║    ОТОБРАЖЕНИЕ НА КАРТОЧКЕ              ║
-                  // ║   (только для Tuya compound/hvac)       ║
                   // ╚══════════════════════════════════════════╝
                   if (!isZigbee && (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac)) ...[
                     const SizedBox(height: 12),
@@ -300,10 +312,8 @@ class DeviceSettings {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          // Копируем properties как есть (battery/linkquality сохраняются)
                           Map<String, dynamic> newProperties = {...latestDevice.properties};
 
-                          // Обновляем RTSP URL для камер
                           if (latestDevice.type == DeviceType.camera &&
                               latestDevice.properties['cameraType'] == 'rtsp') {
                             newProperties['rtspUrl'] = rtspUrlController.text;
@@ -362,8 +372,7 @@ class DeviceSettings {
                   ]),
 
                   // ╔══════════════════════════════════════════╗
-                  // ║  СОЗДАТЬ ДАТЧИК (только для Tuya,        ║
-                  // ║  не для камер/датчиков/compound/Zigbee)  ║
+                  // ║  СОЗДАТЬ ДАТЧИК (только для Tuya)        ║
                   // ╚══════════════════════════════════════════╝
                   if (isTuya &&
                       latestDevice.type != DeviceType.sensor &&
@@ -393,11 +402,26 @@ class DeviceSettings {
   }
 
   // ===================================================================
+  // СВОДКА УВЕДОМЛЕНИЙ
+  // ===================================================================
+
+  static String _getNotifySummary(Device device) {
+    final condition = device.properties['notify_condition'] as String? ?? 'always';
+    final conditionLabel = switch (condition) {
+      'always' => 'Всегда',
+      'away' => 'Когда никого нет',
+      'night' => 'Ночью',
+      'away_or_night' => 'Никого нет ИЛИ ночью',
+      _ => 'Всегда',
+    };
+    final types = (device.properties['notify_types'] as List?)?.length ?? 5;
+    return '$types типов · $conditionLabel';
+  }
+
+  // ===================================================================
   // DPS КАРТА — отображение списка DPS
   // ===================================================================
 
-  /// Отображает отсортированный список DPS из dps_map с иконками.
-  /// Каждый элемент можно нажать для редактирования.
   static List<Widget> _buildDpsMapEditor(
       Device device,
       void Function(VoidCallback) setModalState,
@@ -406,7 +430,6 @@ class DeviceSettings {
       ) {
     final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
 
-    // Сортируем ключи по числовому значению (1, 3, 4, 8...)
     final sortedKeys = dpsMap.keys.toList()
       ..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
 
@@ -416,12 +439,10 @@ class DeviceSettings {
       final role = cfg['role'] as String? ?? '';
       final iconName = cfg['icon'] as String? ?? '';
 
-      // Для каналов — своя иконка, для остальных — по роли
       final leading = role == 'channel'
           ? const Icon(Icons.tune, size: 16, color: Colors.blueGrey)
           : _dpsIcon(role, iconName);
 
-      // Для каналов — префикс «Канал», для остальных — «DPS»
       final titlePrefix = role == 'channel' ? 'Канал' : 'DPS';
 
       return ListTile(
@@ -430,7 +451,6 @@ class DeviceSettings {
         title: Text('$titlePrefix $key: $label', style: const TextStyle(fontSize: 12)),
         trailing: const Icon(Icons.edit, size: 16),
         onTap: () {
-          //Navigator.pop(ctx);
           if (role == 'channel') {
             _showChannelEditor(ctx, setModalState, device, key, ref);
           } else {
@@ -441,7 +461,6 @@ class DeviceSettings {
     }).toList();
   }
 
-  /// Возвращает иконку для DPS: сначала кастомная, затем по роли.
   static Widget _dpsIcon(String role, String? iconName) {
     if (iconName != null && iconName.isNotEmpty) {
       return Text(_iconEmoji(iconName), style: const TextStyle(fontSize: 16));
@@ -449,7 +468,6 @@ class DeviceSettings {
     return _dpsRoleIcon(role);
   }
 
-  /// Возвращает Material иконку по роли DPS.
   static Icon _dpsRoleIcon(String role) {
     switch (role) {
       case 'main':
@@ -473,9 +491,6 @@ class DeviceSettings {
     }
   }
 
-
-
-  /// Преобразует ключ иконки в эмодзи.
   static String _iconEmoji(String key) {
     switch (key) {
       case 'battery': return '🔋';
@@ -498,12 +513,9 @@ class DeviceSettings {
   }
 
   // ===================================================================
-  // РЕДАКТОР ОДНОГО DPS (добавление / изменение)
+  // РЕДАКТОР ОДНОГО DPS
   // ===================================================================
 
-  /// Диалог добавления нового или редактирования существующего DPS.
-  /// dpsKey == null → создание нового DPS.
-  /// dpsKey != null → редактирование существующего.
   static void _showDpsEditor(
       BuildContext context,
       void Function(VoidCallback) setModalState,
@@ -514,7 +526,6 @@ class DeviceSettings {
     final isNew = dpsKey == null;
     final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
 
-    // Контроллеры с текущими значениями
     final keyController = TextEditingController(text: dpsKey ?? '');
     final labelController = TextEditingController(text: isNew ? '' : dpsMap[dpsKey]?['label'] ?? '');
     String selectedType = isNew ? 'bool' : dpsMap[dpsKey]?['type'] ?? 'bool';
@@ -523,7 +534,6 @@ class DeviceSettings {
       selectedType = 'bool';
     }
     String selectedRole = isNew ? 'action' : dpsMap[dpsKey]?['role'] ?? 'action';
-    // Если роль не входит в допустимые — заменяем на 'action'
     const validRoles = ['main', 'action', 'toggle', 'info', 'status', 'enum', 'slider', 'channel'];
     if (!validRoles.contains(selectedRole)) {
       selectedRole = 'action';
@@ -540,22 +550,17 @@ class DeviceSettings {
           title: Text(isNew ? 'Добавить DPS' : 'Редактировать DPS $dpsKey'),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              // Номер DPS (всегда редактируемый)
               TextField(
                 controller: keyController,
                 decoration: const InputDecoration(labelText: 'Номер DPS'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
-
-              // Название
               TextField(
                 controller: labelController,
                 decoration: const InputDecoration(labelText: 'Название'),
               ),
               const SizedBox(height: 8),
-
-              // Тип значения
               DropdownButtonFormField<String>(
                 initialValue: selectedType,
                 decoration: const InputDecoration(labelText: 'Тип'),
@@ -570,8 +575,6 @@ class DeviceSettings {
                 },
               ),
               const SizedBox(height: 8),
-
-              // Роль (определяет отображение в виджете)
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
                 decoration: const InputDecoration(labelText: 'Роль'),
@@ -590,8 +593,6 @@ class DeviceSettings {
                 },
               ),
               const SizedBox(height: 8),
-
-              // Иконка (эмодзи)
               DropdownButtonFormField<String>(
                 initialValue: selectedIcon.isEmpty ? null : selectedIcon,
                 decoration: const InputDecoration(labelText: 'Иконка'),
@@ -629,7 +630,6 @@ class DeviceSettings {
             ]),
           ),
           actions: [
-            // Кнопка «Удалить» (только для существующих DPS)
             if (!isNew)
               TextButton(
                 onPressed: () {
@@ -646,12 +646,10 @@ class DeviceSettings {
 
                 final newDpsMap = Map<String, dynamic>.from(dpsMap);
 
-                // Если ключ изменился — удаляем старый
                 if (!isNew && dpsKey != newKey) {
                   newDpsMap.remove(dpsKey);
                 }
 
-                // Сохраняем конфигурацию DPS
                 newDpsMap[newKey] = {
                   'label': labelController.text,
                   'type': selectedType,
@@ -676,11 +674,6 @@ class DeviceSettings {
                 await ref.read(devicesProvider.notifier).updateDevice(updated);
                 if (ctx.mounted) Navigator.pop(ctx);
                 setModalState(() {});
-
-                // Переоткрываем настройки с обновлённым устройством
-                //WidgetsBinding.instance.addPostFrameCallback((_) {
-                  //DeviceSettings.show(context, ref, updated);
-                //});
               },
               child: Text(isNew ? 'Добавить' : 'Сохранить'),
             ),
@@ -690,7 +683,6 @@ class DeviceSettings {
     );
   }
 
-  /// Удаляет DPS из dps_map.
   static void _deleteDps(Device device, String dpsKey, WidgetRef ref) {
     final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
     dpsMap.remove(dpsKey);
@@ -705,8 +697,6 @@ class DeviceSettings {
   // СОЗДАТЬ ДАТЧИК
   // ===================================================================
 
-  /// Диалог создания датчика из текущего устройства.
-  /// Копирует deviceId, localKey, address, version от родительского устройства.
   static void _showCreateSensorDialog(BuildContext context, WidgetRef ref, Device device) {
     SensorType selectedSensorType = SensorType.temperature;
     final dpsController = TextEditingController(text: '21');
@@ -722,7 +712,6 @@ class DeviceSettings {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text('Из устройства: ${device.name}'),
               const SizedBox(height: 12),
-              // Тип датчика
               DropdownButtonFormField<SensorType>(
                 initialValue: selectedSensorType,
                 decoration: const InputDecoration(labelText: 'Тип датчика'),
@@ -818,7 +807,6 @@ class DeviceSettings {
         padding: const EdgeInsets.all(12),
         child: Consumer(
           builder: (context, ref, _) {
-            // Получаем актуальное состояние устройства из провайдера
             final latestDevice = ref.watch(
               devicesProvider.select(
                     (list) => list.firstWhere((d) => d.id == device.id),
@@ -828,7 +816,6 @@ class DeviceSettings {
               latestDevice.properties['dps_map'] as Map? ?? {},
             );
 
-            // Показываем только info и status DP
             final displayEntries = dpsMap.entries.where((e) {
               final role = (e.value as Map<String, dynamic>)['role'];
               return role == 'info' || role == 'status';
@@ -863,14 +850,13 @@ class DeviceSettings {
                     final config = entry.value as Map<String, dynamic>;
                     final key = entry.key;
                     final label = config['label'] as String? ?? key;
-                    final currentlyShown = config['show_on_card'] != false; // по умолчанию true
+                    final currentlyShown = config['show_on_card'] != false;
 
                     return SwitchListTile(
                       dense: true,
                       title: Text(label, style: TextStyle(fontSize: 13)),
                       value: currentlyShown,
                       onChanged: (val) {
-                        // Клонируем dps_map и меняем show_on_card
                         final newDpsMap = Map<String, dynamic>.from(dpsMap);
                         final newConfig = Map<String, dynamic>.from(config)
                           ..['show_on_card'] = val;
@@ -881,7 +867,6 @@ class DeviceSettings {
                         ref
                             .read(devicesProvider.notifier)
                             .updateDeviceProperties(latestDevice.id, updatedProperties);
-                        // Обновляем основное окно настроек
                         setModalState();
                       },
                       activeThumbColor: Colors.blue,
@@ -894,6 +879,7 @@ class DeviceSettings {
       ),
     );
   }
+
   static void _showChannelEditor(
       BuildContext context,
       void Function(VoidCallback) setModalState,
@@ -935,7 +921,6 @@ class DeviceSettings {
 
                 final newDpsMap = Map<String, dynamic>.from(dpsMap);
 
-                // Если номер канала изменился — удаляем старый
                 if (channelKey != newKey) {
                   newDpsMap.remove(channelKey);
                 }

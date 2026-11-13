@@ -1,8 +1,7 @@
 /// Экран сцен — создание, редактирование и выполнение сценариев автоматизации.
 /// Сцены могут запускаться вручную (тап), по времени (через AutomationEngine)
-/// или по датчику (через AdaptivePoller), или по присутствию.
+/// или по датчику (через AdaptivePoller + ZigbeeBridge.onState).
 /// Поддерживаются повторы: один раз, каждый день, по дням недели.
-/// Долгое нажатие открывает меню редактирования/удаления.
 library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,13 +22,11 @@ class ScenesScreen extends ConsumerWidget {
     final devices = ref.watch(devicesProvider);
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     final crossAxisCount = _calculateCrossAxisCount(screenWidth, isLandscape);
-    final tileWidth = _calculateTileWidth(
-      screenWidth,
-      crossAxisCount,
-    );
+    final tileWidth = _calculateTileWidth(screenWidth, crossAxisCount);
     final scale = (tileWidth / 160).clamp(0.9, 1.8);
 
     return Scaffold(
@@ -49,7 +46,8 @@ class ScenesScreen extends ConsumerWidget {
           return Card(
             child: InkWell(
               onTap: () {
-                if (scene.trigger == null || scene.trigger!.type == TriggerType.manual) {
+                if (scene.trigger == null ||
+                    scene.trigger!.type == TriggerType.manual) {
                   ref.read(scenesProvider.notifier).executeScene(scene.id);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -72,10 +70,10 @@ class ScenesScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    // Заголовок: иконка + название
                     Row(
                       children: [
-                        Text(scene.icon, style: TextStyle(fontSize: 16 * scale)),
+                        Text(scene.icon,
+                            style: TextStyle(fontSize: 16 * scale)),
                         SizedBox(width: 4 * scale),
                         Expanded(
                           child: Text(
@@ -91,23 +89,17 @@ class ScenesScreen extends ConsumerWidget {
                       ],
                     ),
                     SizedBox(height: 5 * scale),
-
-                    // Информация о триггере
                     _buildTriggerInfo(scene, scale),
-
                     SizedBox(height: 4 * scale),
                     Divider(height: 1, thickness: 0.5),
                     SizedBox(height: 4 * scale),
-
-                    // Список действий
                     Expanded(
                       child: _buildActionsList(scene, devices, scale),
                     ),
-
-                    // Количество устройств
                     Text(
                       '${scene.actions.length} ${_pluralize(scene.actions.length)}',
-                      style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
+                      style: TextStyle(
+                          fontSize: 8 * scale, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -138,11 +130,11 @@ class ScenesScreen extends ConsumerWidget {
   double _calculateTileWidth(double screenWidth, int crossAxisCount) {
     const horizontalPadding = 16.0;
     const spacing = 8.0;
-    final available = screenWidth - horizontalPadding - (spacing * (crossAxisCount - 1));
+    final available =
+        screenWidth - horizontalPadding - (spacing * (crossAxisCount - 1));
     return available / crossAxisCount;
   }
 
-  /// Отображает информацию о типе запуска
   Widget _buildTriggerInfo(Scene scene, double scale) {
     if (scene.trigger == null || scene.trigger!.type == TriggerType.manual) {
       return Row(
@@ -168,55 +160,30 @@ class ScenesScreen extends ConsumerWidget {
                 SizedBox(width: 2 * scale),
                 Text(
                   scene.trigger!.time ?? '--:--',
-                  style: TextStyle(fontSize: 10 * scale, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      fontSize: 10 * scale, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
             if (scene.trigger!.repeat != RepeatType.once) ...[
               SizedBox(height: 2 * scale),
-              if (scene.trigger!.repeat == RepeatType.weekly &&
-                  scene.trigger!.repeatDays?.isNotEmpty == true) ...[
-                Row(
-                  children: [
-                    Text('🔄', style: TextStyle(fontSize: 9 * scale)),
-                    SizedBox(width: 2 * scale),
-                    Expanded(
-                      child: Text(
-                        _daysLabel(scene.trigger!.repeatDays),
-                        style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                Row(
-                  children: [
-                    Text('🔄', style: TextStyle(fontSize: 9 * scale)),
-                    SizedBox(width: 2 * scale),
-                    Expanded(
-                      child: Text(
-                        _repeatLabel(scene.trigger!.repeat),
-                        style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                if (scene.trigger!.repeat == RepeatType.weekly &&
-                    scene.trigger!.repeatDays?.isNotEmpty != true)
-                  Padding(
-                    padding: EdgeInsets.only(left: 14 * scale),
+              Row(
+                children: [
+                  Text('🔄', style: TextStyle(fontSize: 9 * scale)),
+                  SizedBox(width: 2 * scale),
+                  Expanded(
                     child: Text(
-                      _repeatLabel(scene.trigger!.repeat),
-                      style: TextStyle(fontSize: 7 * scale, color: Colors.grey),
+                      scene.trigger!.repeat == RepeatType.weekly &&
+                          scene.trigger!.repeatDays?.isNotEmpty == true
+                          ? _daysLabel(scene.trigger!.repeatDays)
+                          : _repeatLabel(scene.trigger!.repeat),
+                      style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-              ],
+                ],
+              ),
             ],
           ],
         );
@@ -248,7 +215,8 @@ class ScenesScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     _presenceEventLabel(scene.trigger!),
-                    style: TextStyle(fontSize: 9 * scale, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontSize: 9 * scale, fontWeight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -258,17 +226,8 @@ class ScenesScreen extends ConsumerWidget {
             if (scene.trigger!.presencePhoneId != null) ...[
               SizedBox(height: 2 * scale),
               Text(
-                _presencePhoneLabel(scene.trigger!),
+                scene.trigger!.presencePhoneId!,
                 style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            if (scene.trigger!.presenceChannel != PresenceChannel.any) ...[
-              SizedBox(height: 2 * scale),
-              Text(
-                _presenceChannelLabel(scene.trigger!.presenceChannel),
-                style: TextStyle(fontSize: 7 * scale, color: Colors.grey),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -281,7 +240,6 @@ class ScenesScreen extends ConsumerWidget {
     }
   }
 
-  /// Отображает список действий компактно
   Widget _buildActionsList(Scene scene, List<Device> devices, double scale) {
     return ListView.builder(
       padding: EdgeInsets.zero,
@@ -289,7 +247,8 @@ class ScenesScreen extends ConsumerWidget {
       itemCount: scene.actions.length,
       itemBuilder: (context, index) {
         final action = scene.actions[index];
-        final device = devices.where((d) => d.id == action.deviceId).firstOrNull;
+        final device =
+            devices.where((d) => d.id == action.deviceId).firstOrNull;
         final deviceName = device?.name ?? 'Устройство';
         final deviceIcon = _getDeviceIcon(device?.type);
         final actionLabel = _actionLabel(action.command);
@@ -310,7 +269,8 @@ class ScenesScreen extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 3 * scale, vertical: 1),
+                padding:
+                EdgeInsets.symmetric(horizontal: 3 * scale, vertical: 1),
                 decoration: BoxDecoration(
                   color: actionColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -331,97 +291,116 @@ class ScenesScreen extends ConsumerWidget {
     );
   }
 
-  /// Возвращает иконку устройства
   String _getDeviceIcon(DeviceType? type) {
     switch (type) {
-      case DeviceType.outlet: return '🔌';
+      case DeviceType.outlet:
+        return '🔌';
       case DeviceType.switch1:
       case DeviceType.switch2:
-      case DeviceType.switch3: return '💡';
-      case DeviceType.light: return '💡';
-      case DeviceType.sensor: return '🌡️';
-      case DeviceType.camera: return '📹';
-      case DeviceType.compound: return '🤖';
-      default: return '📦';
+      case DeviceType.switch3:
+        return '💡';
+      case DeviceType.light:
+        return '💡';
+      case DeviceType.sensor:
+        return '🌡️';
+      case DeviceType.camera:
+        return '📹';
+      case DeviceType.compound:
+        return '🤖';
+      default:
+        return '📦';
     }
   }
 
-  /// Возвращает текст действия
   String _actionLabel(String command) {
     switch (command) {
-      case 'turnOn': return 'ВКЛ';
-      case 'turnOff': return 'ВЫКЛ';
-      case 'setBrightness': return 'ЯРК';
-      default: return command.toUpperCase();
+      case 'turnOn':
+        return 'ВКЛ';
+      case 'turnOff':
+        return 'ВЫКЛ';
+      case 'setBrightness':
+        return 'ЯРК';
+      default:
+        return command.toUpperCase();
     }
   }
 
-  /// Возвращает цвет действия
   Color _actionColor(String command) {
     switch (command) {
-      case 'turnOn': return Colors.green;
-      case 'turnOff': return Colors.red;
-      case 'setBrightness': return Colors.orange;
-      default: return Colors.blue;
+      case 'turnOn':
+        return Colors.green;
+      case 'turnOff':
+        return Colors.red;
+      case 'setBrightness':
+        return Colors.orange;
+      default:
+        return Colors.blue;
     }
   }
 
-  /// Возвращает текст условия датчика
   String _sensorConditionLabel(SceneTrigger trigger) {
     final condition = trigger.sensorCondition ?? '';
     final threshold = trigger.sensorThreshold ?? 0;
 
     switch (condition) {
-      case 'temperature_above': return 'Темп. > $threshold°C';
-      case 'temperature_below': return 'Темп. < $threshold°C';
-      case 'humidity_above': return 'Влаж. > $threshold%';
-      case 'humidity_below': return 'Влаж. < $threshold%';
-      default: return '$condition $threshold';
+      case 'temperature_above':
+        return 'Темп. > $threshold°C';
+      case 'temperature_below':
+        return 'Темп. < $threshold°C';
+      case 'humidity_above':
+        return 'Влаж. > $threshold%';
+      case 'humidity_below':
+        return 'Влаж. < $threshold%';
+    // Zigbee
+      case 'water_leak':
+        return '💧 Протечка';
+      case 'motion':
+        return '🏃 Движение';
+      case 'contact_open':
+        return '🚪 Открыто';
+      case 'contact_closed':
+        return '🚪 Закрыто';
+      case 'smoke':
+        return '🔥 Дым';
+      case 'gas':
+        return '💨 Газ';
+      default:
+        return '$condition $threshold';
     }
   }
 
-  /// Возвращает текст события присутствия
   String _presenceEventLabel(SceneTrigger trigger) {
     final event = trigger.presenceEvent;
     if (event == null) return 'Присутствие';
 
     switch (event) {
-      case PresenceEvent.someoneHome: return 'Кто-то пришёл';
-      case PresenceEvent.nobodyHome: return 'Никого нет';
-      case PresenceEvent.allHome: return 'Все дома';
-      case PresenceEvent.phoneArrived: return 'Телефон пришёл';
-      case PresenceEvent.phoneLeft: return 'Телефон ушёл';
-      case PresenceEvent.phoneUnknown: return 'Телефон потерян';
+      case PresenceEvent.someoneHome:
+        return 'Кто-то пришёл';
+      case PresenceEvent.nobodyHome:
+        return 'Никого нет';
+      case PresenceEvent.allHome:
+        return 'Все дома';
+      case PresenceEvent.phoneArrived:
+        return 'Телефон пришёл';
+      case PresenceEvent.phoneLeft:
+        return 'Телефон ушёл';
+      case PresenceEvent.phoneUnknown:
+        return 'Телефон потерян';
     }
   }
 
-  /// Возвращает имя телефона для триггера присутствия
-  String _presencePhoneLabel(SceneTrigger trigger) {
-    return trigger.presencePhoneId ?? '';
-  }
-
-  /// Возвращает текст канала
-  String _presenceChannelLabel(PresenceChannel channel) {
-    switch (channel) {
-      case PresenceChannel.any: return 'Любой канал';
-      case PresenceChannel.wifi: return 'Wi-Fi';
-      case PresenceChannel.gps: return 'GPS';
-    }
-  }
-
-  /// Склонение слова "устройство"
-  String _pluralize(int count) {
-    if (count == 1) return 'устр.';
-    if (count >= 2 && count <= 4) return 'устр.';
-    return 'устр.';
-  }
+  String _pluralize(int count) => 'устр.';
 
   String _repeatLabel(RepeatType repeat) {
     switch (repeat) {
-      case RepeatType.daily: return 'Каждый день';
-      case RepeatType.weekly: return 'По дням недели';
-      case RepeatType.interval: return 'Интервал';
-      default: return '';
+      case RepeatType.daily:
+        return 'Каждый день';
+      case RepeatType.weekly:
+        return 'По дням недели';
+      case RepeatType.interval:
+        return 'Интервал';
+      default:
+        return '';
     }
   }
 
@@ -441,12 +420,18 @@ class ScenesScreen extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.edit, color: Colors.blue),
               title: const Text('Редактировать'),
-              onTap: () { Navigator.pop(ctx); _showCreateSceneDialog(context, ref, existingScene: scene); },
+              onTap: () {
+                Navigator.pop(ctx);
+                _showCreateSceneDialog(context, ref, existingScene: scene);
+              },
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
               title: const Text('Удалить'),
-              onTap: () { Navigator.pop(ctx); ref.read(scenesProvider.notifier).deleteScene(scene.id); },
+              onTap: () {
+                Navigator.pop(ctx);
+                ref.read(scenesProvider.notifier).deleteScene(scene.id);
+              },
             ),
           ],
         ),
@@ -454,14 +439,19 @@ class ScenesScreen extends ConsumerWidget {
     );
   }
 
-  void _showCreateSceneDialog(BuildContext context, WidgetRef ref, {Scene? existingScene}) {
+  void _showCreateSceneDialog(BuildContext context, WidgetRef ref,
+      {Scene? existingScene}) {
     final isEditing = existingScene != null;
-    final nameController = TextEditingController(text: existingScene?.name ?? '');
+    final nameController =
+    TextEditingController(text: existingScene?.name ?? '');
     final allDevices = ref.read(devicesProvider);
 
     final devices = allDevices.where((d) {
-      return d.type == DeviceType.outlet || d.type == DeviceType.switch1 ||
-          d.type == DeviceType.switch2 || d.type == DeviceType.switch3 || d.type == DeviceType.light;
+      return d.type == DeviceType.outlet ||
+          d.type == DeviceType.switch1 ||
+          d.type == DeviceType.switch2 ||
+          d.type == DeviceType.switch3 ||
+          d.type == DeviceType.light;
     }).toList();
 
     final Map<String, String?> selectedActions = {};
@@ -472,28 +462,33 @@ class ScenesScreen extends ConsumerWidget {
     }
 
     String triggerType = existingScene?.trigger?.type.name ?? 'manual';
-    TimeOfDay selectedTime = _parseTime(existingScene?.trigger?.time) ?? const TimeOfDay(hour: 22, minute: 0);
+    TimeOfDay selectedTime =
+        _parseTime(existingScene?.trigger?.time) ??
+            const TimeOfDay(hour: 22, minute: 0);
     String repeatType = existingScene?.trigger?.repeat.name ?? 'once';
-    final Set<int> selectedDays = Set.from(existingScene?.trigger?.repeatDays ?? []);
+    final Set<int> selectedDays =
+    Set.from(existingScene?.trigger?.repeatDays ?? []);
 
     String? selectedSensorId = existingScene?.trigger?.sensorDeviceId;
-    String selectedSensorCondition = existingScene?.trigger?.sensorCondition ?? 'temperature_above';
+    String selectedSensorCondition =
+        existingScene?.trigger?.sensorCondition ?? 'temperature_above';
     final sensorThresholdController = TextEditingController(
-        text: '${existingScene?.trigger?.sensorThreshold ?? 30}'
-    );
+        text: '${existingScene?.trigger?.sensorThreshold ?? 30}');
 
     // ─── Присутствие ───
     PresenceEvent selectedPresenceEvent =
         existingScene?.trigger?.presenceEvent ?? PresenceEvent.someoneHome;
-    String? selectedPresencePhoneId = existingScene?.trigger?.presencePhoneId;
+    String? selectedPresencePhoneId =
+        existingScene?.trigger?.presencePhoneId;
     PresenceChannel selectedPresenceChannel =
         existingScene?.trigger?.presenceChannel ?? PresenceChannel.gps;
     int presenceDelayMin = existingScene?.trigger?.presenceDelayMin ?? 0;
-    int presenceCooldownMin = existingScene?.trigger?.presenceCooldownMin ?? 1;
-    PresenceConditions? presenceConditions = existingScene?.trigger?.presenceConditions;
+    int presenceCooldownMin =
+        existingScene?.trigger?.presenceCooldownMin ?? 1;
+    PresenceConditions? presenceConditions =
+        existingScene?.trigger?.presenceConditions;
     bool showPresenceAdvanced = false;
 
-    // Телефоны из настроек присутствия
     final presenceSettings = ref.read(presenceSettingsProvider);
     final presencePhones = presenceSettings.phones;
 
@@ -504,24 +499,36 @@ class ScenesScreen extends ConsumerWidget {
           title: Text(isEditing ? 'Редактировать сцену' : 'Новая сцена'),
           content: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Название', hintText: 'Выключить всё')),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                      labelText: 'Название', hintText: 'Выключить всё'),
+                ),
                 const SizedBox(height: 16),
-                const Text('Тип запуска:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Тип запуска:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                // Dropdown вместо SegmentedButton — 4 типа не влезают
                 DropdownButtonFormField<String>(
                   initialValue: triggerType,
-                  decoration: const InputDecoration(labelText: 'Тип запуска'),
+                  decoration:
+                  const InputDecoration(labelText: 'Тип запуска'),
                   items: const [
-                    DropdownMenuItem(value: 'manual', child: Text('🎬 Вручную')),
-                    DropdownMenuItem(value: 'time', child: Text('⏰ По времени')),
-                    DropdownMenuItem(value: 'sensor', child: Text('🌡️ По датчику')),
-                    DropdownMenuItem(value: 'presence', child: Text('📍 По присутствию')),
+                    DropdownMenuItem(
+                        value: 'manual', child: Text('🎬 Вручную')),
+                    DropdownMenuItem(
+                        value: 'time', child: Text('⏰ По времени')),
+                    DropdownMenuItem(
+                        value: 'sensor', child: Text('🌡️ По датчику')),
+                    DropdownMenuItem(
+                        value: 'presence', child: Text('📍 По присутствию')),
                   ],
                   onChanged: (value) {
-                    if (value != null) setDialogState(() => triggerType = value);
+                    if (value != null) {
+                      setDialogState(() => triggerType = value);
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -529,21 +536,62 @@ class ScenesScreen extends ConsumerWidget {
                 // ─── ТРИГГЕР ПО ВРЕМЕНИ ───
                 if (triggerType == 'time') ...[
                   ListTile(
-                    title: Text('${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}'),
+                    title: Text(
+                        '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}'),
                     trailing: const Icon(Icons.access_time),
-                    onTap: () async { final time = await showTimePicker(context: context, initialTime: selectedTime); if (time != null) setDialogState(() => selectedTime = time); },
+                    onTap: () async {
+                      final time = await showTimePicker(
+                          context: context, initialTime: selectedTime);
+                      if (time != null) {
+                        setDialogState(() => selectedTime = time);
+                      }
+                    },
                   ),
                   DropdownButtonFormField<String>(
-                    initialValue: repeatType, decoration: const InputDecoration(labelText: 'Повтор'),
-                    items: const [DropdownMenuItem(value: 'once', child: Text('Один раз')), DropdownMenuItem(value: 'daily', child: Text('Каждый день')), DropdownMenuItem(value: 'weekly', child: Text('По дням недели'))],
-                    onChanged: (value) { if (value != null) setDialogState(() => repeatType = value); },
+                    initialValue: repeatType,
+                    decoration: const InputDecoration(labelText: 'Повтор'),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'once', child: Text('Один раз')),
+                      DropdownMenuItem(
+                          value: 'daily', child: Text('Каждый день')),
+                      DropdownMenuItem(
+                          value: 'weekly',
+                          child: Text('По дням недели')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => repeatType = value);
+                      }
+                    },
                   ),
                   if (repeatType == 'weekly') ...[
-                    const SizedBox(height: 8), const Text('Дни недели:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    Wrap(spacing: 4, children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].asMap().entries.map((e) {
-                      final dayIndex = e.key + 1;
-                      return FilterChip(label: Text(e.value, style: const TextStyle(fontSize: 11)), selected: selectedDays.contains(dayIndex), onSelected: (sel) { setDialogState(() { if (sel) { selectedDays.add(dayIndex); } else { selectedDays.remove(dayIndex); } }); },);
-                    }).toList()),
+                    const SizedBox(height: 8),
+                    const Text('Дни недели:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Wrap(
+                      spacing: 4,
+                      children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+                          .asMap()
+                          .entries
+                          .map((e) {
+                        final dayIndex = e.key + 1;
+                        return FilterChip(
+                          label: Text(e.value,
+                              style: const TextStyle(fontSize: 11)),
+                          selected: selectedDays.contains(dayIndex),
+                          onSelected: (sel) {
+                            setDialogState(() {
+                              if (sel) {
+                                selectedDays.add(dayIndex);
+                              } else {
+                                selectedDays.remove(dayIndex);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
                   ],
                   const SizedBox(height: 16),
                 ],
@@ -552,59 +600,119 @@ class ScenesScreen extends ConsumerWidget {
                 if (triggerType == 'sensor') ...[
                   DropdownButtonFormField<String>(
                     initialValue: selectedSensorId,
-                    decoration: const InputDecoration(labelText: 'Датчик'),
+                    decoration:
+                    const InputDecoration(labelText: 'Датчик'),
                     hint: const Text('Выберите датчик'),
-                    items: allDevices.where((d) => d.type == DeviceType.sensor).map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(),
-                    onChanged: (value) => setDialogState(() => selectedSensorId = value),
+                    items: allDevices
+                        .where((d) =>
+                    d.type == DeviceType.sensor ||
+                        (d.properties['source'] == 'zigbee' &&
+                            d.properties['exposes'] != null))
+                        .map((d) => DropdownMenuItem(
+                      value: d.id,
+                      child: Text(d.name),
+                    ))
+                        .toList(),
+                    onChanged: (value) =>
+                        setDialogState(() => selectedSensorId = value),
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     initialValue: selectedSensorCondition,
-                    decoration: const InputDecoration(labelText: 'Условие'),
+                    decoration:
+                    const InputDecoration(labelText: 'Условие'),
                     items: const [
-                      DropdownMenuItem(value: 'temperature_above', child: Text('Температура >')),
-                      DropdownMenuItem(value: 'temperature_below', child: Text('Температура <')),
-                      DropdownMenuItem(value: 'humidity_above', child: Text('Влажность >')),
-                      DropdownMenuItem(value: 'humidity_below', child: Text('Влажность <')),
+                      // Tuya
+                      DropdownMenuItem(
+                          value: 'temperature_above',
+                          child: Text('🌡️ Температура >')),
+                      DropdownMenuItem(
+                          value: 'temperature_below',
+                          child: Text('🌡️ Температура <')),
+                      DropdownMenuItem(
+                          value: 'humidity_above',
+                          child: Text('💧 Влажность >')),
+                      DropdownMenuItem(
+                          value: 'humidity_below',
+                          child: Text('💧 Влажность <')),
+                      // Zigbee
+                      DropdownMenuItem(
+                          value: 'water_leak', child: Text('💧 Протечка')),
+                      DropdownMenuItem(
+                          value: 'motion', child: Text('🏃 Движение')),
+                      DropdownMenuItem(
+                          value: 'contact_open',
+                          child: Text('🚪 Открыто')),
+                      DropdownMenuItem(
+                          value: 'contact_closed',
+                          child: Text('🚪 Закрыто')),
+                      DropdownMenuItem(
+                          value: 'smoke', child: Text('🔥 Дым')),
+                      DropdownMenuItem(
+                          value: 'gas', child: Text('💨 Газ')),
                     ],
-                    onChanged: (value) => setDialogState(() => selectedSensorCondition = value ?? 'temperature_above'),
+                    onChanged: (value) => setDialogState(() =>
+                    selectedSensorCondition =
+                        value ?? 'temperature_above'),
                   ),
                   const SizedBox(height: 8),
-                  TextField(
-                    controller: sensorThresholdController,
-                    decoration: const InputDecoration(labelText: 'Порог'),
-                    keyboardType: TextInputType.number,
-                  ),
+                  // Threshold только для temperature/humidity
+                  if (selectedSensorCondition.startsWith('temperature') ||
+                      selectedSensorCondition.startsWith('humidity')) ...[
+                    TextField(
+                      controller: sensorThresholdController,
+                      decoration:
+                      const InputDecoration(labelText: 'Порог'),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                 ],
 
                 // ─── ТРИГГЕР ПО ПРИСУТСТВИЮ ───
                 if (triggerType == 'presence') ...[
-                  // Событие
                   DropdownButtonFormField<PresenceEvent>(
                     initialValue: selectedPresenceEvent,
-                    decoration: const InputDecoration(labelText: 'Событие'),
+                    decoration:
+                    const InputDecoration(labelText: 'Событие'),
                     items: const [
-                      DropdownMenuItem(value: PresenceEvent.someoneHome, child: Text('Кто-то пришёл')),
-                      DropdownMenuItem(value: PresenceEvent.nobodyHome, child: Text('Никого нет')),
-                      DropdownMenuItem(value: PresenceEvent.allHome, child: Text('Все дома')),
-                      DropdownMenuItem(value: PresenceEvent.phoneArrived, child: Text('Телефон пришёл')),
-                      DropdownMenuItem(value: PresenceEvent.phoneLeft, child: Text('Телефон ушёл')),
-                      DropdownMenuItem(value: PresenceEvent.phoneUnknown, child: Text('Телефон потерян')),
+                      DropdownMenuItem(
+                          value: PresenceEvent.someoneHome,
+                          child: Text('Кто-то пришёл')),
+                      DropdownMenuItem(
+                          value: PresenceEvent.nobodyHome,
+                          child: Text('Никого нет')),
+                      DropdownMenuItem(
+                          value: PresenceEvent.allHome,
+                          child: Text('Все дома')),
+                      DropdownMenuItem(
+                          value: PresenceEvent.phoneArrived,
+                          child: Text('Телефон пришёл')),
+                      DropdownMenuItem(
+                          value: PresenceEvent.phoneLeft,
+                          child: Text('Телефон ушёл')),
+                      DropdownMenuItem(
+                          value: PresenceEvent.phoneUnknown,
+                          child: Text('Телефон потерян')),
                     ],
                     onChanged: (value) {
-                      if (value != null) setDialogState(() => selectedPresenceEvent = value);
+                      if (value != null) {
+                        setDialogState(
+                                () => selectedPresenceEvent = value);
+                      }
                     },
                   ),
                   const SizedBox(height: 8),
 
-                  // Телефон (для конкретных событий)
-                  if (selectedPresenceEvent == PresenceEvent.phoneArrived ||
+                  if (selectedPresenceEvent ==
+                      PresenceEvent.phoneArrived ||
                       selectedPresenceEvent == PresenceEvent.phoneLeft ||
-                      selectedPresenceEvent == PresenceEvent.phoneUnknown) ...[
+                      selectedPresenceEvent ==
+                          PresenceEvent.phoneUnknown) ...[
                     DropdownButtonFormField<String>(
                       initialValue: selectedPresencePhoneId,
-                      decoration: const InputDecoration(labelText: 'Телефон'),
+                      decoration:
+                      const InputDecoration(labelText: 'Телефон'),
                       hint: const Text('Выберите телефон'),
                       items: presencePhones
                           .map((p) => DropdownMenuItem(
@@ -612,20 +720,23 @@ class ScenesScreen extends ConsumerWidget {
                         child: Text(p.phoneName),
                       ))
                           .toList(),
-                      onChanged: (value) => setDialogState(() => selectedPresencePhoneId = value),
+                      onChanged: (value) => setDialogState(
+                              () => selectedPresencePhoneId = value),
                     ),
                     const SizedBox(height: 8),
                   ],
 
-                  // Раскрывающиеся "Дополнительно"
                   InkWell(
-                    onTap: () => setDialogState(() => showPresenceAdvanced = !showPresenceAdvanced),
+                    onTap: () => setDialogState(
+                            () => showPresenceAdvanced = !showPresenceAdvanced),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
                         children: [
                           Icon(
-                            showPresenceAdvanced ? Icons.expand_less : Icons.expand_more,
+                            showPresenceAdvanced
+                                ? Icons.expand_less
+                                : Icons.expand_more,
                             size: 18,
                             color: Colors.grey[700],
                           ),
@@ -644,63 +755,81 @@ class ScenesScreen extends ConsumerWidget {
                   ),
 
                   if (showPresenceAdvanced) ...[
-                    // Канал
                     DropdownButtonFormField<PresenceChannel>(
                       initialValue: selectedPresenceChannel,
-                      decoration: const InputDecoration(labelText: 'Канал определения'),
+                      decoration: const InputDecoration(
+                          labelText: 'Канал определения'),
                       items: const [
-                        DropdownMenuItem(value: PresenceChannel.any, child: Text('Любой')),
-                        DropdownMenuItem(value: PresenceChannel.wifi, child: Text('Только Wi-Fi')),
-                        DropdownMenuItem(value: PresenceChannel.gps, child: Text('Только GPS')),
+                        DropdownMenuItem(
+                            value: PresenceChannel.any,
+                            child: Text('Любой')),
+                        DropdownMenuItem(
+                            value: PresenceChannel.wifi,
+                            child: Text('Только Wi-Fi')),
+                        DropdownMenuItem(
+                            value: PresenceChannel.gps,
+                            child: Text('Только GPS')),
                       ],
                       onChanged: (value) {
-                        if (value != null) setDialogState(() => selectedPresenceChannel = value);
+                        if (value != null) {
+                          setDialogState(
+                                  () => selectedPresenceChannel = value);
+                        }
                       },
                     ),
                     const SizedBox(height: 8),
-
-                    // Задержка
                     DropdownButtonFormField<int>(
                       initialValue: presenceDelayMin,
-                      decoration: const InputDecoration(labelText: 'Задержка перед запуском'),
+                      decoration: const InputDecoration(
+                          labelText: 'Задержка перед запуском'),
                       items: const [
-                        DropdownMenuItem(value: 0, child: Text('Без задержки')),
-                        DropdownMenuItem(value: 1, child: Text('1 минута')),
-                        DropdownMenuItem(value: 5, child: Text('5 минут')),
-                        DropdownMenuItem(value: 30, child: Text('30 минут')),
+                        DropdownMenuItem(
+                            value: 0, child: Text('Без задержки')),
+                        DropdownMenuItem(
+                            value: 1, child: Text('1 минута')),
+                        DropdownMenuItem(
+                            value: 5, child: Text('5 минут')),
+                        DropdownMenuItem(
+                            value: 30, child: Text('30 минут')),
                       ],
                       onChanged: (value) {
-                        if (value != null) setDialogState(() => presenceDelayMin = value);
+                        if (value != null) {
+                          setDialogState(
+                                  () => presenceDelayMin = value);
+                        }
                       },
                     ),
                     const SizedBox(height: 8),
-
-                    // Антидребезг
                     DropdownButtonFormField<int>(
                       initialValue: presenceCooldownMin,
-                      decoration: const InputDecoration(labelText: 'Антидребезг'),
+                      decoration: const InputDecoration(
+                          labelText: 'Антидребезг'),
                       items: const [
-                        DropdownMenuItem(value: 1, child: Text('1 минута')),
-                        DropdownMenuItem(value: 5, child: Text('5 минут')),
-                        DropdownMenuItem(value: 15, child: Text('15 минут')),
-                        DropdownMenuItem(value: 30, child: Text('30 минут')),
+                        DropdownMenuItem(
+                            value: 1, child: Text('1 минута')),
+                        DropdownMenuItem(
+                            value: 5, child: Text('5 минут')),
+                        DropdownMenuItem(
+                            value: 15, child: Text('15 минут')),
+                        DropdownMenuItem(
+                            value: 30, child: Text('30 минут')),
                       ],
                       onChanged: (value) {
-                        if (value != null) setDialogState(() => presenceCooldownMin = value);
+                        if (value != null) {
+                          setDialogState(
+                                  () => presenceCooldownMin = value);
+                        }
                       },
                     ),
                   ],
                   const SizedBox(height: 8),
-
-                  // Кнопка "Настроить условия"
                   OutlinedButton.icon(
                     onPressed: () async {
                       final result = await _showConditionsDialog(
-                        context,
-                        presenceConditions,
-                      );
+                          context, presenceConditions);
                       if (result != null) {
-                        setDialogState(() => presenceConditions = result);
+                        setDialogState(
+                                () => presenceConditions = result);
                       }
                     },
                     icon: const Icon(Icons.tune, size: 16),
@@ -716,33 +845,70 @@ class ScenesScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                 ],
 
-                const Text('Действия:', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(height: 8),
-                if (devices.isEmpty) const Text('Нет устройств', style: TextStyle(color: Colors.grey))
-                else ...devices.map((device) {
-                  final action = selectedActions[device.id];
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      child: Row(children: [
-                        Expanded(child: Text(device.name, style: const TextStyle(fontSize: 14))),
-                        ChoiceChip(label: const Text('ВКЛ', style: TextStyle(fontSize: 11)), selected: action == 'turnOn', selectedColor: Colors.green.withValues(alpha: 0.3), onSelected: (s) => setDialogState(() => selectedActions[device.id] = s ? 'turnOn' : null)),
-                        const SizedBox(width: 4),
-                        ChoiceChip(label: const Text('ВЫКЛ', style: TextStyle(fontSize: 11)), selected: action == 'turnOff', selectedColor: Colors.red.withValues(alpha: 0.3), onSelected: (s) => setDialogState(() => selectedActions[device.id] = s ? 'turnOff' : null)),
-                      ]),
-                    ),
-                  );
-                }),
+                const Text('Действия:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                if (devices.isEmpty)
+                  const Text('Нет устройств',
+                      style: TextStyle(color: Colors.grey))
+                else
+                  ...devices.map((device) {
+                    final action = selectedActions[device.id];
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: Text(device.name,
+                                    style:
+                                    const TextStyle(fontSize: 14))),
+                            ChoiceChip(
+                              label: const Text('ВКЛ',
+                                  style: TextStyle(fontSize: 11)),
+                              selected: action == 'turnOn',
+                              selectedColor:
+                              Colors.green.withValues(alpha: 0.3),
+                              onSelected: (s) => setDialogState(() =>
+                              selectedActions[device.id] =
+                              s ? 'turnOn' : null),
+                            ),
+                            const SizedBox(width: 4),
+                            ChoiceChip(
+                              label: const Text('ВЫКЛ',
+                                  style: TextStyle(fontSize: 11)),
+                              selected: action == 'turnOff',
+                              selectedColor:
+                              Colors.red.withValues(alpha: 0.3),
+                              onSelected: (s) => setDialogState(() =>
+                              selectedActions[device.id] =
+                              s ? 'turnOff' : null),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Отмена')),
             ElevatedButton(
               onPressed: () {
-                final hasActions = selectedActions.values.any((a) => a != null);
+                final hasActions =
+                selectedActions.values.any((a) => a != null);
                 if (nameController.text.isNotEmpty && hasActions) {
-                  final actions = selectedActions.entries.where((e) => e.value != null).map((e) => SceneAction(deviceId: e.key, command: e.value!)).toList();
-                  final timeStr = '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+                  final actions = selectedActions.entries
+                      .where((e) => e.value != null)
+                      .map((e) =>
+                      SceneAction(deviceId: e.key, command: e.value!))
+                      .toList();
+                  final timeStr =
+                      '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
 
                   SceneTrigger? trigger;
 
@@ -750,15 +916,20 @@ class ScenesScreen extends ConsumerWidget {
                     trigger = SceneTrigger(
                       type: TriggerType.time,
                       time: timeStr,
-                      repeat: RepeatType.values.firstWhere((r) => r.name == repeatType),
-                      repeatDays: repeatType == 'weekly' ? selectedDays.toList() : null,
+                      repeat: RepeatType.values
+                          .firstWhere((r) => r.name == repeatType),
+                      repeatDays: repeatType == 'weekly'
+                          ? selectedDays.toList()
+                          : null,
                     );
                   } else if (triggerType == 'sensor') {
                     trigger = SceneTrigger(
                       type: TriggerType.deviceState,
                       sensorDeviceId: selectedSensorId,
                       sensorCondition: selectedSensorCondition,
-                      sensorThreshold: double.tryParse(sensorThresholdController.text) ?? 30,
+                      sensorThreshold: double.tryParse(
+                          sensorThresholdController.text) ??
+                          30,
                     );
                   } else if (triggerType == 'presence') {
                     trigger = SceneTrigger(
@@ -788,9 +959,16 @@ class ScenesScreen extends ConsumerWidget {
 
                   ref.read(scenesProvider.notifier).addScene(scene);
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isEditing ? '✅ Сцена обновлена!' : '✅ Сцена создана!')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(isEditing
+                              ? '✅ Сцена обновлена!'
+                              : '✅ Сцена создана!')));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('⚠️ Введите название и выберите действия')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              '⚠️ Введите название и выберите действия')));
                 }
               },
               child: Text(isEditing ? 'Сохранить' : 'Создать'),
@@ -801,22 +979,15 @@ class ScenesScreen extends ConsumerWidget {
     );
   }
 
-  /// Диалог условий для триггера присутствия.
   Future<PresenceConditions?> _showConditionsDialog(
-      BuildContext context,
-      PresenceConditions? current,
-      ) async {
+      BuildContext context, PresenceConditions? current) async {
     final conditions = current ?? const PresenceConditions();
 
     bool useTime = conditions.useTime;
     TimeOfDay startTime = TimeOfDay(
-      hour: conditions.startHour,
-      minute: conditions.startMinute,
-    );
+        hour: conditions.startHour, minute: conditions.startMinute);
     TimeOfDay endTime = TimeOfDay(
-      hour: conditions.endHour,
-      minute: conditions.endMinute,
-    );
+        hour: conditions.endHour, minute: conditions.endMinute);
     bool useDays = conditions.useDays;
     final Set<int> days = Set.from(conditions.daysOfWeek);
 
@@ -830,7 +1001,6 @@ class ScenesScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Время суток
                 SwitchListTile(
                   dense: true,
                   title: const Text('Время суток'),
@@ -841,35 +1011,27 @@ class ScenesScreen extends ConsumerWidget {
                   ListTile(
                     dense: true,
                     title: Text(
-                      'С ${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}',
-                    ),
+                        'С ${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
                     trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       final time = await showTimePicker(
-                        context: context,
-                        initialTime: startTime,
-                      );
+                          context: context, initialTime: startTime);
                       if (time != null) setState(() => startTime = time);
                     },
                   ),
                   ListTile(
                     dense: true,
                     title: Text(
-                      'По ${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}',
-                    ),
+                        'По ${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}'),
                     trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       final time = await showTimePicker(
-                        context: context,
-                        initialTime: endTime,
-                      );
+                          context: context, initialTime: endTime);
                       if (time != null) setState(() => endTime = time);
                     },
                   ),
                 ],
                 const Divider(),
-
-                // Дни недели
                 SwitchListTile(
                   dense: true,
                   title: const Text('Дни недели'),
@@ -885,7 +1047,8 @@ class ScenesScreen extends ConsumerWidget {
                         .map((e) {
                       final dayIndex = e.key + 1;
                       return FilterChip(
-                        label: Text(e.value, style: const TextStyle(fontSize: 11)),
+                        label: Text(e.value,
+                            style: const TextStyle(fontSize: 11)),
                         selected: days.contains(dayIndex),
                         onSelected: (sel) {
                           setState(() {
@@ -905,7 +1068,8 @@ class ScenesScreen extends ConsumerWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx, const PresenceConditions()),
+              onPressed: () =>
+                  Navigator.pop(ctx, const PresenceConditions()),
               child: const Text('Сбросить'),
             ),
             TextButton(

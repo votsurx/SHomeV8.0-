@@ -1,5 +1,34 @@
 # История изменений SHome
 
+## [8.1.48] — 2026-11-13
+
+### Added
+- EventLogger для Zigbee alerts / availability / Frigate
+- events_screen.dart — иконки, цвета, чипсы (Все/Алерты/Действия/Ошибки) + dropdown по устройствам
+- notification_coordinator.dart — единая логика уведомлений (Singleton)
+- device_notifications_screen.dart: notify_condition, notify_types, notify_cooldown_min (per-device)
+- Кнопка 🔔 Уведомления в DeviceSettings (Zigbee) + FrigateCameraSettings
+- Маршрут `/device_notifications?id=...`
+- Per-channel уведомления VK/SMS (water_leak, smoke, gas, motion, contact, person, car, offline)
+- vkCooldownMin / smsCooldownMin — антидребезг отдельно для VK/SMS
+- globalContainer вынесен в lib/di/global_container.dart
+- adaptive_poller.dart — Tuya offline + thresholds для датчиков
+
+### Changed
+- devices_provider.dart использует NotificationCoordinator
+- SMS default — только критичное (water_leak, smoke, gas)
+- flutter_secure_storage 9.2.4 → 11.2.0 (device_key_* восстановлены из бекапа)
+
+### Fixed
+- Frigate: дубликаты камер, удаление обеих, roomId → name
+- Frigate: настройки камеры (bottom sheet) + шестерёнка на карточке
+- Zigbee: availability (Wi-Fi иконка), onState → isOnline: true
+- Zigbee-датчики в сценах (были только Tuya)
+
+### Removed
+- Локальный автобекап облака
+- autoSync() из MailruCloudService (мёртвый код)
+
 ## v8.1.47 — Frigate UX + Zigbee Availability
 
 ### 🐛 Исправления

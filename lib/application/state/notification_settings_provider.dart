@@ -30,7 +30,7 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     if (token.isEmpty && oldToken != null && oldToken.isNotEmpty) {
       await _keys.saveVkToken(oldToken);
       token = oldToken;
-      await prefs.remove('vk_token');   // убираем plaintext
+      await prefs.remove('vk_token');
     }
     if (userId.isEmpty && oldUserId != null && oldUserId.isNotEmpty) {
       await _keys.saveVkUserId(oldUserId);
@@ -38,7 +38,6 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       await prefs.remove('vk_user_id');
     }
 
-    // ─── ОСТАЛЬНЫЕ НАСТРОЙКИ — в SharedPreferences ───
     state = NotificationSettings(
       enabled: prefs.getBool('notifications_enabled') ?? false,
       vkToken: token,
@@ -47,6 +46,21 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       notifyDevices: prefs.getBool('notify_devices') ?? false,
       notifyAlarms: prefs.getBool('notify_alarms') ?? true,
       notifyErrors: prefs.getBool('notify_errors') ?? true,
+      // Zigbee alerts
+      notifyZigbeeWaterLeak: prefs.getBool('notify_zigbee_water_leak') ?? true,
+      notifyZigbeeSmoke: prefs.getBool('notify_zigbee_smoke') ?? true,
+      notifyZigbeeGas: prefs.getBool('notify_zigbee_gas') ?? true,
+      notifyZigbeeMotion: prefs.getBool('notify_zigbee_motion') ?? true,
+      notifyZigbeeContact: prefs.getBool('notify_zigbee_contact') ?? true,
+      // Frigate
+      notifyFrigatePerson: prefs.getBool('notify_frigate_person') ?? true,
+      notifyFrigateCar: prefs.getBool('notify_frigate_car') ?? false,
+      // Availability
+      notifyZigbeeOffline: prefs.getBool('notify_zigbee_offline') ?? true,
+      notifyFrigateOffline: prefs.getBool('notify_frigate_offline') ?? true,
+      // Cooldown
+      vkCooldownMin: prefs.getInt('vk_cooldown_min') ?? 1,
+      // Schedule
       useSchedule: prefs.getBool('notify_use_schedule') ?? false,
       scheduleOnlyAlarms: prefs.getBool('notify_schedule_only_alarms') ?? true,
       startHour: prefs.getInt('notify_start_hour') ?? 9,
@@ -82,6 +96,21 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     await prefs.setBool('notify_devices', settings.notifyDevices);
     await prefs.setBool('notify_alarms', settings.notifyAlarms);
     await prefs.setBool('notify_errors', settings.notifyErrors);
+    // Zigbee alerts
+    await prefs.setBool('notify_zigbee_water_leak', settings.notifyZigbeeWaterLeak);
+    await prefs.setBool('notify_zigbee_smoke', settings.notifyZigbeeSmoke);
+    await prefs.setBool('notify_zigbee_gas', settings.notifyZigbeeGas);
+    await prefs.setBool('notify_zigbee_motion', settings.notifyZigbeeMotion);
+    await prefs.setBool('notify_zigbee_contact', settings.notifyZigbeeContact);
+    // Frigate
+    await prefs.setBool('notify_frigate_person', settings.notifyFrigatePerson);
+    await prefs.setBool('notify_frigate_car', settings.notifyFrigateCar);
+    // Availability
+    await prefs.setBool('notify_zigbee_offline', settings.notifyZigbeeOffline);
+    await prefs.setBool('notify_frigate_offline', settings.notifyFrigateOffline);
+    // Cooldown
+    await prefs.setInt('vk_cooldown_min', settings.vkCooldownMin);
+    // Schedule
     await prefs.setBool('notify_use_schedule', settings.useSchedule);
     await prefs.setBool('notify_schedule_only_alarms', settings.scheduleOnlyAlarms);
     await prefs.setInt('notify_start_hour', settings.startHour);

@@ -17,7 +17,6 @@ class SmsSettingsNotifier extends StateNotifier<SmsSettings> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Загружаем номера
     final phonesJson = prefs.getString('sms_phones') ?? '[]';
     final phonesList = (jsonDecode(phonesJson) as List)
         .map((e) => SmsPhone.fromJson(e as Map<String, dynamic>))
@@ -30,6 +29,21 @@ class SmsSettingsNotifier extends StateNotifier<SmsSettings> {
       notifyDevices: prefs.getBool('sms_notify_devices') ?? false,
       notifyAlarms: prefs.getBool('sms_notify_alarms') ?? true,
       notifyErrors: prefs.getBool('sms_notify_errors') ?? false,
+      // Zigbee alerts
+      notifyZigbeeWaterLeak: prefs.getBool('sms_notify_zigbee_water_leak') ?? true,
+      notifyZigbeeSmoke: prefs.getBool('sms_notify_zigbee_smoke') ?? true,
+      notifyZigbeeGas: prefs.getBool('sms_notify_zigbee_gas') ?? true,
+      notifyZigbeeMotion: prefs.getBool('sms_notify_zigbee_motion') ?? false,
+      notifyZigbeeContact: prefs.getBool('sms_notify_zigbee_contact') ?? false,
+      // Frigate
+      notifyFrigatePerson: prefs.getBool('sms_notify_frigate_person') ?? false,
+      notifyFrigateCar: prefs.getBool('sms_notify_frigate_car') ?? false,
+      // Availability
+      notifyZigbeeOffline: prefs.getBool('sms_notify_zigbee_offline') ?? false,
+      notifyFrigateOffline: prefs.getBool('sms_notify_frigate_offline') ?? false,
+      // Cooldown
+      smsCooldownMin: prefs.getInt('sms_cooldown_min') ?? 1,
+      // Schedule
       useSchedule: prefs.getBool('sms_use_schedule') ?? false,
       scheduleOnlyAlarms: prefs.getBool('sms_schedule_only_alarms') ?? true,
       startHour: prefs.getInt('sms_start_hour') ?? 9,
@@ -54,6 +68,21 @@ class SmsSettingsNotifier extends StateNotifier<SmsSettings> {
     await prefs.setBool('sms_notify_devices', settings.notifyDevices);
     await prefs.setBool('sms_notify_alarms', settings.notifyAlarms);
     await prefs.setBool('sms_notify_errors', settings.notifyErrors);
+    // Zigbee alerts
+    await prefs.setBool('sms_notify_zigbee_water_leak', settings.notifyZigbeeWaterLeak);
+    await prefs.setBool('sms_notify_zigbee_smoke', settings.notifyZigbeeSmoke);
+    await prefs.setBool('sms_notify_zigbee_gas', settings.notifyZigbeeGas);
+    await prefs.setBool('sms_notify_zigbee_motion', settings.notifyZigbeeMotion);
+    await prefs.setBool('sms_notify_zigbee_contact', settings.notifyZigbeeContact);
+    // Frigate
+    await prefs.setBool('sms_notify_frigate_person', settings.notifyFrigatePerson);
+    await prefs.setBool('sms_notify_frigate_car', settings.notifyFrigateCar);
+    // Availability
+    await prefs.setBool('sms_notify_zigbee_offline', settings.notifyZigbeeOffline);
+    await prefs.setBool('sms_notify_frigate_offline', settings.notifyFrigateOffline);
+    // Cooldown
+    await prefs.setInt('sms_cooldown_min', settings.smsCooldownMin);
+    // Schedule
     await prefs.setBool('sms_use_schedule', settings.useSchedule);
     await prefs.setBool('sms_schedule_only_alarms', settings.scheduleOnlyAlarms);
     await prefs.setInt('sms_start_hour', settings.startHour);
@@ -66,19 +95,16 @@ class SmsSettingsNotifier extends StateNotifier<SmsSettings> {
     );
   }
 
-  /// Добавить номер
   Future<void> addPhone(SmsPhone phone) async {
     final updated = [...state.phones, phone];
     await update(state.copyWith(phones: updated));
   }
 
-  /// Удалить номер
   Future<void> removePhone(String phone) async {
     final updated = state.phones.where((p) => p.phone != phone).toList();
     await update(state.copyWith(phones: updated));
   }
 
-  /// Обновить номер
   Future<void> updatePhone(String oldPhone, SmsPhone newPhone) async {
     final updated = state.phones.map((p) {
       return p.phone == oldPhone ? newPhone : p;

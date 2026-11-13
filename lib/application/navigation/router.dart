@@ -20,7 +20,7 @@ import '../../presentation/screens/mqtt_broker_settings_screen.dart';
 import '../../presentation/screens/zigbee_scan_screen.dart';
 import '../../presentation/screens/frigate_screen.dart';
 import '../../presentation/screens/frigate_settings_screen.dart';
-// import '../../presentation/screens/frigate_player_screen.dart';  // TODO
+import '../../presentation/screens/device_notifications_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -114,6 +114,15 @@ final router = GoRouter(
     GoRoute(
       path: '/events',
       builder: (context, state) => const EventsScreen(),
+    ),
+
+    // Уведомления устройства
+    GoRoute(
+      path: '/device_notifications',
+      builder: (context, state) {
+        final deviceId = state.uri.queryParameters['id'] ?? '';
+        return DeviceNotificationsScreen(deviceId: deviceId);
+      },
     ),
 
     // Сканер Tuya

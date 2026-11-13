@@ -2,56 +2,33 @@
 /// Диалог с редактированием:
 /// - Название
 /// - Комната
-/// - Уведомления (labels)
 /// - Snapshot interval
 /// - RTSP порт
 /// - Удаление
+/// - Кнопка «Уведомления» → DeviceNotificationsScreen (labels + условие)
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../application/state/devices_provider.dart';
 import '../../application/state/rooms_provider.dart';
 import '../../domain/models/device.dart';
 
 class FrigateCameraSettings {
-  /// Все возможные labels Frigate
-  static const _allLabels = [
-    'person',
-    'car',
-    'dog',
-    'cat',
-    'bird',
-    'motorcycle',
-    'bicycle',
-    'truck',
-    'bus',
-    'boat',
-  ];
-
   static void show(BuildContext context, WidgetRef ref, Device device) {
-    // ─── Контроллеры ───
     final nameController = TextEditingController(text: device.name);
     final rtspPortController = TextEditingController(
       text: (device.properties['rtsp_port'] as int?)?.toString() ?? '8554',
     );
 
-    // ─── Существующие значения ───
     String selectedRoomId = device.roomId;
-    Set<String> selectedLabels = Set.from(
-      (device.properties['notify_labels'] as List?)?.cast<String>() ??
-          ['person', 'car'],
-    );
     int snapshotInterval = (device.properties['snapshot_interval'] as int?) ?? 5;
 
-    // ─── Доступные комнаты ───
     final rooms = ref.read(roomsProvider);
 
-    // ─── Строим список комнат для dropdown ───
-    // Убираем хардкод 'other' — берём из БД, fallback если 'other' нет
     final Map<String, DropdownMenuItem<String>> roomItemsMap = {};
 
-    // Добавляем все комнаты из БД
     for (final r in rooms) {
       roomItemsMap[r.id] = DropdownMenuItem(
         value: r.id,
@@ -59,7 +36,6 @@ class FrigateCameraSettings {
       );
     }
 
-    // Fallback: если 'other' нет — добавляем
     if (!roomItemsMap.containsKey('other')) {
       roomItemsMap['other'] = const DropdownMenuItem(
         value: 'other',
@@ -67,9 +43,7 @@ class FrigateCameraSettings {
       );
     }
 
-    // Проверяем что selectedRoomId валиден
     if (!roomItemsMap.containsKey(selectedRoomId)) {
-      // Fallback: 'other' или первая комната
       selectedRoomId = roomItemsMap.containsKey('other')
           ? 'other'
           : roomItemsMap.keys.first;
@@ -82,7 +56,6 @@ class FrigateCameraSettings {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          // Актуальное устройство
           final latestDevice = ref.watch(devicesProvider).firstWhere(
                 (d) => d.id == device.id,
             orElse: () => device,
@@ -100,7 +73,6 @@ class FrigateCameraSettings {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ─── Заголовок ───
                   Row(
                     children: [
                       const Icon(Icons.videocam, color: Colors.red, size: 28),
@@ -118,7 +90,6 @@ class FrigateCameraSettings {
                   ),
                   const SizedBox(height: 16),
 
-                  // ─── Название ───
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
@@ -129,7 +100,6 @@ class FrigateCameraSettings {
                   ),
                   const SizedBox(height: 12),
 
-                  // ─── Комната ───
                   DropdownButtonFormField<String>(
                     initialValue: selectedRoomId,
                     decoration: const InputDecoration(
@@ -144,7 +114,6 @@ class FrigateCameraSettings {
                   ),
                   const SizedBox(height: 12),
 
-                  // ─── Snapshot interval ───
                   DropdownButtonFormField<int>(
                     initialValue: snapshotInterval,
                     decoration: const InputDecoration(
@@ -163,7 +132,6 @@ class FrigateCameraSettings {
                   ),
                   const SizedBox(height: 12),
 
-                  // ─── RTSP порт ───
                   TextField(
                     controller: rtspPortController,
                     decoration: const InputDecoration(
@@ -176,43 +144,26 @@ class FrigateCameraSettings {
                   ),
                   const SizedBox(height: 16),
 
-                  // ─── Уведомления (labels) ───
-                  const Text(
-                    'Уведомления',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  // 🔔 Уведомления → отдельный экран
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.notifications_active,
+                          color: Colors.orange),
+                      title: const Text('Уведомления'),
+                      subtitle: Text(
+                        _getNotifySummary(latestDevice),
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        context.push(
+                            '/device_notifications?id=${latestDevice.id}');
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Какие объекты отслеживать',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: _allLabels.map((label) {
-                      final isSelected = selectedLabels.contains(label);
-                      return FilterChip(
-                        label: Text('${_labelEmoji(label)} $label'),
-                        selected: isSelected,
-                        onSelected: (val) {
-                          setModalState(() {
-                            if (val) {
-                              selectedLabels.add(label);
-                            } else {
-                              selectedLabels.remove(label);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
                   ),
                   const SizedBox(height: 24),
 
-                  // ─── Кнопки ───
                   Row(
                     children: [
                       Expanded(
@@ -235,7 +186,6 @@ class FrigateCameraSettings {
                         flex: 2,
                         child: ElevatedButton.icon(
                           onPressed: () async {
-                            // Валидация
                             final name = nameController.text.trim();
                             if (name.isEmpty) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
@@ -257,24 +207,12 @@ class FrigateCameraSettings {
                               return;
                             }
 
-                            if (selectedLabels.isEmpty) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                  Text('Выберите хотя бы один объект'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            // Сохраняем
                             final updated = latestDevice.copyWith(
                               name: name,
                               roomId: selectedRoomId,
                               properties: {
                                 ...latestDevice.properties,
                                 'camera_name': name,
-                                'notify_labels': selectedLabels.toList(),
                                 'snapshot_interval': snapshotInterval,
                                 'rtsp_port': rtspPort,
                               },
@@ -313,31 +251,19 @@ class FrigateCameraSettings {
     );
   }
 
-  static String _labelEmoji(String label) {
-    switch (label) {
-      case 'person':
-        return '🚶';
-      case 'car':
-        return '🚗';
-      case 'dog':
-        return '🐕';
-      case 'cat':
-        return '🐱';
-      case 'bird':
-        return '🐦';
-      case 'motorcycle':
-        return '🏍️';
-      case 'bicycle':
-        return '🚲';
-      case 'truck':
-        return '🚚';
-      case 'bus':
-        return '🚌';
-      case 'boat':
-        return '⛵';
-      default:
-        return '📦';
-    }
+  static String _getNotifySummary(Device device) {
+    final labels =
+        (device.properties['notify_labels'] as List?)?.cast<String>() ?? [];
+    final condition =
+        device.properties['notify_condition'] as String? ?? 'always';
+    final conditionLabel = switch (condition) {
+      'always' => 'Всегда',
+      'away' => 'Когда никого нет',
+      'night' => 'Ночью',
+      'away_or_night' => 'Никого нет ИЛИ ночью',
+      _ => 'Всегда',
+    };
+    return '${labels.length} объектов · $conditionLabel';
   }
 
   static Future<void> _confirmDelete(

@@ -17,7 +17,6 @@ class SmsSettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Включить SMS
           SwitchListTile(
             title: const Text('Включить SMS'),
             subtitle: const Text('Отправлять уведомления по SMS'),
@@ -28,7 +27,6 @@ class SmsSettingsScreen extends ConsumerWidget {
           ),
           const Divider(height: 32),
 
-          // Номера телефонов
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -84,7 +82,6 @@ class SmsSettingsScreen extends ConsumerWidget {
 
           const Divider(height: 32),
 
-          // События
           const Text(
             'События для SMS',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -104,24 +101,113 @@ class SmsSettingsScreen extends ConsumerWidget {
               notifier.update(settings.copyWith(notifyDevices: val));
             },
           ),
+          const Divider(height: 32),
+          // ═══ ТРЕВОГИ ═══
+          const Text(
+            'Тревоги',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
           SwitchListTile(
-            title: const Text('Тревоги'),
-            value: settings.notifyAlarms,
+            title: const Text('Zigbee: 💧 Протечка'),
+            value: settings.notifyZigbeeWaterLeak,
             onChanged: (val) {
-              notifier.update(settings.copyWith(notifyAlarms: val));
+              notifier.update(
+                  settings.copyWith(notifyZigbeeWaterLeak: val));
             },
           ),
           SwitchListTile(
-            title: const Text('Ошибки'),
-            value: settings.notifyErrors,
+            title: const Text('Zigbee: 🔥 Дым'),
+            value: settings.notifyZigbeeSmoke,
             onChanged: (val) {
-              notifier.update(settings.copyWith(notifyErrors: val));
+              notifier.update(settings.copyWith(notifyZigbeeSmoke: val));
             },
           ),
-
+          SwitchListTile(
+            title: const Text('Zigbee: 💨 Газ'),
+            value: settings.notifyZigbeeGas,
+            onChanged: (val) {
+              notifier.update(settings.copyWith(notifyZigbeeGas: val));
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Zigbee: 🏃 Движение'),
+            value: settings.notifyZigbeeMotion,
+            onChanged: (val) {
+              notifier.update(
+                  settings.copyWith(notifyZigbeeMotion: val));
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Zigbee: 🚪 Контакт'),
+            value: settings.notifyZigbeeContact,
+            onChanged: (val) {
+              notifier.update(
+                  settings.copyWith(notifyZigbeeContact: val));
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Frigate: 🚶 Person'),
+            value: settings.notifyFrigatePerson,
+            onChanged: (val) {
+              notifier.update(
+                  settings.copyWith(notifyFrigatePerson: val));
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Frigate: 🚗 Car'),
+            value: settings.notifyFrigateCar,
+            onChanged: (val) {
+              notifier.update(settings.copyWith(notifyFrigateCar: val));
+            },
+          ),
+          const Divider(height: 32),
+          // ═══ ОШИБКИ ═══
+          const Text(
+            'Ошибки',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: const Text('Zigbee offline'),
+            subtitle: const Text('Устройство потеряло связь'),
+            value: settings.notifyZigbeeOffline,
+            onChanged: (val) {
+              notifier.update(
+                  settings.copyWith(notifyZigbeeOffline: val));
+            },
+          ),
+          SwitchListTile(
+            title: const Text('Frigate offline'),
+            subtitle: const Text('Frigate недоступен'),
+            value: settings.notifyFrigateOffline,
+            onChanged: (val) {
+              notifier.update(
+                  settings.copyWith(notifyFrigateOffline: val));
+            },
+          ),
+          const Divider(height: 32),
+          // ═══ АНТИДРЕБЕЗГ ═══
+          DropdownButtonFormField<int>(
+            initialValue: settings.smsCooldownMin,
+            decoration: const InputDecoration(
+              labelText: 'Антидребезг SMS',
+              prefixIcon: Icon(Icons.timer),
+            ),
+            items: const [
+              DropdownMenuItem(value: 1, child: Text('1 минута')),
+              DropdownMenuItem(value: 5, child: Text('5 минут')),
+              DropdownMenuItem(value: 15, child: Text('15 минут')),
+              DropdownMenuItem(value: 30, child: Text('30 минут')),
+            ],
+            onChanged: (val) {
+              if (val != null) {
+                notifier.update(settings.copyWith(smsCooldownMin: val));
+              }
+            },
+          ),
           const Divider(height: 32),
 
-          // Расписание
           SwitchListTile(
             title: const Text('Расписание'),
             subtitle: const Text('Отправлять только в указанное время'),
@@ -212,7 +298,6 @@ class SmsSettingsScreen extends ConsumerWidget {
 
           const SizedBox(height: 16),
 
-          // Тест
           ElevatedButton.icon(
             onPressed: () async {
               if (settings.phones.isEmpty) {

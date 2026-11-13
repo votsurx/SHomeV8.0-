@@ -4,7 +4,6 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:webdav_client/webdav_client.dart';
 import 'dart:convert';
-import '../local/secure_storage/encrypted_keys.dart';
 
 class MailruCloudService {
   static const String _webdavUrl = 'https://webdav.cloud.mail.ru';
@@ -183,29 +182,6 @@ class MailruCloudService {
       }
     } catch (e) {
       debugPrint('❌ Ошибка ротации бекапов: $e');
-    }
-  }
-
-  // ─── АВТОСИНХРОНИЗАЦИЯ ─────────────────────────────────
-
-  static Future<void> autoSync(String jsonConfig) async {
-    try {
-      final keys = EncryptedKeys();
-      final login = await keys.getCloudLogin();
-      final password = await keys.getCloudPassword();
-
-      if (login == null || password == null || autoSync != true) return;
-
-      final service = MailruCloudService(login: login, password: password);
-      final success = await service.uploadBackup(jsonConfig);
-
-      if (success) {
-        final now = DateTime.now();
-        final dateStr = '${now.day}.${now.month}.${now.year} ${now.hour}:${now.minute}';
-        await keys.saveCloudLastSync(dateStr);
-      }
-    } catch (e) {
-      debugPrint('❌ Ошибка автосинхронизации: $e');
     }
   }
 }
