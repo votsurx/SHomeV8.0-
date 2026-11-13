@@ -1,5 +1,37 @@
 # История изменений SHome
 
+## v8.1.49 — Per-Device Notifications + Events Filters — 2026-11-13
+
+### 🔔 Уведомления (per-device)
+- **DeviceNotificationsScreen** — отдельный экран для каждого устройства
+- Условие отправки: всегда / никого нет / ночью / никого нет ИЛИ ночью
+- Антидребезг per-device (1/5/15/30 мин)
+- Пороги: батарея, температура, влажность, мощность
+- Типы по устройству: Zigbee (water_leak/smoke/gas/motion/contact/low_battery), Frigate (person/car/...), Tuya (state_changed/offline/error, sensor thresholds, compound low_battery)
+
+### 🔔 NotificationCoordinator
+- Единая логика отправки VK/SMS
+- Per-device + глобальные проверки
+- Антидребезг per-device per-channel per-type
+- Используется в DevicesNotifier, AdaptivePoller, Zigbee/Frigate
+
+### 📊 События
+- Фильтры: чипсы (Все/Алерты/Действия/Ошибки) + dropdown по устройствам
+- Иконки и цвета для Zigbee/Frigate алертов
+- EventLogger для Zigbee availability, Frigate events
+
+### 🔧 Tuya
+- `AdaptivePoller` — offline (transition) + thresholds для датчиков
+- Compound low_battery (< 20%)
+- Уведомления через `NotificationCoordinator`
+
+### 🗑️ Чистка
+- Удалён `MailruCloudService.autoSync()` (мёртвый код)
+- `globalContainer` вынесен в `lib/di/global_container.dart`
+
+### 🔧 versionCode
+- `versionCode` = 80149
+
 ## [8.1.48] — 2026-11-13
 
 ### Added

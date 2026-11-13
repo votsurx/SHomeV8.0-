@@ -3,6 +3,7 @@
 /// - Тип уведомлений (Zigbee / Frigate / Tuya — по типу устройства)
 /// - Условие отправки (всегда / никого нет / ночью / никого нет ИЛИ ночью)
 /// - Антидребезг (per-device)
+/// - Пороги (батарея, температура, влажность, мощность)
 library;
 
 import 'package:flutter/material.dart';
@@ -21,16 +22,15 @@ class DeviceNotificationsScreen extends ConsumerStatefulWidget {
 
 class _DeviceNotificationsScreenState
     extends ConsumerState<DeviceNotificationsScreen> {
-  // Zigbee
   static const _zigbeeTypes = [
     'water_leak',
     'smoke',
     'gas',
     'motion',
     'contact',
+    'low_battery',
   ];
 
-  // Frigate
   static const _frigateLabels = [
     'person',
     'car',
@@ -44,7 +44,6 @@ class _DeviceNotificationsScreenState
     'boat',
   ];
 
-  // Tuya — по типам устройств
   static const _tuyaTypesByDeviceType = {
     DeviceType.outlet: ['state_changed', 'offline', 'error'],
     DeviceType.switch1: ['state_changed', 'offline', 'error'],
@@ -185,7 +184,7 @@ class _DeviceNotificationsScreenState
   }
 
   // ═══════════════════════════════════════════════════════════
-  // THRESHOLD (Tuya-датчики)
+  // THRESHOLD
   // ═══════════════════════════════════════════════════════════
 
   void _setThreshold(String key, double? value) {
@@ -231,6 +230,7 @@ class _DeviceNotificationsScreenState
       case 'gas': return '💨';
       case 'motion': return '🏃';
       case 'contact': return '🚪';
+      case 'low_battery': return '🔋';
       default: return '📦';
     }
   }
@@ -242,10 +242,10 @@ class _DeviceNotificationsScreenState
       case 'gas': return '💨 Газ';
       case 'motion': return '🏃 Движение';
       case 'contact': return '🚪 Контакт';
+      case 'low_battery': return '🔋 Низкий заряд';
       case 'state_changed': return '🔄 Вкл/Выкл';
       case 'offline': return '📡 Offline';
       case 'error': return '❌ Ошибка';
-      case 'low_battery': return '🔋 Низкий заряд';
       case 'temperature_above': return '🌡️ Температура >';
       case 'temperature_below': return '🌡️ Температура <';
       case 'humidity_above': return '💧 Влажность >';
@@ -287,8 +287,10 @@ class _DeviceNotificationsScreenState
     final isFrigate = source == 'frigate';
     final isTuya = !isZigbee && !isFrigate;
 
-    // Типы для Tuya (по типу устройства)
     final tuyaTypes = _tuyaTypesByDeviceType[device.type] ?? [];
+
+    // Zigbee с батареей?
+    final isZigbeeBattery = isZigbee && device.properties['battery'] != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -401,13 +403,26 @@ class _DeviceNotificationsScreenState
             const SizedBox(height: 8),
             Card(
               child: Column(
-                children: _zigbeeTypes
-                    .map((type) => SwitchListTile(
-                  title: Text(_typeLabel(type)),
-                  value: _isTypeEnabled(type, _zigbeeTypes),
-                  onChanged: (v) => _toggleType(type, v),
-                ))
-                    .toList(),
+                children: _zigbeeTypes.map((type) {
+                  final isBatteryType = type == 'low_battery';
+                  return Column(
+                    children: [
+                      SwitchListTile(
+                        title: Text(_typeLabel(type)),
+                        value: _isTypeEnabled(type, _zigbeeTypes),
+                        onChanged: (v) => _toggleType(type, v),
+                      ),
+                      if (isBatteryType &&
+                          isZigbeeBattery &&
+                          _isTypeEnabled(type, _zigbeeTypes))
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 16, right: 16, bottom: 8),
+                          child: _buildBatteryThresholdField(),
+                        ),
+                    ],
+                  );
+                }).toList(),
               ),
             ),
             const SizedBox(height: 16),
@@ -444,10 +459,10 @@ class _DeviceNotificationsScreenState
             Card(
               child: Column(
                 children: tuyaTypes.map((type) {
-                  // Для threshold-типов — SwitchListTile + TextField
                   final isThreshold = type.startsWith('temperature') ||
                       type.startsWith('humidity') ||
                       type.startsWith('power');
+                  final isBatteryType = type == 'low_battery';
 
                   return Column(
                     children: [
@@ -456,12 +471,18 @@ class _DeviceNotificationsScreenState
                         value: _isTypeEnabled(type, tuyaTypes),
                         onChanged: (v) => _toggleType(type, v),
                       ),
-                      if (isThreshold &&
-                          _isTypeEnabled(type, tuyaTypes))
+                      if (isThreshold && _isTypeEnabled(type, tuyaTypes))
                         Padding(
                           padding: const EdgeInsets.only(
                               left: 16, right: 16, bottom: 8),
                           child: _buildThresholdField(type),
+                        ),
+                      if (isBatteryType &&
+                          _isTypeEnabled(type, tuyaTypes))
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 16, right: 16, bottom: 8),
+                          child: _buildBatteryThresholdField(),
                         ),
                     ],
                   );
@@ -533,6 +554,29 @@ class _DeviceNotificationsScreenState
       ),
       keyboardType:
       const TextInputType.numberWithOptions(decimal: true),
+      onChanged: (v) {
+        final parsed = double.tryParse(v);
+        _setThreshold(key, parsed);
+      },
+    );
+  }
+
+  Widget _buildBatteryThresholdField() {
+    final key = 'threshold_battery_low';
+    final current = _getThreshold(key) ?? 20;
+    final controller =
+    TextEditingController(text: current.toStringAsFixed(0));
+
+    return TextField(
+      controller: controller,
+      decoration: const InputDecoration(
+        labelText: 'Порог заряда',
+        hintText: '20',
+        suffixText: '%',
+        border: OutlineInputBorder(),
+        isDense: true,
+      ),
+      keyboardType: TextInputType.number,
       onChanged: (v) {
         final parsed = double.tryParse(v);
         _setThreshold(key, parsed);
