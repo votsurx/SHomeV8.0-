@@ -19,7 +19,6 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   bool _isConnecting = false;
   bool _isUploading = false;
   bool _isDownloading = false;
-  bool _autoSync = false;
   String? _login;
   String? _lastSync;
 
@@ -32,14 +31,12 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   Future<void> _loadState() async {
     final login = await _keys.getCloudLogin();
     final password = await _keys.getCloudPassword();
-    final autoSync = await _keys.getCloudAutoSync();
 
     if (login != null && password != null) {
       if (!mounted) return;
       setState(() {
         _isConnected = true;
         _login = login;
-        _autoSync = autoSync ?? false;
       });
       _loadLastSync();
     }
@@ -69,13 +66,11 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       if (success) {
         await _keys.saveCloudLogin(login);
         await _keys.saveCloudPassword(password);
-        await _keys.saveCloudAutoSync(false);
 
         if (!mounted) return;
         setState(() {
           _isConnected = true;
           _login = login;
-          _autoSync = false;
         });
         _showSnack('✅ Подключено к облаку');
       } else {
@@ -91,22 +86,15 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   Future<void> _disconnect() async {
     await _keys.deleteCloudLogin();
     await _keys.deleteCloudPassword();
-    await _keys.deleteCloudAutoSync();
     await _keys.deleteCloudLastSync();
 
     if (!mounted) return;
     setState(() {
       _isConnected = false;
       _login = null;
-      _autoSync = false;
       _lastSync = null;
     });
     _showSnack('🔌 Отключено от облака');
-  }
-
-  Future<void> _toggleAutoSync(bool value) async {
-    await _keys.saveCloudAutoSync(value);
-    setState(() => _autoSync = value);
   }
 
   Future<void> _uploadBackup() async {
@@ -318,25 +306,6 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
             leading: const Icon(Icons.link_off, color: Colors.red),
             title: const Text('Отключить'),
             onTap: _disconnect,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('🔄 Автосинхронизация', style: Theme.of(context).textTheme.titleMedium),
-                const Divider(),
-                SwitchListTile(
-                  title: const Text('Автосинхронизация бекапов'),
-                  subtitle: const Text('Загружать бекап в облако при сворачивании приложения'),
-                  value: _autoSync,
-                  onChanged: _toggleAutoSync,
-                ),
-              ],
-            ),
           ),
         ),
         const SizedBox(height: 12),

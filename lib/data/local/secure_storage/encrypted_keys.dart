@@ -18,7 +18,6 @@ class EncryptedKeys {
   static const _vkUserIdKey = 'vk_user_id';
   static const _cloudLoginKey = 'mailru_login';
   static const _cloudPasswordKey = 'mailru_password';
-  static const _cloudAutoSyncKey = 'mailru_autosync';
   static const _cloudLastSyncKey = 'mailru_last_sync';
   // ─── Frigate ───
   static const _frigateRtspPasswordKey = 'frigate_rtsp_password';
@@ -62,14 +61,6 @@ class EncryptedKeys {
   Future<void> saveCloudPassword(String password) => save(_cloudPasswordKey, password);
   Future<String?> getCloudPassword() => get(_cloudPasswordKey);
   Future<void> deleteCloudPassword() => delete(_cloudPasswordKey);
-
-  Future<void> saveCloudAutoSync(bool enabled) => save(_cloudAutoSyncKey, enabled.toString());
-  Future<bool?> getCloudAutoSync() async {
-    final v = await get(_cloudAutoSyncKey);
-    if (v == null) return null;
-    return v == 'true';
-  }
-  Future<void> deleteCloudAutoSync() => delete(_cloudAutoSyncKey);
 
   Future<void> saveCloudLastSync(String value) => save(_cloudLastSyncKey, value);
   Future<String?> getCloudLastSync() => get(_cloudLastSyncKey);

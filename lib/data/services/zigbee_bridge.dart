@@ -19,6 +19,7 @@ class ZigbeeBridge {
   void Function(ZigbeeEvent event)? onEvent;
   void Function(String friendlyName, Map<String, dynamic> state)? onState;
   void Function(bool online)? onBridgeState;
+  void Function(String friendlyName, bool isOnline)? onAvailability;
 
   StreamSubscription<MqttMessageData>? _subscription;
   bool _isRunning = false;
@@ -44,6 +45,7 @@ class ZigbeeBridge {
       await _mqttService.subscribe('zigbee2mqtt/bridge/event');
       await _mqttService.subscribe('zigbee2mqtt/bridge/state');
       await _mqttService.subscribe('zigbee2mqtt/#');
+      await _mqttService.subscribe('zigbee2mqtt/+/availability');
 
       // ✅ ЗАПРОС СПИСКА (fallback)
       await Future.delayed(const Duration(milliseconds: 500));
@@ -76,6 +78,21 @@ class ZigbeeBridge {
       // ✅ ИГНОРИРУЕМ ЭХО НАШИХ ЗАПРОСОВ (/get, /set)
       // ═══════════════════════════════════════════════════════════
       if (topic.endsWith('/get') || topic.endsWith('/set')) {
+        return;
+      }
+
+      // ═══════════════════════════════════════════════════════════
+      // ✅ AVAILABILITY (online/offline) — ДОБАВЛЕНО!
+      // ═══════════════════════════════════════════════════════════
+      if (topic.endsWith('/availability')) {
+        final parts = topic.split('/');
+        if (parts.length >= 2) {
+          final friendlyName = parts[1];
+          final status = msg.payload.trim();
+          final isOnline = status == 'online';
+          _talker.info('🐝 Availability: $friendlyName → $status');
+          onAvailability?.call(friendlyName, isOnline);
+        }
         return;
       }
 

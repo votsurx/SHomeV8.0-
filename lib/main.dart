@@ -9,12 +9,11 @@ import 'package:talker/talker.dart';
 
 import 'data/services/heartbeat_server.dart';
 import 'di/injection.dart';
+import 'domain/models/device.dart';
 import 'domain/models/room.dart';
 import 'domain/repositories/room_repository.dart';
 import 'data/services/automation_engine.dart';
 import 'data/services/timer_engine.dart';
-import 'data/services/config_service.dart';
-import 'data/services/mailru_cloud_service.dart';
 import 'app.dart';
 import 'application/state/theme_provider.dart';
 import 'domain/services/mqtt_service_interface.dart';
@@ -23,7 +22,6 @@ import 'data/services/frigate_bridge.dart';
 import 'data/services/frigate_service.dart';
 import 'data/local/secure_storage/encrypted_keys.dart';
 import 'application/state/devices_provider.dart';
-import 'dart:io';
 
 /// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
@@ -141,7 +139,13 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
       zigbeeBridge.onState = (friendlyName, newState) {
         _updateZigbeeDeviceState(friendlyName, newState);
       };
-      getIt<Talker>().info('🐝 onState привязан к devicesProvider');
+
+      // ✅ НОВОЕ: привязываем onAvailability → devicesProvider
+      zigbeeBridge.onAvailability = (friendlyName, isOnline) {
+        _updateZigbeeAvailability(friendlyName, isOnline);
+      };
+
+      getIt<Talker>().info('🐝 onState + onAvailability привязаны');
 
       // ═══════════════════════════════════════════════════════════
       // 🎥 FRIGATE
@@ -170,16 +174,13 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
   }
 
   /// Обновляет `properties` Zigbee-устройства в `devicesProvider`.
-  ///
-  /// Ищем `Device` по `friendly_name`, мержим `newState` в `properties`,
-  /// и вызываем `updateDeviceLocal` — это триггерит перерисовку `DeviceCard`.
+  /// Пришли данные → устройство точно online.
   void _updateZigbeeDeviceState(
       String friendlyName,
       Map<String, dynamic> newState,
       ) {
     try {
-      final devicesNotifier =
-      globalContainer.read(devicesProvider.notifier);
+      final devicesNotifier = globalContainer.read(devicesProvider.notifier);
       final devices = globalContainer.read(devicesProvider);
 
       final device = devices.firstWhere(
@@ -188,13 +189,21 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
             d.properties['friendly_name'] == friendlyName,
       );
 
-      // Мержим новые значения (battery, linkquality, water_leak...) в properties
+      // Мержим новые значения (battery, linkquality, water_leak...)
       final updatedProperties = <String, dynamic>{
         ...device.properties,
         ...newState,
+        // ✅ Сохраняем timestamp последнего контакта
+        'last_seen': DateTime.now().toIso8601String(),
       };
 
-      final updatedDevice = device.copyWith(properties: updatedProperties);
+      // ✅ Пришли данные → устройство точно online
+      final updatedDevice = device.copyWith(
+        properties: updatedProperties,
+        isOnline: true,
+        state: DeviceState.online,
+      );
+
       devicesNotifier.updateDeviceLocal(updatedDevice);
 
       getIt<Talker>().debug(
@@ -205,18 +214,43 @@ class _SHomeAppObserverState extends State<SHomeAppObserver>
     }
   }
 
+  /// Обновляет `isOnline` Zigbee-устройства по `availability`.
+  /// Zigbee2MQTT шлёт `online` / `offline` на `zigbee2mqtt/<name>/availability`.
+  void _updateZigbeeAvailability(String friendlyName, bool isOnline) {
+    try {
+      final devicesNotifier = globalContainer.read(devicesProvider.notifier);
+      final devices = globalContainer.read(devicesProvider);
+
+      final device = devices.firstWhere(
+            (d) =>
+        d.properties['source'] == 'zigbee' &&
+            d.properties['friendly_name'] == friendlyName,
+      );
+
+      final updatedDevice = device.copyWith(
+        isOnline: isOnline,
+        state: isOnline ? DeviceState.online : DeviceState.offline,
+      );
+
+      devicesNotifier.updateDeviceLocal(updatedDevice);
+
+      getIt<Talker>().info(
+        '🐝 Availability: $friendlyName → ${isOnline ? "online" : "offline"}',
+      );
+    } catch (_) {
+      // Устройство ещё не добавлено — игнорируем
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════
   // ЖИЗНЕННЫЙ ЦИКЛ
   // ═══════════════════════════════════════════════════════════
 
   @override
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Бекапим только когда приложение реально свернули
-    if (state == AppLifecycleState.paused) {
-      ConfigService.buildConfigJson().then((json) {
-        MailruCloudService.autoSync(json);
-      });
-    }
+    // Автосинхронизация облака отключена.
+    // Бекап — только вручную через «Облако → Загрузить в облако».
   }
 
   @override

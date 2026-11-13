@@ -193,7 +193,6 @@ class MailruCloudService {
       final keys = EncryptedKeys();
       final login = await keys.getCloudLogin();
       final password = await keys.getCloudPassword();
-      final autoSync = await keys.getCloudAutoSync();
 
       if (login == null || password == null || autoSync != true) return;
 
