@@ -1,4 +1,4 @@
-# 🏠 SHome v8.1.47 — Умный дом на Flutter
+# 🏠 SHome v8.1.48 — Умный дом на Flutter
 
 [![Version](https://img.shields.io/badge/version-8.1.47-blue)](https://github.com/votsurx/SHome-Releases/releases)
 [![Platform](https://img.shields.io/badge/platform-Android-lightgrey)]()
