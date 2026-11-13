@@ -1,7 +1,8 @@
 /// Центральный класс для работы с SQLite базой данных SHome.
 /// Управляет созданием, миграцией и всеми CRUD-операциями.
-/// Содержит 6 таблиц: devices, rooms, scenes, events, timers, energy_log.
-/// Версия БД: 6.
+/// Таблицы: devices, rooms, scenes, events, timers, energy_log, sensor_log,
+///          device_stats_daily, system_health_daily, stats_settings.
+/// Версия БД: 9.
 library;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -13,23 +14,22 @@ import '../../domain/models/device_timer.dart';
 
 class AppDatabase {
   static Database? _database;
-  /// Синглтон базы данных. При первом обращении создаёт/открывает БД.
+
   static Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB();
     return _database!;
   }
-  /// Инициализирует БД: создаёт таблицы при первом запуске,
-  /// выполняет миграции при обновлении версии.
+
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'shome.db');
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9, // ← NEW: было 8
       onCreate: (db, version) async {
-        // Создание всех таблиц с нуля
+        // ─── существующие таблицы ───
         await db.execute('''
           CREATE TABLE energy_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,7 +42,6 @@ class AppDatabase {
             current REAL NOT NULL DEFAULT 0
           )
         ''');
-
         await db.execute('''
           CREATE TABLE timers (
             id TEXT PRIMARY KEY,
@@ -53,7 +52,6 @@ class AppDatabase {
             executed INTEGER NOT NULL DEFAULT 0
           )
         ''');
-
         await db.execute('''
           CREATE TABLE events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +65,6 @@ class AppDatabase {
             timestamp TEXT NOT NULL
           )
         ''');
-
         await db.execute('''
           CREATE TABLE sensor_log (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,7 +76,6 @@ class AppDatabase {
             power REAL
           )
         ''');
-
         await db.execute('''
           CREATE TABLE devices (
             id TEXT PRIMARY KEY,
@@ -96,7 +92,6 @@ class AppDatabase {
             properties TEXT NOT NULL
           )
         ''');
-
         await db.execute('''
           CREATE TABLE rooms (
             id TEXT PRIMARY KEY,
@@ -105,7 +100,6 @@ class AppDatabase {
             sortOrder INTEGER NOT NULL
           )
         ''');
-
         await db.execute('''
           CREATE TABLE scenes (
             id TEXT PRIMARY KEY,
@@ -117,8 +111,17 @@ class AppDatabase {
             triggerRepeat TEXT
           )
         ''');
+
+        // ─── NEW: индексы для существующих таблиц ───
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)');
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_events_device ON events(deviceId)');
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_sensor_log_device_time ON sensor_log(deviceId, timestamp)');
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_sensor_log_time ON sensor_log(timestamp)');
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_energy_log_device_date ON energy_log(deviceId, date)');
+
+        // ─── NEW: таблицы статистики ───
+        await _createStatsTables(db);
       },
-      // Миграции при обновлении версии БД
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await db.execute('ALTER TABLE devices ADD COLUMN dpsIndex INTEGER');
@@ -178,17 +181,65 @@ class AppDatabase {
             )
           ''');
         }
-        // Миграция 8: переименование robotVacuum → compound
         if (oldVersion < 8) {
           await db.execute("UPDATE devices SET type = 'compound' WHERE type = 'robotVacuum'");
+        }
+        // ─── NEW: миграция v8 → v9 ───
+        if (oldVersion < 9) {
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_events_device ON events(deviceId)');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_sensor_log_device_time ON sensor_log(deviceId, timestamp)');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_sensor_log_time ON sensor_log(timestamp)');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_energy_log_device_date ON energy_log(deviceId, date)');
+          await _createStatsTables(db);
         }
       },
     );
   }
-  // ============ Energy Log ============
 
-  /// Сохраняет или обновляет данные энергопотребления за сегодня.
-  /// Если запись за сегодня уже есть — добавляет energyIncrement к totalEnergy.
+  // ═══════════════════════════════════════════════════════════
+  // NEW: создание таблиц статистики (общая для onCreate и onUpgrade)
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<void> _createStatsTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS device_stats_daily (
+        device_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        online_count INTEGER NOT NULL DEFAULT 0,
+        offline_count INTEGER NOT NULL DEFAULT 0,
+        alert_count INTEGER NOT NULL DEFAULT 0,
+        action_count INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (device_id, date)
+      )
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_device_stats_date ON device_stats_daily(date)');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS system_health_daily (
+        date TEXT PRIMARY KEY,
+        app_uptime_sec INTEGER NOT NULL DEFAULT 0,
+        mqtt_reconnects INTEGER NOT NULL DEFAULT 0,
+        heartbeat_losses INTEGER NOT NULL DEFAULT 0,
+        db_size_mb REAL NOT NULL DEFAULT 0,
+        error_count INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS stats_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
+    // дефолты — INSERT OR IGNORE, чтобы не перетереть пользовательские настройки
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('stats_retention_days','365')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('events_retention_days','30')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('electricity_tariff_rub_per_kwh','5.5')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('stats_backfilled','0')");
+  }
+
+  // ============ Energy Log ============
 
   static Future<void> upsertEnergyLog({
     required String deviceId,
@@ -200,9 +251,7 @@ class AppDatabase {
   }) async {
     final db = await database;
     final today = DateTime.now().toIso8601String().substring(0, 10);
-
     final existing = await db.query('energy_log', where: 'deviceId = ? AND date = ?', whereArgs: [deviceId, today]);
-
     if (existing.isNotEmpty) {
       final row = existing.first;
       final newTotal = (row['totalEnergy'] as num).toDouble() + energyIncrement;
@@ -224,7 +273,7 @@ class AppDatabase {
       });
     }
   }
-  /// Вставляет запись в лог датчиков
+
   static Future<void> insertSensorLog({
     required String deviceId,
     required String deviceName,
@@ -244,17 +293,14 @@ class AppDatabase {
     });
   }
 
-  /// Возвращает данные датчиков за последние N дней
   static Future<List<Map<String, dynamic>>> getSensorData({
     String? deviceId,
     int days = 7,
   }) async {
     final db = await database;
     final cutoff = DateTime.now().subtract(Duration(days: days)).toIso8601String();
-
-    String? where;
-    List<dynamic>? whereArgs;
-
+    String where;
+    List<dynamic> whereArgs;
     if (deviceId != null) {
       where = 'deviceId = ? AND timestamp >= ?';
       whereArgs = [deviceId, cutoff];
@@ -262,30 +308,27 @@ class AppDatabase {
       where = 'timestamp >= ?';
       whereArgs = [cutoff];
     }
-
-    return await db.query('sensor_log', where: where, whereArgs: whereArgs, orderBy: 'timestamp ASC');
+    return db.query('sensor_log', where: where, whereArgs: whereArgs, orderBy: 'timestamp ASC');
   }
 
-  /// Возвращает статистику энергопотребления за последние N дней.
   static Future<List<Map<String, dynamic>>> getEnergyStats({int days = 7}) async {
     final db = await database;
-    return await db.query('energy_log', orderBy: 'date DESC', limit: days);
+    return db.query('energy_log', orderBy: 'date DESC', limit: days);
   }
 
   // ============ Events CRUD ============
 
-  /// Записывает событие в журнал.
   static Future<void> insertEvent(EventEntity event) async {
     final db = await database;
     await db.insert('events', event.toMap());
   }
-  /// Возвращает последние N событий (по умолчанию 100).
+
   static Future<List<EventEntity>> getRecentEvents({int limit = 100}) async {
     final db = await database;
     final maps = await db.query('events', orderBy: 'id DESC', limit: limit);
     return maps.map((m) => EventEntity.fromMap(m)).toList();
   }
-  /// Удаляет все события из журнала.
+
   static Future<void> clearEvents() async {
     final db = await database;
     await db.delete('events');
@@ -293,68 +336,47 @@ class AppDatabase {
 
   // ============ Devices CRUD ============
 
-  /// Возвращает все устройства из БД.
   static Future<List<DeviceEntity>> getAllDevices() async {
     final db = await database;
     final maps = await db.query('devices');
     return maps.map((map) => DeviceEntity.fromMap(map)).toList();
   }
 
-  /// Возвращает одно устройство по ID (или null, если не найдено).
   static Future<DeviceEntity?> getDeviceById(String id) async {
     final db = await database;
-    final maps = await db.query(
-      'devices',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
+    final maps = await db.query('devices', where: 'id = ?', whereArgs: [id], limit: 1);
     if (maps.isEmpty) return null;
     return DeviceEntity.fromMap(maps.first);
   }
 
-  /// Вставляет новое устройство (или заменяет существующее).
   static Future<void> insertDevice(DeviceEntity device) async {
     final db = await database;
-    await db.insert(
-      'devices',
-      device.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('devices', device.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  /// Обновляет существующее устройство.
   static Future<void> updateDevice(DeviceEntity device) async {
     final db = await database;
-    await db.update(
-      'devices',
-      device.toMap(),
-      where: 'id = ?',
-      whereArgs: [device.id],
-    );
+    await db.update('devices', device.toMap(), where: 'id = ?', whereArgs: [device.id]);
   }
 
-  /// Удаляет устройство по ID.
   static Future<void> deleteDevice(String id) async {
     final db = await database;
     await db.delete('devices', where: 'id = ?', whereArgs: [id]);
   }
 
-
   // ============ Rooms CRUD ============
 
-  /// Возвращает все комнаты, отсортированные по sortOrder.
   static Future<List<RoomEntity>> getAllRooms() async {
     final db = await database;
     final maps = await db.query('rooms', orderBy: 'sortOrder');
     return maps.map((map) => RoomEntity.fromMap(map)).toList();
   }
-  /// Вставляет новую комнату.
+
   static Future<void> insertRoom(RoomEntity room) async {
     final db = await database;
     await db.insert('rooms', room.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
-  /// Удаляет комнату по ID.
+
   static Future<void> deleteRoom(String id) async {
     final db = await database;
     await db.delete('rooms', where: 'id = ?', whereArgs: [id]);
@@ -362,18 +384,17 @@ class AppDatabase {
 
   // ============ Scenes CRUD ============
 
-  /// Возвращает все сцены из БД.
   static Future<List<SceneEntity>> getAllScenes() async {
     final db = await database;
     final maps = await db.query('scenes');
     return maps.map((map) => SceneEntity.fromMap(map)).toList();
   }
-  /// Вставляет новую сцену.
+
   static Future<void> insertScene(SceneEntity scene) async {
     final db = await database;
     await db.insert('scenes', scene.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
-  /// Удаляет сцену по ID.
+
   static Future<void> deleteScene(String id) async {
     final db = await database;
     await db.delete('scenes', where: 'id = ?', whereArgs: [id]);
@@ -381,7 +402,6 @@ class AppDatabase {
 
   // ============ Timers CRUD ============
 
-  /// Вставляет новый таймер.
   static Future<void> insertTimer(DeviceTimer timer) async {
     final db = await database;
     await db.insert('timers', {
@@ -393,7 +413,7 @@ class AppDatabase {
       'executed': timer.executed ? 1 : 0,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
-  /// Возвращает все активные (не выполненные) таймеры.
+
   static Future<List<DeviceTimer>> getActiveTimers() async {
     final db = await database;
     final maps = await db.query('timers', where: 'executed = 0', orderBy: 'executeAt ASC');
@@ -406,14 +426,130 @@ class AppDatabase {
       executed: (m['executed'] as int) == 1,
     )).toList();
   }
-  /// Помечает таймер как выполненный.
+
   static Future<void> markTimerExecuted(String id) async {
     final db = await database;
     await db.update('timers', {'executed': 1}, where: 'id = ?', whereArgs: [id]);
   }
-  /// Удаляет таймер.
+
   static Future<void> deleteTimer(String id) async {
     final db = await database;
     await db.delete('timers', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // NEW: STATS — device_stats_daily
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<void> upsertDeviceStat({
+    required String deviceId,
+    required String date,
+    int online = 0,
+    int offline = 0,
+    int alert = 0,
+    int action = 0,
+  }) async {
+    final db = await database;
+    await db.rawInsert('''
+      INSERT INTO device_stats_daily
+        (device_id, date, online_count, offline_count, alert_count, action_count)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(device_id, date) DO UPDATE SET
+        online_count  = online_count  + excluded.online_count,
+        offline_count = offline_count + excluded.offline_count,
+        alert_count   = alert_count   + excluded.alert_count,
+        action_count  = action_count  + excluded.action_count
+    ''', [deviceId, date, online, offline, alert, action]);
+  }
+
+  static Future<List<Map<String, Object?>>> getDeviceUptime({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT device_id,
+        SUM(online_count)  AS online,
+        SUM(offline_count) AS offline,
+        SUM(alert_count)   AS alerts,
+        SUM(action_count)  AS actions,
+        CASE WHEN SUM(online_count)+SUM(offline_count)=0 THEN NULL
+             ELSE 1.0*SUM(online_count)/(SUM(online_count)+SUM(offline_count))
+        END AS uptime_ratio
+      FROM device_stats_daily
+      WHERE date BETWEEN ? AND ?
+      GROUP BY device_id
+      ORDER BY uptime_ratio ASC
+    ''', [fromDate, toDate]);
+  }
+
+  static Future<Map<String, int>> getStatsTotals({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final r = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(online_count),0)  AS online,
+        COALESCE(SUM(offline_count),0) AS offline,
+        COALESCE(SUM(alert_count),0)   AS alerts,
+        COALESCE(SUM(action_count),0)  AS actions
+      FROM device_stats_daily WHERE date BETWEEN ? AND ?
+    ''', [fromDate, toDate]);
+    final m = r.first;
+    return {
+      'online': (m['online'] as num).toInt(),
+      'offline': (m['offline'] as num).toInt(),
+      'alerts': (m['alerts'] as num).toInt(),
+      'actions': (m['actions'] as num).toInt(),
+    };
+  }
+
+  static Future<List<Map<String, Object?>>> getDeviceDailySeries({
+    required String deviceId,
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT date, online_count, offline_count, alert_count, action_count
+      FROM device_stats_daily
+      WHERE device_id = ? AND date BETWEEN ? AND ?
+      ORDER BY date ASC
+    ''', [deviceId, fromDate, toDate]);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // NEW: STATS — system_health_daily
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<void> incrementSystemError(String date) async {
+    final db = await database;
+    await db.rawInsert('''
+      INSERT INTO system_health_daily (date, error_count) VALUES (?, 1)
+      ON CONFLICT(date) DO UPDATE SET error_count = error_count + 1
+    ''', [date]);
+  }
+
+  static Future<Map<String, Object?>?> getSystemHealth(String date) async {
+    final db = await database;
+    final r = await db.query('system_health_daily', where: 'date = ?', whereArgs: [date], limit: 1);
+    return r.isEmpty ? null : r.first;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // NEW: STATS — настройки
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<String?> getStatsSetting(String key) async {
+    final db = await database;
+    final r = await db.query('stats_settings', where: 'key = ?', whereArgs: [key], limit: 1);
+    return r.isEmpty ? null : r.first['value'] as String?;
+  }
+
+  static Future<void> setStatsSetting(String key, String value) async {
+    final db = await database;
+    await db.insert('stats_settings', {'key': key, 'value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

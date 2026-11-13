@@ -21,6 +21,7 @@ import '../../presentation/screens/zigbee_scan_screen.dart';
 import '../../presentation/screens/frigate_screen.dart';
 import '../../presentation/screens/frigate_settings_screen.dart';
 import '../../presentation/screens/device_notifications_screen.dart';
+import '../../presentation/screens/stats/stats_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -96,6 +97,11 @@ final router = GoRouter(
     GoRoute(
       path: '/timers',
       builder: (context, state) => const TimersScreen(),
+    ),
+
+    GoRoute(
+      path: '/stats',
+      builder: (context, state) => const StatsScreen(),
     ),
 
     // Статистика

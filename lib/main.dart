@@ -30,12 +30,14 @@ import 'data/services/frigate_service.dart';
 import 'data/local/secure_storage/encrypted_keys.dart';
 import 'application/state/devices_provider.dart';
 import 'di/global_container.dart';
+import 'data/services/stats_aggregator.dart';
 
 /// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await StatsAggregator.instance.backfillIfNeeded();
   configureDependencies();
   ThemeNotifier.updateAutoCache();
 

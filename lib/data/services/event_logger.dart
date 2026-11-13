@@ -1,22 +1,10 @@
 /// Сервис логирования событий в журнал.
-/// Все действия в системе (вкл/выкл, сцены, добавление/удаление устройств и комнат)
-/// записываются в таблицу events через этот класс.
-/// Используется DevicesNotifier, RoomsNotifier, ScenesNotifier, AdaptivePoller.
 library;
 import '../local/database.dart';
 import '../local/entities/event_entity.dart';
+import 'stats_aggregator.dart';   // ← NEW
 
 class EventLogger {
-  /// Записывает событие в БД.
-  ///
-  /// Параметры:
-  /// - event: тип события (turnOn, turnOff, scene, deviceAdded, deviceRemoved, roomAdded, roomRemoved, sceneCreated, sceneDeleted)
-  /// - deviceId: ID устройства (опционально)
-  /// - deviceName: название устройства для отображения
-  /// - value: дополнительное значение (температура, энергия)
-  /// - sceneName: название сцены
-  /// - roomName: название комнаты
-  /// - timerName: название таймера
   static Future<void> log({
     required String event,
     String? deviceId,
@@ -26,6 +14,7 @@ class EventLogger {
     String? roomName,
     String? timerName,
   }) async {
+    final timestamp = DateTime.now().toIso8601String();   // ← NEW: вынесли
     final entity = EventEntity(
       event: event,
       deviceId: deviceId,
@@ -34,8 +23,15 @@ class EventLogger {
       sceneName: sceneName,
       roomName: roomName,
       timerName: timerName,
-      timestamp: DateTime.now().toIso8601String(),
+      timestamp: timestamp,                                // ← NEW: та же
     );
     await AppDatabase.insertEvent(entity);
+
+    // ─── NEW: агрегация статистики ───
+    await StatsAggregator.instance.onEvent(
+      event: event,
+      deviceId: deviceId,
+      timestamp: timestamp,
+    );
   }
 }
