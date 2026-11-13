@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/device.dart';
 import '../../di/injection.dart';
 import '../../data/services/frigate_service.dart';
+import 'frigate_camera_settings.dart';
 
 class FrigateCameraCard extends ConsumerStatefulWidget {
   final Device device;
@@ -103,9 +104,8 @@ class _FrigateCameraCardState extends ConsumerState<FrigateCameraCard> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.settings, color: Colors.white, size: 20),
-                    onPressed: () {
-                      // TODO: открыть FrigateCameraSettingsScreen (bottom sheet)
-                    },
+                    tooltip: 'Настройки',
+                    onPressed: () => FrigateCameraSettings.show(context, ref, widget.device),
                   ),
                 ],
               ),

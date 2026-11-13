@@ -23,6 +23,7 @@ import 'data/services/frigate_bridge.dart';
 import 'data/services/frigate_service.dart';
 import 'data/local/secure_storage/encrypted_keys.dart';
 import 'application/state/devices_provider.dart';
+import 'dart:io';
 
 /// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
