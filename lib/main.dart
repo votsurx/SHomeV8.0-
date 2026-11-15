@@ -70,6 +70,11 @@ class SHomeAppObserver extends StatefulWidget {
 class _SHomeAppObserverState extends State<SHomeAppObserver> {
   Timer? _themeTimer;
   final NotificationCoordinator _notifier = NotificationCoordinator();
+  // 🆕 Время старта — игнорируем availability в первые 10 секунд
+  final DateTime _startTime = DateTime.now();
+  static const _startupGracePeriod = Duration(seconds: 10);
+
+  bool get _isStartupGrace => DateTime.now().difference(_startTime) < _startupGracePeriod;
 
   @override
   void initState() {
@@ -136,7 +141,7 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
       // 🐝 ZIGBEE
       // ═══════════════════════════════════════════════════════════
       final zigbeeBridge = getIt<ZigbeeBridge>();
-      await zigbeeBridge.start();
+
       getIt<Talker>().info('🐝 ZigbeeBridge запущен');
 
       zigbeeBridge.onState = (friendlyName, newState) {
@@ -146,6 +151,7 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
       zigbeeBridge.onAvailability = (friendlyName, isOnline) {
         _updateZigbeeAvailability(friendlyName, isOnline);
       };
+      await zigbeeBridge.start();
 
       getIt<Talker>().info('🐝 onState + onAvailability привязаны');
 
@@ -187,15 +193,27 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
       String friendlyName,
       Map<String, dynamic> newState,
       ) {
+    debugPrint('🐝 onState: $friendlyName → ${newState.keys.join(", ")}');
     try {
       final devicesNotifier = globalContainer.read(devicesProvider.notifier);
       final devices = globalContainer.read(devicesProvider);
 
-      final device = devices.firstWhere(
-            (d) =>
-        d.properties['source'] == 'zigbee' &&
-            d.properties['friendly_name'] == friendlyName,
-      );
+      final device = devices
+          .where((d) =>
+      d.properties['source'] == 'zigbee' &&
+          d.properties['friendly_name'] == friendlyName)
+          .firstOrNull;
+
+      if (device == null) {
+        getIt<Talker>().debug(
+          '🐝 onState для "$friendlyName" пропущен — устройство не добавлено в SHome',
+        );
+        return;
+      }
+
+      // 🆕 Логируем алерты ДО обновления properties,
+      // чтобы сравнить old vs new (prevProps — старые)
+      _logZigbeeAlerts(device, newState);
 
       final updatedProperties = <String, dynamic>{
         ...device.properties,
@@ -216,21 +234,48 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
       getIt<Talker>().debug(
         '🐝 onState: $friendlyName → ${newState.keys.join(", ")}',
       );
-    } catch (_) {
-      // Устройство ещё не добавлено — игнорируем
+    } catch (e, st) {
+      getIt<Talker>().error('❌ Zigbee state error: $friendlyName', e, st);
     }
   }
 
   void _updateZigbeeAvailability(String friendlyName, bool isOnline) {
+    debugPrint('🐝 availability: $friendlyName → $isOnline');
     try {
       final devicesNotifier = globalContainer.read(devicesProvider.notifier);
       final devices = globalContainer.read(devicesProvider);
 
-      final device = devices.firstWhere(
-            (d) =>
-        d.properties['source'] == 'zigbee' &&
-            d.properties['friendly_name'] == friendlyName,
-      );
+      // Устройство не добавлено в SHome — пропускаем тихо
+      final device = devices
+          .where((d) =>
+      d.properties['source'] == 'zigbee' &&
+          d.properties['friendly_name'] == friendlyName)
+          .firstOrNull;
+
+      if (device == null) {
+        getIt<Talker>().debug(
+          '🐝 Availability для "$friendlyName" пропущен — устройство не добавлено в SHome',
+        );
+        return;
+      }
+
+      final wasOnline = device.isOnline;
+
+      // Защита: не помечаем offline, если недавно было onState (< 2ч)
+      if (!isOnline) {
+        final lastSeen = device.properties['last_seen'] as String?;
+        if (lastSeen != null) {
+          final lastSeenDt = DateTime.tryParse(lastSeen);
+          if (lastSeenDt != null &&
+              DateTime.now().difference(lastSeenDt).inHours < 2) {
+            getIt<Talker>().debug(
+              '🐝 availability/offline игнорируется для $friendlyName '
+                  '(last_seen < 2ч)',
+            );
+            return;
+          }
+        }
+      }
 
       final updatedDevice = device.copyWith(
         isOnline: isOnline,
@@ -239,31 +284,142 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
 
       devicesNotifier.updateDeviceLocal(updatedDevice);
 
-      EventLogger.log(
-        event: isOnline ? 'online' : 'offline',
-        deviceId: device.id,
-        deviceName: device.name,
-      );
+      // Логируем только при изменении И не в первые 10 секунд после старта
+      if (wasOnline != isOnline && !_isStartupGrace) {
+        EventLogger.log(
+          event: isOnline ? 'online' : 'offline',
+          deviceId: device.id,
+          deviceName: device.name,
+        );
 
-      // ✅ Уведомления для offline — через Coordinator
-      if (!isOnline) {
-        final vkSettings = globalContainer.read(notificationSettingsProvider);
-        final smsSettings = globalContainer.read(smsSettingsProvider);
+        if (!isOnline) {
+          final vkSettings = globalContainer.read(notificationSettingsProvider);
+          final smsSettings = globalContainer.read(smsSettingsProvider);
 
-        _notifier.notifyDevice(
-          device: updatedDevice,
-          type: 'offline',
-          title: '📡 Устройство offline',
-          message: device.name,
-          vkSettings: vkSettings,
-          smsSettings: smsSettings,
+          _notifier.notifyDevice(
+            device: updatedDevice,
+            type: 'offline',
+            title: '📡 Устройство offline',
+            message: device.name,
+            vkSettings: vkSettings,
+            smsSettings: smsSettings,
+          );
+        }
+      } else if (wasOnline != isOnline && _isStartupGrace) {
+        getIt<Talker>().debug(
+          '🐝 Availability: $friendlyName → ${isOnline ? "online" : "offline"} '
+              '(startup grace — без события)',
         );
       }
 
       getIt<Talker>().info(
         '🐝 Availability: $friendlyName → ${isOnline ? "online" : "offline"}',
       );
-    } catch (_) {}
+    } catch (e, st) {
+      getIt<Talker>().error('❌ Availability error: $friendlyName', e, st);
+    }
+  }
+
+  /// Логирует алерты Zigbee-датчиков в журнал НЕЗАВИСИМО от сцен.
+  /// Вызывается при каждом onState.
+  void _logZigbeeAlerts(Device device, Map<String, dynamic> newState) {
+    try {
+      final prevProps = device.properties;
+
+      // water_leak: true → alarm_water_leak
+      if (newState['water_leak'] == true &&
+          prevProps['water_leak'] != true) {
+        EventLogger.log(
+          event: 'alarm_water_leak',
+          deviceId: device.id,
+          deviceName: device.name,
+          value: 'Протечка',
+        );
+      }
+
+      // smoke
+      if (newState['smoke'] == true && prevProps['smoke'] != true) {
+        EventLogger.log(
+          event: 'alarm_smoke',
+          deviceId: device.id,
+          deviceName: device.name,
+          value: 'Дым',
+        );
+      }
+
+      // gas
+      if (newState['gas'] == true && prevProps['gas'] != true) {
+        EventLogger.log(
+          event: 'alarm_gas',
+          deviceId: device.id,
+          deviceName: device.name,
+          value: 'Газ',
+        );
+      }
+
+      // motion / occupancy
+      final motion = newState['occupancy'] ?? newState['motion'];
+      final prevMotion = prevProps['occupancy'] ?? prevProps['motion'];
+      if (motion == true && prevMotion != true) {
+        EventLogger.log(
+          event: 'alarm_motion',
+          deviceId: device.id,
+          deviceName: device.name,
+          value: 'Движение',
+        );
+      }
+
+      // contact: false → open, true → closed
+      if (newState.containsKey('contact')) {
+        final isOpen = newState['contact'] == false;
+        final prevIsOpen = prevProps['contact'] == false;
+
+        if (isOpen && !prevIsOpen) {
+          EventLogger.log(
+            event: 'alarm_contact_open',
+            deviceId: device.id,
+            deviceName: device.name,
+            value: 'Открыто',
+          );
+        } else if (!isOpen && prevIsOpen) {
+          EventLogger.log(
+            event: 'alarm_contact_closed',
+            deviceId: device.id,
+            deviceName: device.name,
+            value: 'Закрыто',
+          );
+        }
+      }
+
+      // temperature thresholds (если заданы в настройках датчика)
+      final temp = newState['temperature'];
+      if (temp is num) {
+        final above = (prevProps['threshold_temperature_above'] as num?)?.toDouble();
+        final below = (prevProps['threshold_temperature_below'] as num?)?.toDouble();
+        final prevTemp = (prevProps['temperature'] as num?)?.toDouble();
+
+        if (above != null && temp > above &&
+            (prevTemp == null || prevTemp <= above)) {
+          EventLogger.log(
+            event: 'alarm_temperature_above',
+            deviceId: device.id,
+            deviceName: device.name,
+            value: '${temp.toStringAsFixed(1)}°C',
+          );
+        }
+        if (below != null && temp < below &&
+            (prevTemp == null || prevTemp >= below)) {
+          EventLogger.log(
+            event: 'alarm_temperature_below',
+            deviceId: device.id,
+            deviceName: device.name,
+            value: '${temp.toStringAsFixed(1)}°C',
+          );
+        }
+      }
+    } catch (e, st) {
+      getIt<Talker>().error('❌ logZigbeeAlerts error', e, st);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════

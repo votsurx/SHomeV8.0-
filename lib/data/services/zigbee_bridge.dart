@@ -88,9 +88,18 @@ class ZigbeeBridge {
         final parts = topic.split('/');
         if (parts.length >= 2) {
           final friendlyName = parts[1];
-          final status = msg.payload.trim();
-          final isOnline = status == 'online';
-          _talker.info('🐝 Availability: $friendlyName → $status');
+          final payload = msg.payload.trim();
+
+          bool isOnline;
+          try {
+            final data = jsonDecode(payload) as Map<String, dynamic>;
+            isOnline = data['state'] == 'online';
+          } catch (_) {
+            // Fallback: если payload — просто строка "online"/"offline"
+            isOnline = payload == 'online';
+          }
+
+          _talker.info('🐝 Availability: $friendlyName → $isOnline (raw: $payload)');
           onAvailability?.call(friendlyName, isOnline);
         }
         return;

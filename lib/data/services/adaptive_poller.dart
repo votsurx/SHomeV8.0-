@@ -73,18 +73,14 @@ class AdaptivePoller {
     final state = _states[deviceId];
     if (state != null) {
       state.reset();
+      // 🆕 Не опрашивать 3 секунды после команды — устройство ещё не применило
+      state.nextPollAt = DateTime.now().add(const Duration(seconds: 3));
     }
   }
 
   void _tick() {
     final now = DateTime.now();
     for (final device in _devices) {
-      final cameraType = device.properties['cameraType'] as String? ?? '';
-
-      if (cameraType == 'nvr') continue;
-      if (cameraType == 'ispy') continue;
-      if (cameraType == 'rtsp') continue;
-      if (cameraType == 'mjpeg') continue;
 
       if (device.deviceId == null || device.address == null) continue;
       final state = _states.putIfAbsent(device.id, () => _DevicePollState(_normalInterval));
@@ -185,13 +181,31 @@ class AdaptivePoller {
           }
 
           if (changed) {
+            // Запоминаем старые состояния для определения изменившихся каналов
+            final oldStates = List<bool>.from(
+              device.properties['states'] ?? List.filled(channels, false),
+            );
+
             final updatedDevice = device.copyWith(
               properties: {...device.properties, 'states': currentStates, 'isOn': currentStates.any((s) => s)},
             );
             _updateDeviceInList(updatedDevice);
             _talker.info('Multi-channel state changed: $currentStates');
             _onStatesChanged(device.id, currentStates);
+
             if (!isFirstPoll) {
+              // 🆕 События в журнал — по каждому изменившемуся каналу
+              for (var i = 0; i < currentStates.length; i++) {
+                if (i < oldStates.length && oldStates[i] != currentStates[i]) {
+                  EventLogger.log(
+                    deviceId: device.id,
+                    deviceName: device.name,
+                    event: currentStates[i] ? 'turnOn' : 'turnOff',
+                    value: 'Канал ${i + 1}',
+                  );
+                }
+              }
+
               await _sendMultiChannelNotification(device, currentStates);
             }
           }
@@ -206,16 +220,20 @@ class AdaptivePoller {
 
             if (realIsOn != currentIsOn) {
               _onStateChanged(device.id, realIsOn);
+
               if (!isFirstPoll) {
+                EventLogger.log(
+                  deviceId: device.id,
+                  deviceName: device.name,
+                  event: realIsOn ? 'turnOn' : 'turnOff',
+                );
+
                 await _sendSimpleDeviceNotification(
                   device,
                   realIsOn ? 'Включено' : 'Выключено',
                   true,
                 );
               }
-              try {
-                EventLogger.log(deviceId: device.id, deviceName: device.name, event: realIsOn ? 'turnOn' : 'turnOff');
-              } catch (_) {}
             }
           }
           // --- Датчики ---

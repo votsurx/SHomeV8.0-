@@ -226,6 +226,53 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════
+  // ФОРМИРОВАНИЕ TITLE / SUBTITLE
+  // ═══════════════════════════════════════════════════════════
+
+  /// Title: имя устройства (или сцены) + канал в скобках, если есть.
+  /// Пример: "Свет Зал (Канал 2)" или "Розетка".
+  String _buildTitle(dynamic event) {
+    // Сцена — показываем имя сцены
+    if (event.sceneName != null) {
+      return '${event.sceneName}';
+    }
+
+    final deviceName = (event.deviceName as String?) ?? '';
+    final value = (event.value as String?) ?? '';
+
+    // Если value — "Канал N", добавляем в скобках к имени
+    if (value.startsWith('Канал ')) {
+      return '$deviceName ($value)';
+    }
+
+    return deviceName;
+  }
+
+  /// Subtitle: действие + дополнительное значение (если оно не канал).
+  /// Пример: "Включено" или "🌡️ Температура > · 32.5°C".
+  String _buildSubtitle(dynamic event) {
+    if (event.sceneName != null) {
+      return 'Сцена выполнена';
+    }
+
+    final eventType = (event.event as String?) ?? '';
+    final value = (event.value as String?) ?? '';
+    final label = _eventLabel(eventType);
+
+    // Канал уже в title — не дублируем
+    if (value.startsWith('Канал ')) {
+      return label;
+    }
+
+    // Для алертов и Frigate value — полезная инфа (температура, %)
+    if (value.isNotEmpty) {
+      return '$label · $value';
+    }
+
+    return label;
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // BUILD
   // ═══════════════════════════════════════════════════════════
 
@@ -369,22 +416,22 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       color: _eventColor(eventType),
                     ),
                     title: Text(
-                      event.sceneName != null
-                          ? '${event.sceneName}'
-                          : (event.deviceName ?? ''),
+                      _buildTitle(event),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                     subtitle: Text(
-                      event.sceneName != null
-                          ? 'Сцена выполнена'
-                          : _eventLabel(eventType),
+                      _buildSubtitle(event),
                       style: TextStyle(
                         color: _eventColor(eventType),
                         fontSize: 12,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                     trailing: Text(
                       timeStr,

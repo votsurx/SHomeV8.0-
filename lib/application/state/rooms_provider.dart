@@ -37,7 +37,7 @@ class RoomsNotifier extends StateNotifier<List<Room>> {
   Future<void> addRoom(Room room) async {
     await _repository.saveRoom(room);
     state = [...state, room];
-    EventLogger.log(event: 'roomAdded', roomName: room.name);
+    await EventLogger.log(event: 'roomAdded', roomName: room.name);
   }
 
   /// Удаляет комнату по ID (без переноса устройств).

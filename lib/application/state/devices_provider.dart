@@ -62,9 +62,19 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
         props['states'] = List<bool>.filled((props['channels'] as int?) ?? 1, false);
       }
 
+      // 🆕 Zigbee: не сбрасываем isOnline, если last_seen свежий (< 24ч).
+      // Tuya и остальные — как раньше, сбрасываем в offline (AdaptivePoller актуализирует).
+      final isZigbee = d.properties['source'] == 'zigbee';
+      final lastSeen = d.properties['last_seen'] as String?;
+      final isRecent = lastSeen != null &&
+          DateTime.tryParse(lastSeen) != null &&
+          DateTime.now().difference(DateTime.parse(lastSeen)).inHours < 24;
+
+      final keepOnline = isZigbee && isRecent;
+
       return d.copyWith(
-        isOnline: false,
-        state: DeviceState.offline,
+        isOnline: keepOnline ? d.isOnline : false,
+        state: keepOnline ? d.state : DeviceState.offline,
         properties: props,
       );
     }).toList();
@@ -250,11 +260,19 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
     if (device.properties['source'] == 'zigbee') {
       try {
-        final friendlyName = device.properties['friendly_name'] as String?
-            ?? device.name;
+        final friendlyName = device.properties['friendly_name'] as String? ?? device.name;
         final protocol = getIt<ZigbeeProtocol>();
         await protocol.setState(friendlyName, {'state_l$channel': value ? 'ON' : 'OFF'});
         _updateChannelState(id, channel, value);
+
+        // 🆕 Событие для Zigbee-канала
+        EventLogger.log(
+          deviceId: id,
+          deviceName: device.name,
+          event: value ? 'turnOn' : 'turnOff',
+          value: 'Канал $channel',
+        );
+
         return true;
       } catch (e) {
         debugPrint('❌ Zigbee setSwitchChannel error: $e');
@@ -265,7 +283,19 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
     onCommandSent?.call(id);
     _updateChannelState(id, channel, value);
     final success = await _tuyaProtocol.setSwitchChannel(device, channel, value);
-    if (!success) _updateChannelState(id, channel, !value);
+
+    if (!success) {
+      _updateChannelState(id, channel, !value);
+    } else {
+      // 🆕 Событие для Tuya-канала
+      EventLogger.log(
+        deviceId: id,
+        deviceName: device.name,
+        event: value ? 'turnOn' : 'turnOff',
+        value: 'Канал $channel',
+      );
+    }
+
     return success;
   }
 
