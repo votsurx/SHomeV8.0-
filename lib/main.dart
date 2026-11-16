@@ -417,6 +417,32 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
           );
         }
       }
+      // humidity thresholds
+      final humidity = newState['humidity'];
+      if (humidity is num) {
+        final aboveH = (prevProps['threshold_humidity_above'] as num?)?.toDouble();
+        final belowH = (prevProps['threshold_humidity_below'] as num?)?.toDouble();
+        final prevHum = (prevProps['humidity'] as num?)?.toDouble();
+
+        if (aboveH != null && humidity > aboveH &&
+            (prevHum == null || prevHum <= aboveH)) {
+          EventLogger.log(
+            event: 'alarm_humidity_above',
+            deviceId: device.id,
+            deviceName: device.name,
+            value: '${humidity.toStringAsFixed(1)}%',
+          );
+        }
+        if (belowH != null && humidity < belowH &&
+            (prevHum == null || prevHum >= belowH)) {
+          EventLogger.log(
+            event: 'alarm_humidity_below',
+            deviceId: device.id,
+            deviceName: device.name,
+            value: '${humidity.toStringAsFixed(1)}%',
+          );
+        }
+      }
     } catch (e, st) {
       getIt<Talker>().error('❌ logZigbeeAlerts error', e, st);
     }

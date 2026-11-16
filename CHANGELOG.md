@@ -1,4 +1,45 @@
 # История изменений SHome
+## v8.2.1 — Event Log Fix (Zigbee Alerts + Frigate Detections) — 2026-11-16
+
+### 🐝 Zigbee-алерты в журнале и статистике
+- `alarm_water_leak` — протечка
+- `alarm_smoke` — дым
+- `alarm_gas` — газ
+- `alarm_motion` — движение (occupancy/motion)
+- `alarm_contact_open` / `alarm_contact_closed` — открытие/закрытие
+- `alarm_temperature_above` / `alarm_temperature_below` — пороги температуры (с гистерезисом)
+- `alarm_humidity_above` / `alarm_humidity_below` — пороги влажности (с гистерезисом)
+- `_logZigbeeAlerts` — алерты логируются **независимо от сцен**
+- Порядок `_logZigbeeAlerts` → `updateDeviceLocal` (антидребезг работает)
+
+### 🐝 Zigbee availability
+- `online` / `offline` при изменении состояния
+- `_isStartupGrace` — нет ложных `online` при старте
+- Защита от ложного `offline`
+- `passive.timeout: 604800` в Z2M
+
+### 🎥 Frigate-детекции
+- `frigate_person`, `frigate_car`, `frigate_dog`, ... в журнале и статистике
+- `deviceId: 'frigate_<camera>'` — статистика по камерам
+- Антидребезг: только `event.isActive` (new, не update/end)
+
+### 🔔 Уведомления
+- Zigbee/Frigate-алерты → `NotificationCoordinator` (VK/SMS)
+
+### ⚡ Производительность
+- `EventLogger.log` **без `await`** в горячих путях
+- `firstOrNull` вместо `firstWhere` — не падаем на неизвестных устройствах
+- Многоканальные Tuya: задержка **3с** после команды (не мигают)
+
+### 📊 Статистика (из v8.2.0)
+- Экран `/stats`: вкладки **Обзор** / **Устройства**
+- Обзор: счётчики alerts/actions/offline/online за 1/7/30 дней + топ-3 проблемных устройств
+- Устройства: таблица uptime с drill-down (спарклайны)
+- `StatsAggregator` — event-driven + backfill из events
+- DB v9: `device_stats_daily`, `system_health_daily`, `stats_settings`
+
+### 🔧 versionCode
+- `versionCode` = **80201**
 
 ## v8.1.49 — Per-Device Notifications + Events Filters — 2026-11-13
 
