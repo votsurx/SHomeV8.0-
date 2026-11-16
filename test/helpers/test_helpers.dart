@@ -4,6 +4,25 @@ import 'package:shome/domain/models/scene.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/services.dart';
+import 'package:shome/domain/models/frigate_models.dart';
+
+FrigateEvent createFrigateEvent({
+  String id = 'evt_1',
+  String camera = 'front_door',
+  String label = 'person',
+  double score = 0.9,
+  DateTime? startTime,
+  DateTime? endTime,
+}) {
+  return FrigateEvent(
+    id: id,
+    camera: camera,
+    label: label,
+    score: score,
+    startTime: startTime ?? DateTime.now(),
+    endTime: endTime,
+  );
+}
 
 /// Инициализация sqflite FFI для тестов БД.
 void setupSqfliteFfi() {
