@@ -1,8 +1,8 @@
 /// Центральный класс для работы с SQLite базой данных SHome.
 /// Управляет созданием, миграцией и всеми CRUD-операциями.
 /// Таблицы: devices, rooms, scenes, events, timers, energy_log, sensor_log,
-///          device_stats_daily, system_health_daily, stats_settings.
-/// Версия БД: 9.
+///          device_stats_daily, system_health_daily, stats_settings, presence_daily.
+/// Версия БД: 10.
 library;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -27,7 +27,7 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 9, // ← NEW: было 8
+      version: 10, // ← NEW: было 9
       onCreate: (db, version) async {
         // ─── существующие таблицы ───
         await db.execute('''
@@ -112,14 +112,14 @@ class AppDatabase {
           )
         ''');
 
-        // ─── NEW: индексы для существующих таблиц ───
+        // ─── индексы ───
         await db.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)');
         await db.execute('CREATE INDEX IF NOT EXISTS idx_events_device ON events(deviceId)');
         await db.execute('CREATE INDEX IF NOT EXISTS idx_sensor_log_device_time ON sensor_log(deviceId, timestamp)');
         await db.execute('CREATE INDEX IF NOT EXISTS idx_sensor_log_time ON sensor_log(timestamp)');
         await db.execute('CREATE INDEX IF NOT EXISTS idx_energy_log_device_date ON energy_log(deviceId, date)');
 
-        // ─── NEW: таблицы статистики ───
+        // ─── таблицы статистики ───
         await _createStatsTables(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -184,7 +184,6 @@ class AppDatabase {
         if (oldVersion < 8) {
           await db.execute("UPDATE devices SET type = 'compound' WHERE type = 'robotVacuum'");
         }
-        // ─── NEW: миграция v8 → v9 ───
         if (oldVersion < 9) {
           await db.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)');
           await db.execute('CREATE INDEX IF NOT EXISTS idx_events_device ON events(deviceId)');
@@ -193,12 +192,25 @@ class AppDatabase {
           await db.execute('CREATE INDEX IF NOT EXISTS idx_energy_log_device_date ON energy_log(deviceId, date)');
           await _createStatsTables(db);
         }
+        // ─── NEW: миграция v9 → v10 (presence_daily) ───
+        if (oldVersion < 10) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS presence_daily (
+              date TEXT PRIMARY KEY,
+              home_sec INTEGER NOT NULL DEFAULT 0,
+              near_sec INTEGER NOT NULL DEFAULT 0,
+              away_sec INTEGER NOT NULL DEFAULT 0,
+              unknown_sec INTEGER NOT NULL DEFAULT 0,
+              cloud_fallback_count INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+        }
       },
     );
   }
 
   // ═══════════════════════════════════════════════════════════
-  // NEW: создание таблиц статистики (общая для onCreate и onUpgrade)
+  // создание таблиц статистики (общая для onCreate и onUpgrade)
   // ═══════════════════════════════════════════════════════════
 
   static Future<void> _createStatsTables(Database db) async {
@@ -232,11 +244,22 @@ class AppDatabase {
         value TEXT NOT NULL
       )
     ''');
-    // дефолты — INSERT OR IGNORE, чтобы не перетереть пользовательские настройки
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('stats_retention_days','365')");
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('events_retention_days','30')");
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('electricity_tariff_rub_per_kwh','5.5')");
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('stats_backfilled','0')");
+
+    // ─── NEW: presence_daily ───
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS presence_daily (
+        date TEXT PRIMARY KEY,
+        home_sec INTEGER NOT NULL DEFAULT 0,
+        near_sec INTEGER NOT NULL DEFAULT 0,
+        away_sec INTEGER NOT NULL DEFAULT 0,
+        unknown_sec INTEGER NOT NULL DEFAULT 0,
+        cloud_fallback_count INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
   }
 
   // ============ Energy Log ============
@@ -438,7 +461,7 @@ class AppDatabase {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // NEW: STATS — device_stats_daily
+  // STATS — device_stats_daily
   // ═══════════════════════════════════════════════════════════
 
   static Future<void> upsertDeviceStat({
@@ -520,7 +543,7 @@ class AppDatabase {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // NEW: STATS — system_health_daily
+  // STATS — system_health_daily
   // ═══════════════════════════════════════════════════════════
 
   static Future<void> incrementSystemError(String date) async {
@@ -538,7 +561,7 @@ class AppDatabase {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // NEW: STATS — настройки
+  // STATS — настройки
   // ═══════════════════════════════════════════════════════════
 
   static Future<String?> getStatsSetting(String key) async {
@@ -552,11 +575,11 @@ class AppDatabase {
     await db.insert('stats_settings', {'key': key, 'value': value},
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
+
   // ═══════════════════════════════════════════════════════════
   // STATS: Frigate детекции (из events)
   // ═══════════════════════════════════════════════════════════
 
-  /// Детекции по типам (person, car, dog, ...).
   static Future<Map<String, int>> getFrigateDetectionsByLabel({
     required String fromDate,
     required String toDate,
@@ -577,7 +600,6 @@ class AppDatabase {
     return result;
   }
 
-  /// Детекции по камерам (deviceName = camera).
   static Future<Map<String, int>> getFrigateDetectionsByCamera({
     required String fromDate,
     required String toDate,
@@ -598,7 +620,6 @@ class AppDatabase {
     return result;
   }
 
-  /// Тепловая карта: date × hour → count.
   static Future<List<Map<String, Object?>>> getFrigateHourlyHeatmap({
     required String fromDate,
     required String toDate,
@@ -615,5 +636,155 @@ class AppDatabase {
       GROUP BY date, hour
       ORDER BY date ASC, hour ASC
     ''', [fromDate, '$toDate 23:59:59']);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Сцены (из events)
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<Map<String, int>> getSceneStats({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT sceneName, COUNT(*) AS cnt
+      FROM events
+      WHERE event = 'scene' AND sceneName IS NOT NULL
+        AND timestamp >= ? AND timestamp < ?
+      GROUP BY sceneName
+      ORDER BY cnt DESC
+    ''', [fromDate, '$toDate 23:59:59']);
+    final result = <String, int>{};
+    for (final r in rows) {
+      result[r['sceneName'] as String] = (r['cnt'] as num).toInt();
+    }
+    return result;
+  }
+
+  static Future<List<String>> getForgottenScenes({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT name FROM scenes
+      WHERE name NOT IN (
+        SELECT DISTINCT sceneName FROM events
+        WHERE event = 'scene' AND sceneName IS NOT NULL
+          AND timestamp >= ? AND timestamp < ?
+      )
+      ORDER BY name ASC
+    ''', [fromDate, '$toDate 23:59:59']);
+    return rows.map((r) => r['name'] as String).toList();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Присутствие (из presence_daily)
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<Map<String, int>> getPresenceTotals({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final r = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(home_sec), 0)    AS home,
+        COALESCE(SUM(near_sec), 0)    AS near,
+        COALESCE(SUM(away_sec), 0)    AS away,
+        COALESCE(SUM(unknown_sec), 0) AS unknown,
+        COALESCE(SUM(cloud_fallback_count), 0) AS cloud
+      FROM presence_daily
+      WHERE date BETWEEN ? AND ?
+    ''', [fromDate, toDate]);
+    final m = r.first;
+    return {
+      'home': (m['home'] as num).toInt(),
+      'near': (m['near'] as num).toInt(),
+      'away': (m['away'] as num).toInt(),
+      'unknown': (m['unknown'] as num).toInt(),
+      'cloud': (m['cloud'] as num).toInt(),
+    };
+  }
+
+  static Future<List<Map<String, Object?>>> getPresenceDailySeries({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT date, home_sec, near_sec, away_sec, unknown_sec
+      FROM presence_daily
+      WHERE date BETWEEN ? AND ?
+      ORDER BY date ASC
+    ''', [fromDate, toDate]);
+  }
+
+  static Future<void> addPresenceSeconds({
+    required String date,
+    required String state,
+    required int seconds,
+  }) async {
+    final db = await database;
+    // защита от SQL-инъекции: state — только из известного набора
+    const allowed = {'home', 'near', 'away', 'unknown'};
+    if (!allowed.contains(state)) return;
+    final column = '${state}_sec';
+    await db.rawInsert('''
+      INSERT INTO presence_daily (date, $column)
+      VALUES (?, ?)
+      ON CONFLICT(date) DO UPDATE SET $column = $column + excluded.$column
+    ''', [date, seconds]);
+  }
+
+  static Future<void> incrementCloudFallback(String date) async {
+    final db = await database;
+    await db.rawInsert('''
+      INSERT INTO presence_daily (date, cloud_fallback_count)
+      VALUES (?, 1)
+      ON CONFLICT(date) DO UPDATE SET cloud_fallback_count = cloud_fallback_count + 1
+    ''', [date]);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Климат (из sensor_log)
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<List<Map<String, Object?>>> getClimateStats({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT deviceId, deviceName,
+        MIN(temperature) AS t_min,
+        MAX(temperature) AS t_max,
+        AVG(temperature) AS t_avg,
+        MIN(humidity) AS h_min,
+        MAX(humidity) AS h_max,
+        AVG(humidity) AS h_avg,
+        COUNT(*) AS samples
+      FROM sensor_log
+      WHERE timestamp >= ? AND timestamp < ?
+        AND (temperature IS NOT NULL OR humidity IS NOT NULL)
+      GROUP BY deviceId
+      ORDER BY deviceName ASC
+    ''', [fromDate, '$toDate 23:59:59']);
+  }
+
+  static Future<List<Map<String, Object?>>> getClimateTrend({
+    required String deviceId,
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT timestamp, temperature, humidity
+      FROM sensor_log
+      WHERE deviceId = ? AND timestamp >= ? AND timestamp < ?
+        AND (temperature IS NOT NULL OR humidity IS NOT NULL)
+      ORDER BY timestamp ASC
+    ''', [deviceId, fromDate, '$toDate 23:59:59']);
   }
 }

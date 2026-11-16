@@ -1,5 +1,30 @@
 # История изменений SHome
 
+## v8.2.4 — Scenes, Presence, Climate — 2026-11-16
+
+### 🎬 Сцены
+- **`StatsScenesTab`**: топ сцен (bar chart) + список срабатываний
+- **Забытые сцены** (0 срабатываний за период) — кандидаты на удаление
+- SQL: `getSceneStats`, `getForgottenScenes`
+
+### 📍 Присутствие
+- **`StatsPresenceTab`**: время дома/рядом/ушёл/неизвестно
+- **Cloud fallback** — сколько раз heartbeat не сработал
+- **DB v10**: `presence_daily` (date, home_sec, near_sec, away_sec, unknown_sec, cloud_fallback_count)
+- SQL: `getPresenceTotals`, `getPresenceDailySeries`, `addPresenceSeconds`, `incrementCloudFallback`
+
+### 🌡️ Климат
+- **`StatsClimateTab`**: min/max/avg температуры и влажности по устройствам
+- SQL: `getClimateStats`, `getClimateTrend`
+
+### 🎨 UI: плитки вместо вкладок
+- **`StatsScreen`** — горизонтальный скролл плиток (как комнаты на главном)
+- **7 плиток**: Обзор / Устройства / Энергия / Видео / Сцены / Присутствие / Климат
+- `AnimatedContainer` — плавная анимация выбора
+
+### 🔧 versionCode
+- `versionCode` = **80204**
+
 ## v8.2.3 — Frigate Statistics — 2026-11-16
 
 ### 🎥 Видеостатистика

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../data/local/database.dart';
-import '../../../application/state/devices_provider.dart';
 
 class StatsVideoTab extends ConsumerStatefulWidget {
   const StatsVideoTab({super.key});
@@ -281,7 +280,7 @@ class _HourHeatmap extends StatelessWidget {
           children: [
             const SizedBox(width: 60),
             ...List.generate(24, (h) => Expanded(
-              child: Text('${h.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 8, color: Colors.grey), textAlign: TextAlign.center),
+              child: Text(h.toString().padLeft(2, '0'), style: const TextStyle(fontSize: 8, color: Colors.grey), textAlign: TextAlign.center),
             )),
           ],
         ),

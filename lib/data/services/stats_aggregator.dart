@@ -68,14 +68,20 @@ class StatsAggregator {
   }
 
   _Cat _categorize(String e) {
-    if (e.startsWith('alarm_') || e.startsWith('frigate_')) return _Cat.alert;
+    if (e.startsWith('alarm_') || e.startsWith('frigate_')) {
+      return _Cat.alert;
+    }
     if (const {
       'turnOn', 'turnOff', 'scene', 'roomAdded', 'roomRemoved',
       'timer', 'deviceAdded', 'deviceRemoved', 'sceneCreated', 'sceneDeleted',
-    }.contains(e)) return _Cat.action;
-    if (e == 'online') return _Cat.online;
-    if (e == 'offline') return _Cat.offline;
-    if (e == 'error') return _Cat.error;
+    }.contains(e)) {
+      return _Cat.action;
+    }
+    switch (e) {
+      case 'online':  return _Cat.online;
+      case 'offline': return _Cat.offline;
+      case 'error':   return _Cat.error;
+    }
     return _Cat.unknown;
   }
 
