@@ -180,6 +180,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
+          // 🗑️ Хранить события
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.auto_delete, color: Colors.grey),
+              title: const Text('Хранить события'),
+              subtitle: FutureBuilder<String?>(
+                future: AppDatabase.getStatsSetting('events_retention_days'),
+                builder: (ctx, snap) =>
+                    Text('${snap.data ?? '30'} дней'),
+              ),
+              onTap: () async {
+                final current = await AppDatabase.getStatsSetting(
+                    'events_retention_days');
+                final selected = await showDialog<int>(
+                  context: context,
+                  builder: (ctx) => SimpleDialog(
+                    title: const Text('Хранить события'),
+                    children: [30, 60, 90, 365]
+                        .map((d) => SimpleDialogOption(
+                      onPressed: () => Navigator.pop(ctx, d),
+                      child: Text('$d дней'),
+                    ))
+                        .toList(),
+                  ),
+                );
+                if (selected != null) {
+                  await AppDatabase.setStatsSetting(
+                      'events_retention_days', '$selected');
+                  if (mounted) setState(() {});
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // 💰 Тариф электроэнергии
           Card(
             child: ListTile(

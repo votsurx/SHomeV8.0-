@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/local/database.dart';
 import '../../application/state/current_room_provider.dart';
+import '../../data/services/stats_cache.dart';
 
 class TodayDrawer extends ConsumerStatefulWidget {
   /// Если null — берётся currentRoomIdProvider (реактивно).
@@ -39,6 +40,7 @@ class _TodayDrawerState extends ConsumerState<TodayDrawer> {
     final total = await AppDatabase.getTotalCount(roomId: roomId);
 
     if (!mounted) return;
+    await StatsCache.instance.refreshAnomalies(roomId: roomId);
     setState(() {
       _stats = stats;
       _energy = energy;

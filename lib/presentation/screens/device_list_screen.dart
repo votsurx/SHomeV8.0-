@@ -175,7 +175,7 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
               ),
             ],
           ),
-          EdgeHandle(                                       // ← NEW: «хвостик»
+          EdgeHandle(
             onOpen: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
         ],

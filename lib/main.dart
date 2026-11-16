@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker/talker.dart';
 
 import 'data/services/heartbeat_server.dart';
+import 'data/services/stats_cache.dart';
 import 'di/injection.dart';
 import 'domain/models/device.dart';
 import 'domain/models/frigate_models.dart';
@@ -31,6 +32,7 @@ import 'data/local/secure_storage/encrypted_keys.dart';
 import 'application/state/devices_provider.dart';
 import 'di/global_container.dart';
 import 'data/services/stats_aggregator.dart';
+import 'data/local/database.dart';
 
 /// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
@@ -38,6 +40,12 @@ MqttService? globalMqttService;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StatsAggregator.instance.backfillIfNeeded();
+  await StatsCache.instance.loadFromDb();
+  // Retention: почистить старые события
+  final deleted = await AppDatabase.cleanupOldEvents();
+  if (deleted > 0) {
+    getIt<Talker>().info('🗑️ Cleaned $deleted old events');
+  }
   configureDependencies();
   ThemeNotifier.updateAutoCache();
 
@@ -50,6 +58,7 @@ void main() async {
   getIt<AutomationEngine>().start();
 
   _addDefaultRooms();
+  WidgetsBinding.instance.addObserver(_LifecycleObserver());
 
   runApp(
     UncontrolledProviderScope(
@@ -81,12 +90,26 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
     super.initState();
     _startAutoThemeTimer();
     _connectMqtt();
+    _startDailyCleanupTimer();
+  }
+
+  Timer? _cleanupTimer;
+
+  void _startDailyCleanupTimer() {
+    _cleanupTimer?.cancel();
+    _cleanupTimer = Timer.periodic(const Duration(hours: 24), (_) async {
+      final deleted = await AppDatabase.cleanupOldEvents();
+      if (deleted > 0) {
+        getIt<Talker>().info('🗑️ Daily cleanup: $deleted events');
+      }
+    });
   }
 
   @override
   void dispose() {
     _themeTimer?.cancel();
     HeartbeatServer.stop();
+    _cleanupTimer?.cancel();
     super.dispose();
   }
 
@@ -646,5 +669,18 @@ void _addDefaultRooms() async {
         Room(id: 'kitchen', name: 'Кухня', icon: '🍳', sortOrder: 2));
     await roomRepo.saveRoom(
         Room(id: 'other', name: 'Техника', icon: '🔌', sortOrder: 3));
+  }
+}
+// ═══════════════════════════════════════════════════════════
+// LIFECYCLE OBSERVER — flush EventLogger при выходе
+// ═══════════════════════════════════════════════════════════
+
+class _LifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      EventLogger.flushNow();
+    }
   }
 }

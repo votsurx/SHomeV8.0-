@@ -29,7 +29,7 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 11,
+      version: 12,
       onCreate: (db, version) async {
         // ─── существующие таблицы ───
         await db.execute('''
@@ -228,6 +228,12 @@ class AppDatabase {
               PRIMARY KEY (date, channel, category)
             )
           ''');
+          if (oldVersion < 12) {
+            await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_battery_threshold','20')");
+            await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_linkquality_threshold','30')");
+            await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_offline_per_day','5')");
+            await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_energy_multiplier','1.5')");
+          }
         }
       },
     );
@@ -272,6 +278,10 @@ class AppDatabase {
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('events_retention_days','30')");
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('electricity_tariff_rub_per_kwh','5.5')");
     await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('stats_backfilled','0')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_battery_threshold','20')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_linkquality_threshold','30')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_offline_per_day','5')");
+    await db.rawInsert("INSERT OR IGNORE INTO stats_settings(key,value) VALUES('anomaly_energy_multiplier','1.5')");
 
     // ─── NEW: presence_daily ───
     await db.execute('''
@@ -1110,7 +1120,21 @@ class AppDatabase {
     final db = await database;
     final result = <Map<String, Object?>>[];
 
-    // 1. Battery < 20% / Linkquality < 30 (из devices.properties)
+    // ─── читаем пороги из настроек ───
+    final batteryTh = int.tryParse(
+        await getStatsSetting('anomaly_battery_threshold') ?? '20') ??
+        20;
+    final lqTh = int.tryParse(
+        await getStatsSetting('anomaly_linkquality_threshold') ?? '30') ??
+        30;
+    final offlineTh = int.tryParse(
+        await getStatsSetting('anomaly_offline_per_day') ?? '5') ??
+        5;
+    final energyMult = double.tryParse(
+        await getStatsSetting('anomaly_energy_multiplier') ?? '1.5') ??
+        1.5;
+
+    // 1. Battery / Linkquality (из devices.properties)
     final devices = roomId == null
         ? await db.query('devices')
         : await db.query('devices', where: 'roomId = ?', whereArgs: [roomId]);
@@ -1120,32 +1144,32 @@ class AppDatabase {
       try {
         final props = _parseProps(propsRaw);
         final battery = (props['battery'] as num?)?.toInt();
-        if (battery != null && battery < 20) {
+        if (battery != null && battery < batteryTh) {
           result.add({
             'type': 'battery',
             'title': '🔋 ${d['name']}',
-            'subtitle': 'Батарея $battery%',
+            'subtitle': 'Батарея $battery% (порог $batteryTh%)',
           });
         }
         final lq = (props['linkquality'] as num?)?.toInt();
-        if (lq != null && lq < 30) {
+        if (lq != null && lq < lqTh) {
           result.add({
             'type': 'linkquality',
             'title': '📶 ${d['name']}',
-            'subtitle': 'Linkquality $lq (плохо)',
+            'subtitle': 'Linkquality $lq (порог $lqTh)',
           });
         }
       } catch (_) {}
     }
 
-    // 2. Offline > 5 раз за сегодня (join по devices, если roomId)
+    // 2. Offline > N раз за сегодня
     final offlineSql = roomId == null
         ? '''
           SELECT e.deviceId, e.deviceName, COUNT(*) AS cnt
           FROM events e
           WHERE e.event = 'offline' AND e.timestamp >= ? AND e.timestamp < ?
           GROUP BY e.deviceId
-          HAVING cnt > 5
+          HAVING cnt > ?
         '''
         : '''
           SELECT e.deviceId, e.deviceName, COUNT(*) AS cnt
@@ -1154,21 +1178,21 @@ class AppDatabase {
           WHERE e.event = 'offline' AND d.roomId = ?
             AND e.timestamp >= ? AND e.timestamp < ?
           GROUP BY e.deviceId
-          HAVING cnt > 5
+          HAVING cnt > ?
         ''';
     final offlineArgs = roomId == null
-        ? [date, '$date 23:59:59']
-        : [roomId, date, '$date 23:59:59'];
+        ? [date, '$date 23:59:59', offlineTh]
+        : [roomId, date, '$date 23:59:59', offlineTh];
     final offlineRows = await db.rawQuery(offlineSql, offlineArgs);
     for (final r in offlineRows) {
       result.add({
         'type': 'offline',
         'title': '📡 ${r['deviceName'] ?? '—'}',
-        'subtitle': 'Offline ${r['cnt']} раз сегодня',
+        'subtitle': 'Offline ${r['cnt']} раз сегодня (порог $offlineTh)',
       });
     }
 
-    // 3. Энергия > 1.5× avg за 30 дней
+    // 3. Энергия > N× avg за 30 дней
     final energySql = roomId == null
         ? '''
           WITH avg30 AS (
@@ -1180,7 +1204,7 @@ class AppDatabase {
           SELECT e.deviceId, e.deviceName, e.totalEnergy, a.avg_kwh
           FROM energy_log e
           JOIN avg30 a ON a.deviceId = e.deviceId
-          WHERE e.date = ? AND e.totalEnergy > a.avg_kwh * 1.5
+          WHERE e.date = ? AND e.totalEnergy > a.avg_kwh * ?
         '''
         : '''
           WITH avg30 AS (
@@ -1193,21 +1217,36 @@ class AppDatabase {
           FROM energy_log e
           JOIN avg30 a ON a.deviceId = e.deviceId
           JOIN devices d ON d.id = e.deviceId
-          WHERE e.date = ? AND d.roomId = ? AND e.totalEnergy > a.avg_kwh * 1.5
+          WHERE e.date = ? AND d.roomId = ? AND e.totalEnergy > a.avg_kwh * ?
         ''';
     final energyArgs = roomId == null
-        ? [date, date]
-        : [date, date, roomId];
+        ? [date, date, energyMult]
+        : [date, date, roomId, energyMult];
     final energyAnomalies = await db.rawQuery(energySql, energyArgs);
     for (final r in energyAnomalies) {
       result.add({
         'type': 'energy',
         'title': '⚡ ${r['deviceName'] ?? '—'}',
         'subtitle':
-        '${(r['totalEnergy'] as num).toStringAsFixed(2)} кВт·ч (норма ${(r['avg_kwh'] as num).toStringAsFixed(2)})',
+        '${(r['totalEnergy'] as num).toStringAsFixed(2)} кВт·ч (норма ${(r['avg_kwh'] as num).toStringAsFixed(2)}, ×$energyMult)',
       });
     }
 
     return result;
+  }
+  // ═══════════════════════════════════════════════════════════
+  // RETENTION: удаление старых событий
+  // ═══════════════════════════════════════════════════════════
+
+  /// Удаляет события старше `events_retention_days` (default 30).
+  /// Возвращает количество удалённых.
+  static Future<int> cleanupOldEvents() async {
+    final daysStr = await getStatsSetting('events_retention_days') ?? '30';
+    final days = int.tryParse(daysStr) ?? 30;
+    final cutoff = DateTime.now()
+        .subtract(Duration(days: days))
+        .toIso8601String();
+    final db = await database;
+    return db.delete('events', where: 'timestamp < ?', whereArgs: [cutoff]);
   }
 }

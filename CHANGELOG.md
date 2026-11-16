@@ -1,5 +1,32 @@
 # История изменений SHome
 
+## v8.2.8 — StatsCache (in-memory events + instant badge) — 2026-11-16
+
+### 🧠 StatsCache
+- **`StatsCache`** (Singleton, `ChangeNotifier`) — последние 200 событий в памяти
+- **Загрузка** из БД при старте (`loadFromDb`)
+- **`add(event)`** — из `EventLogger.log()` (мгновенно)
+- **Кольцевой буфер** 200 событий
+- **`refreshAnomalies(roomId)`** — пересчёт аномалий из БД с debounce 500мс
+
+### 🔴 Бейдж на «хвостике»
+- **`EdgeHandle`** → `StatefulWidget` + слушает `StatsCache`
+- **Бейдж мгновенно**: зелёный (0 аномалий) / красный (>0)
+- **Пересчёт** при `offline`/`online` (debounce 500мс)
+- **Пересчёт** при открытии «Сегодня» (`refreshAnomalies`)
+
+### 🗑️ Удалено
+- `anomalies_provider.dart` — заменён на `StatsCache`
+- `anomalyCountProvider` — больше не нужен
+
+### 📦 Архитектура (гибрид)
+- **БД** — источник правды (батчинг 500мс/50 через `EventLogger`)
+- **`StatsCache`** — кэш для чтения (мгновенный UI)
+- **Нет потери событий** при рестарте (БД пишется)
+
+### 🔧 versionCode
+- `versionCode` = **80208**
+
 ## v8.2.7 — Room-Filtered Today Drawer — 2026-11-16
 
 ### 🏠 Контекстная статистика по комнате
