@@ -4,6 +4,8 @@
 ///          device_stats_daily, system_health_daily, stats_settings, presence_daily.
 /// Версия БД: 10.
 library;
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'entities/device_entity.dart';
@@ -902,5 +904,120 @@ class AppDatabase {
       'sent': (m['sent'] as num).toInt(),
       'suppressed': (m['suppressed'] as num).toInt(),
     };
+  }
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Сегодня (мини-карточки)
+  // ═══════════════════════════════════════════════════════════
+
+  static Future<Map<String, int>> getTodayStats(String date) async {
+    final db = await database;
+    final r = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(CASE WHEN event LIKE 'alarm_%' OR event LIKE 'frigate_%' THEN 1 ELSE 0 END), 0) AS alerts,
+        COALESCE(SUM(CASE WHEN event IN ('turnOn','turnOff') THEN 1 ELSE 0 END), 0) AS actions
+      FROM events
+      WHERE timestamp >= ? AND timestamp < ?
+    ''', [date, '$date 23:59:59']);
+    final m = r.first;
+    return {
+      'alerts': (m['alerts'] as num).toInt(),
+      'actions': (m['actions'] as num).toInt(),
+    };
+  }
+
+  static Future<Map<String, double>> getTodayEnergy(String date) async {
+    final db = await database;
+    final energyR = await db.rawQuery('''
+      SELECT COALESCE(SUM(totalEnergy), 0) AS kwh FROM energy_log WHERE date = ?
+    ''', [date]);
+    final tempR = await db.rawQuery('''
+      SELECT COALESCE(AVG(temperature), 0) AS avg_temp
+      FROM sensor_log WHERE timestamp >= ? AND timestamp < ? AND temperature IS NOT NULL
+    ''', [date, '$date 23:59:59']);
+    final e = energyR.first;
+    final t = tempR.first;
+    return {
+      'kwh': (e['kwh'] as num).toDouble(),
+      'avg_temp': (t['avg_temp'] as num).toDouble(),
+    };
+  }
+
+  /// Аномалии за сегодня.
+  static Future<List<Map<String, Object?>>> getAnomalies(String date) async {
+    final db = await database;
+    final result = <Map<String, Object?>>[];
+
+    // 1. Battery < 20% (из devices.properties)
+    final devices = await db.query('devices');
+    for (final d in devices) {
+      final propsRaw = d['properties'] as String?;
+      if (propsRaw == null) continue;
+      try {
+        final props = _parseProps(propsRaw);
+        final battery = (props['battery'] as num?)?.toInt();
+        if (battery != null && battery < 20) {
+          result.add({
+            'type': 'battery',
+            'title': '🔋 ${d['name']}',
+            'subtitle': 'Батарея $battery%',
+          });
+        }
+        final lq = (props['linkquality'] as num?)?.toInt();
+        if (lq != null && lq < 30) {
+          result.add({
+            'type': 'linkquality',
+            'title': '📶 ${d['name']}',
+            'subtitle': 'Linkquality $lq (плохо)',
+          });
+        }
+      } catch (_) {}
+    }
+
+    // 2. Offline > 5 раз за сегодня
+    final offlineRows = await db.rawQuery('''
+      SELECT deviceId, deviceName, COUNT(*) AS cnt
+      FROM events
+      WHERE event = 'offline' AND timestamp >= ? AND timestamp < ?
+      GROUP BY deviceId
+      HAVING cnt > 5
+    ''', [date, '$date 23:59:59']);
+    for (final r in offlineRows) {
+      result.add({
+        'type': 'offline',
+        'title': '📡 ${r['deviceName'] ?? '—'}',
+        'subtitle': 'Offline ${r['cnt']} раз сегодня',
+      });
+    }
+
+    // 3. Энергия > 1.5× avg за 30 дней
+    final energyAnomalies = await db.rawQuery('''
+      WITH avg30 AS (
+        SELECT deviceId, AVG(totalEnergy) AS avg_kwh
+        FROM energy_log
+        WHERE date >= date('now', '-30 days') AND date < ?
+        GROUP BY deviceId
+      )
+      SELECT e.deviceId, e.deviceName, e.totalEnergy, a.avg_kwh
+      FROM energy_log e
+      JOIN avg30 a ON a.deviceId = e.deviceId
+      WHERE e.date = ? AND e.totalEnergy > a.avg_kwh * 1.5
+    ''', [date, date]);
+    for (final r in energyAnomalies) {
+      result.add({
+        'type': 'energy',
+        'title': '⚡ ${r['deviceName'] ?? '—'}',
+        'subtitle': '${(r['totalEnergy'] as num).toStringAsFixed(2)} кВт·ч (норма ${(r['avg_kwh'] as num).toStringAsFixed(2)})',
+      });
+    }
+
+    return result;
+  }
+
+  static Map<String, dynamic> _parseProps(String raw) {
+    try {
+      return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return {};
+    }
   }
 }

@@ -16,6 +16,8 @@ import '../../di/injection.dart';
 import '../../data/protocols/tuya_protocol.dart';
 import 'dart:async';
 import 'dart:convert';
+import '../widgets/edge_handle.dart';
+import '../widgets/today_drawer.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import '../../application/onboarding_manager.dart';
 import '../widgets/frigate_camera_card.dart';
@@ -31,11 +33,12 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
   String _selectedRoomId = 'all';
   DeviceType _selectedType = DeviceType.outlet;
   AdaptivePoller? _poller;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
-    _initPoller(); // ← добавить
+    _initPoller();
     _checkOnboarding();
   }
 
@@ -88,6 +91,8 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
         : allDevices.where((d) => d.roomId == _selectedRoomId).toList();
 
     return Scaffold(
+      key: _scaffoldKey,                                    // ← NEW
+      endDrawer: const TodayDrawer(),                       // ← NEW
       appBar: AppBar(
         title: const Row(
           children: [
@@ -105,58 +110,65 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(                                          // ← NEW: Stack
         children: [
-          RoomSelector(
-            selectedRoomId: _selectedRoomId,
-            onRoomSelected: (room) => setState(() => _selectedRoomId = room.id),
-          ),
-          const Divider(),
-          Expanded(
-            child: devices.isEmpty
-                ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.devices, size: 80, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('Нет устройств', style: TextStyle(fontSize: 20, color: Colors.grey)),
-                ],
+          Column(                                           // ← существующий body
+            children: [
+              RoomSelector(
+                selectedRoomId: _selectedRoomId,
+                onRoomSelected: (room) => setState(() => _selectedRoomId = room.id),
               ),
-            )
-                : LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                final crossAxisCount = width > 900 ? 5 : (width > 600 ? 4 : (width > 400 ? 3 : 2));
+              const Divider(),
+              Expanded(
+                child: devices.isEmpty
+                    ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.devices, size: 80, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('Нет устройств', style: TextStyle(fontSize: 20, color: Colors.grey)),
+                    ],
+                  ),
+                )
+                    : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    final crossAxisCount = width > 900 ? 5 : (width > 600 ? 4 : (width > 400 ? 3 : 2));
 
-                return ReorderableGridView.count(
-                  crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.85,
-                  padding: const EdgeInsets.all(12),
-                  children: devices.map((device) {
-                    // 🎥 Frigate-камера — своя карточка
-                    if (device.type == DeviceType.camera &&
-                        device.properties['source'] == 'frigate') {
-                      return FrigateCameraCard(
-                        key: ValueKey(device.id),
-                        device: device,
-                      );
-                    }
+                    return ReorderableGridView.count(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.85,
+                      padding: const EdgeInsets.all(12),
+                      children: devices.map((device) {
+                        // 🎥 Frigate-камера — своя карточка
+                        if (device.type == DeviceType.camera &&
+                            device.properties['source'] == 'frigate') {
+                          return FrigateCameraCard(
+                            key: ValueKey(device.id),
+                            device: device,
+                          );
+                        }
 
-                    // Остальные устройства (Tuya, Zigbee)
-                    return DeviceCard(
-                      key: ValueKey(device.id),
-                      device: device,
+                        // Остальные устройства (Tuya, Zigbee)
+                        return DeviceCard(
+                          key: ValueKey(device.id),
+                          device: device,
+                        );
+                      }).toList(),
+                      onReorder: (oldIndex, newIndex) {
+                        ref.read(devicesProvider.notifier).reorderDevices(oldIndex, newIndex);
+                      },
                     );
-                  }).toList(),
-                  onReorder: (oldIndex, newIndex) {
-                    ref.read(devicesProvider.notifier).reorderDevices(oldIndex, newIndex);
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
+          ),
+          EdgeHandle(                                       // ← NEW: «хвостик»
+            onOpen: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
         ],
       ),

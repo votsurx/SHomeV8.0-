@@ -1,5 +1,27 @@
 # История изменений SHome
 
+## v8.2.6 — Today Drawer + Anomalies — 2026-11-16
+
+### 🎯 «Сегодня» — EndDrawer на главном
+- **`EdgeHandle`** — прозрачный «хвостик» справа по центру
+- Тап или свайп влево → `EndDrawer` «Сегодня»
+- **`TodayDrawer`**: мини-карточки (online, алерты, действия, энергия, температура)
+- **Аномалии**: battery < 20%, linkquality < 30, offline > 5/день, энергия > 1.5× avg
+- **Быстрые ссылки**: «Все события», «Вся статистика»
+
+### 🗄️ SQL-хелперы
+- `getTodayStats(date)` — алерты/действия за сегодня
+- `getTodayEnergy(date)` — кВт·ч + средняя температура
+- `getAnomalies(date)` — battery/linkquality/offline/energy
+
+### 🎨 UI
+- `DeviceListScreen`: `Scaffold(key: _scaffoldKey, endDrawer: TodayDrawer())`
+- `body: Stack([Column(...), EdgeHandle(...)])`
+- «Хвостик» — `Colors.primary.withValues(alpha: 0.12)`, не перекрывает контент
+
+### 🔧 versionCode
+- `versionCode` = **80206**
+
 ## v8.2.5 — Notifications & Noise — 2026-11-16
 
 ### 🔔 Статистика уведомлений
