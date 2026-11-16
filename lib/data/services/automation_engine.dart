@@ -14,6 +14,7 @@ import '../../domain/repositories/scene_repository.dart';
 import '../../data/services/vk_notification_service.dart';
 import '../../application/services/notification_settings_service.dart';
 import 'presence_detector.dart';
+import 'package:flutter/foundation.dart';
 
 class AutomationEngine {
   final SceneRepository _sceneRepository;
@@ -40,6 +41,10 @@ class AutomationEngine {
         PresenceDetector? presenceDetector,
       }) : _presenceDetector = presenceDetector;
 
+  /// Публичный доступ для тестов.
+  @visibleForTesting
+  Future<void> checkTimeTriggers() => _checkTimeTriggers();
+
   /// Запускает периодическую проверку time-триггеров
   /// и подписывается на изменения присутствия.
   void start() {
@@ -47,7 +52,7 @@ class AutomationEngine {
     _lastCheck = DateTime.now().subtract(const Duration(minutes: 1));
     _timer = Timer.periodic(
       const Duration(seconds: 30),
-          (_) => _checkTimeTriggers(),
+          (_) => checkTimeTriggers(),
     );
 
     // Подписываемся на изменения присутствия

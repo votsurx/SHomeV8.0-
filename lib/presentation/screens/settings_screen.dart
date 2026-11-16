@@ -5,6 +5,7 @@ import '../../application/services/update_service.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
 import 'package:restart_app/restart_app.dart';
+import '../../data/local/database.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -173,6 +174,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   );
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 💰 Тариф электроэнергии
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.payments, color: Colors.amber),
+              title: const Text('Тариф электроэнергии'),
+              subtitle: FutureBuilder<String?>(
+                future: AppDatabase.getStatsSetting(
+                    'electricity_tariff_rub_per_kwh'),
+                builder: (ctx, snap) =>
+                    Text('${snap.data ?? '5.5'} ₽/кВт·ч'),
+              ),
+              onTap: () async {
+                final current = await AppDatabase.getStatsSetting(
+                    'electricity_tariff_rub_per_kwh');
+                final controller =
+                TextEditingController(text: current ?? '5.5');
+
+                if (!context.mounted) return;
+                final result = await showDialog<String>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Тариф ₽/кВт·ч'),
+                    content: TextField(
+                      controller: controller,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      decoration: const InputDecoration(hintText: '5.5'),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Отмена'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () =>
+                            Navigator.pop(ctx, controller.text),
+                        child: const Text('Сохранить'),
+                      ),
+                    ],
+                  ),
+                );
+                if (result != null && result.isNotEmpty) {
+                  final parsed = double.tryParse(result);
+                  if (parsed != null && parsed > 0) {
+                    await AppDatabase.setStatsSetting(
+                        'electricity_tariff_rub_per_kwh', result);
+                    if (mounted) setState(() {});
+                  }
                 }
               },
             ),

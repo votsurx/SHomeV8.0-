@@ -36,17 +36,84 @@ void main() {
       );
       await repo.saveScene(scene);
 
-      // _checkTimeTriggers приватный — эмулируем через start + wait
-      // Вместо этого, вызываем напрямую через engine (если сделать _checkTimeTriggers публичным)
-      // Пока — проверяем, что start/stop не падают
-      engine.start();
-      await Future.delayed(const Duration(milliseconds: 100));
-      engine.stop();
+      await engine.checkTimeTriggers();
 
-      // Сцена должна быть выполнена (в течение 30с, но мы ждём 100мс — не сработает)
-      // Поэтому этот тест — smoke test на start/stop
-      expect(talker, isNotNull);
+      expect(repo.executedSceneIds, contains('scene_1'));
     });
+
+    test('time trigger: сцена с другим временем НЕ выполняется', () async {
+      final now = DateTime.now();
+      final other = now.add(const Duration(hours: 1));
+      final otherTime =
+          '${other.hour.toString().padLeft(2, '0')}:${other.minute.toString().padLeft(2, '0')}';
+
+      final scene = createTestScene(
+        trigger: SceneTrigger(
+          type: TriggerType.time,
+          time: otherTime,
+          repeat: RepeatType.daily,
+        ),
+      );
+      await repo.saveScene(scene);
+
+      await engine.checkTimeTriggers();
+
+      expect(repo.executedSceneIds, isEmpty);
+    });
+
+    test('time trigger: повторный вызов в ту же минуту НЕ выполняется',
+            () async {
+          final now = DateTime.now();
+          final currentTime =
+              '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+          final scene = createTestScene(
+            trigger: SceneTrigger(
+              type: TriggerType.time,
+              time: currentTime,
+              repeat: RepeatType.daily,
+            ),
+          );
+          await repo.saveScene(scene);
+
+          await engine.checkTimeTriggers();
+          expect(repo.executedSceneIds.length, 1);
+
+          // Второй раз в ту же минуту — защита _isSameMinute
+          await engine.checkTimeTriggers();
+          expect(repo.executedSceneIds.length, 1);
+        });
+
+    test('time trigger: сцена без trigger не выполняется', () async {
+      final scene = createTestScene(trigger: null);
+      await repo.saveScene(scene);
+
+      await engine.checkTimeTriggers();
+
+      expect(repo.executedSceneIds, isEmpty);
+    });
+
+    test('time trigger: сцена с TriggerType.presence не выполняется по времени',
+            () async {
+          final now = DateTime.now();
+          final currentTime =
+              '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+          final scene = createTestScene(
+            trigger: SceneTrigger(
+              type: TriggerType.presence,
+              time: currentTime,
+              presenceEvent: PresenceEvent.someoneHome,
+            ),
+          );
+          await repo.saveScene(scene);
+
+          await engine.checkTimeTriggers();
+
+          expect(repo.executedSceneIds, isEmpty);
+        });
+
+    // ─── start/stop ───
 
     test('start/stop не падают', () {
       engine.start();
@@ -54,31 +121,9 @@ void main() {
       expect(true, true);
     });
 
-    // ─── presence triggers ───
-
-    test('presence trigger: someoneHome при переходе away→home', () async {
-      final scene = createTestScene(
-        trigger: SceneTrigger(
-          type: TriggerType.presence,
-          presenceEvent: PresenceEvent.someoneHome,
-          presenceCooldownMin: 0,
-        ),
-      );
-      await repo.saveScene(scene);
-
-      // PresenceDetector нужен для _onPresenceChanged, но он приватный
-      // Тестируем через публичный API — start/stop
+    test('stop идемпотентен — повторный вызов не падает', () {
       engine.start();
       engine.stop();
-
-      expect(true, true);
-    });
-
-    test('stop отменяет таймеры', () async {
-      engine.start();
-      engine.stop();
-
-      // После stop — таймеры отменены, повторный stop не падает
       engine.stop();
       expect(true, true);
     });

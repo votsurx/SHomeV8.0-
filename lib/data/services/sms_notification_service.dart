@@ -5,12 +5,12 @@ import 'package:permission_handler/permission_handler.dart';
 class SmsNotificationService {
   static const _channel = MethodChannel('com.example.shome/installer');
 
-  static Future<bool> requestPermission() async {
+  Future<bool> requestPermission() async {
     final status = await Permission.sms.request();
     return status.isGranted;
   }
 
-  static Future<bool> sendSms({
+  Future<bool> sendSms({
     required String phoneNumber,
     required String message,
   }) async {
@@ -34,7 +34,7 @@ class SmsNotificationService {
     }
   }
 
-  static Future<bool> sendAlarm({
+  Future<bool> sendAlarm({
     required String phoneNumber,
     required String cameraName,
     required String event,

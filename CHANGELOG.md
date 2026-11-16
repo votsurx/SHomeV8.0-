@@ -1,4 +1,30 @@
 # История изменений SHome
+
+## v8.2.2 — Energy Statistics — 2026-11-16
+
+### ⚡ Энергомониторинг
+- **`energy_log` пишется**: `AdaptivePoller.upsertEnergyLog` для power-датчиков (UPSERT по `deviceId + date`, каждые 2 сек)
+- `energyIncrement` = `power × interval / 3600 / 1000` (Вт·ч → кВт·ч)
+- Одна строка в день на устройство, `totalEnergy` накапливается
+
+### 📊 Статистика — вкладка «Энергия»
+- **`StatsEnergyTab`**: 3-я вкладка в `StatsScreen` (Обзор / Устройства / Энергия)
+- Карточки: **Потребление** (кВт·ч) и **Стоимость** (₽) за 24ч / 7д / 30д
+- Список устройств, отсортированный по убыванию кВт·ч
+- Стоимость = `кВт·ч × тариф`
+
+### 💰 Тариф электроэнергии
+- Настройка в `SettingsScreen`: «Тариф электроэнергии» (₽/кВт·ч)
+- Хранится в `stats_settings.electricity_tariff_rub_per_kwh` (default `5.5`)
+- Изменение → пересчёт стоимости в статистике
+
+### 🗑️ Чистка
+- Удалён `statistics_screen.dart` (дублировал «Устройства»/«Датчики»/«Энергия»)
+- Роут `/statistics` → заменён на `/stats` (`StatsScreen`)
+
+### 🔧 versionCode
+- `versionCode` = **80202**
+- 
 ## v8.2.1 — Event Log Fix (Zigbee Alerts + Frigate Detections) — 2026-11-16
 
 ### 🐝 Zigbee-алерты в журнале и статистике

@@ -17,6 +17,8 @@ import '../../application/models/sms_settings.dart';
 import 'presence_detector.dart';
 import 'sms_notification_service.dart';
 import 'vk_notification_service.dart';
+import 'package:flutter/foundation.dart';
+import 'notification_sender.dart';
 
 class NotificationCoordinator {
   static final NotificationCoordinator _instance =
@@ -27,6 +29,26 @@ class NotificationCoordinator {
   /// Антидребезг per-device per-channel per-type.
   /// Ключ: `<channel>_<type>_<deviceId>`.
   final Map<String, DateTime> _lastNotification = {};
+
+  // 🆕 Инъекция для тестов
+  NotificationSender _vkSender = VkNotificationSender();
+  SmsNotificationService _smsService = SmsNotificationService();
+
+  @visibleForTesting
+  void setSendersForTest({
+    NotificationSender? vkSender,
+    SmsNotificationService? smsService,
+  }) {
+    if (vkSender != null) _vkSender = vkSender;
+    if (smsService != null) _smsService = smsService;
+  }
+
+  @visibleForTesting
+  void resetForTest() {
+    _lastNotification.clear();
+    _vkSender = VkNotificationSender();
+    _smsService = SmsNotificationService();
+  }
 
   // ═══════════════════════════════════════════════════════════
   // УСЛОВИЯ
@@ -113,9 +135,7 @@ class NotificationCoordinator {
           _isVkTypeEnabled(vkSettings, type, device)) {
         final key = 'vk_${type}_${device.id}';
         if (_checkDebounce(key, vkCooldown)) {
-          final vk = VkNotificationService();
-          await vk.loadSettings();
-          await vk.sendMessage('$title\n$message');
+          await _vkSender.send('$title\n$message');
         }
       }
 
@@ -125,7 +145,7 @@ class NotificationCoordinator {
         final key = 'sms_${type}_${device.id}';
         if (_checkDebounce(key, smsCooldown)) {
           for (final phone in smsSettings.phones.where((p) => p.enabled)) {
-            await SmsNotificationService.sendSms(
+            await _smsService.sendSms(
               phoneNumber: phone.phone,
               message: 'SHome: $title\n$message',
             );
@@ -202,7 +222,7 @@ class NotificationCoordinator {
         final key = 'sms_frigate_${event.label}_${camera.id}';
         if (_checkDebounce(key, smsCooldown)) {
           for (final phone in smsSettings.phones.where((p) => p.enabled)) {
-            await SmsNotificationService.sendAlarm(
+            await _smsService.sendAlarm(
               phoneNumber: phone.phone,
               cameraName: event.camera,
               event: event.label,

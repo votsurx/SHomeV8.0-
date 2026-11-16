@@ -53,7 +53,7 @@ class StatsAggregator {
       final events = await AppDatabase.getRecentEvents(limit: 100000);
       for (final e in events) {
         await onEvent(
-          event: e.event ?? '',
+          event: e.event,
           deviceId: e.deviceId,
           timestamp: e.timestamp,
         );

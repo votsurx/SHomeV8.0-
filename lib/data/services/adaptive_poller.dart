@@ -20,6 +20,7 @@ import '../../application/constants/debug_config.dart';
 import '../../application/state/notification_settings_provider.dart';
 import '../../application/state/sms_settings_provider.dart';
 import 'notification_coordinator.dart';
+import '../local/database.dart';
 
 class AdaptivePoller {
   final TuyaProtocol _tuyaProtocol;
@@ -263,6 +264,24 @@ class AdaptivePoller {
               // ✅ Tuya sensor: thresholds
               if (!isFirstPoll) {
                 _checkSensorThresholds(updated, value, sensorType);
+              }
+
+              // ✅ Tuya power sensor: запись в energy_log (NEW)
+              if (sensorType == 'power') {
+                final power = (updatedProperties['power'] as num?)?.toDouble() ?? 0;
+                final voltage = (updatedProperties['voltage'] as num?)?.toDouble() ?? 0;
+                final current = (updatedProperties['current'] as num?)?.toDouble() ?? 0;
+                final intervalHours = _normalInterval.inSeconds / 3600.0;
+                final energyIncrement = power * intervalHours / 1000.0;
+
+                await AppDatabase.upsertEnergyLog(
+                  deviceId: device.id,
+                  deviceName: device.name,
+                  power: power,
+                  voltage: voltage,
+                  current: current,
+                  energyIncrement: energyIncrement,
+                );
               }
             }
           }

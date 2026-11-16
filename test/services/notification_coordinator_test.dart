@@ -5,19 +5,30 @@ import 'package:shome/application/models/notification_settings.dart';
 import 'package:shome/application/models/sms_settings.dart';
 import '../helpers/test_helpers.dart';
 
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('NotificationCoordinator', () {
     late NotificationCoordinator coordinator;
+    late MockNotificationSender sender;
+    late MockSmsService smsService;
 
     setUpAll(() {
       setupPrefsMock();
       setupSecureStorageMock();
+      setupGetItForTests();
     });
 
     setUp(() {
       coordinator = NotificationCoordinator();
+      coordinator.resetForTest();                        // ← сначала
+      sender = MockNotificationSender();
+      smsService = MockSmsService();
+      coordinator.setSendersForTest(                    // ← потом
+        vkSender: sender,
+        smsService: smsService,
+      );
     });
 
     // ─── isConditionMet ───
@@ -26,8 +37,7 @@ void main() {
       expect(coordinator.isConditionMet('always'), true);
     });
 
-    test('isConditionMet night — ночью true', () {
-      // Не можем подменить DateTime.now(), но проверим, что не падает
+    test('isConditionMet night — возвращает bool', () {
       final result = coordinator.isConditionMet('night');
       expect(result, isA<bool>());
     });
@@ -41,125 +51,203 @@ void main() {
     test('notifyDevice не шлёт, если type не в notify_types', () async {
       final device = createTestDevice(
         properties: {
-          'notify_types': ['offline'],  // только offline разрешён
+          'notify_types': ['offline'],
         },
       );
-
-      final vk = NotificationSettings(enabled: true, vkToken: 'token', vkUserId: '123');
-      final sms = SmsSettings(enabled: false);
-
-      // state_changed не в списке — должен быть пропуск
-      await coordinator.notifyDevice(
-        device: device,
-        type: 'state_changed',
-        title: 'Test',
-        message: 'Test',
-        vkSettings: vk,
-        smsSettings: sms,
-      );
-
-      // Не падаем, VK не вызван (не можем проверить без мока VK)
-      expect(true, true);
-    });
-
-    test('notifyDevice шлёт, если notify_types null (все разрешены)', () async {
-      final device = createTestDevice(properties: {});  // нет notify_types
-
-      final vk = NotificationSettings(enabled: false);
-      final sms = SmsSettings(enabled: false);
-
-      // Не должно падать
-      await coordinator.notifyDevice(
-        device: device,
-        type: 'state_changed',
-        title: 'Test',
-        message: 'Test',
-        vkSettings: vk,
-        smsSettings: sms,
-      );
-
-      expect(true, true);
-    });
-
-    // ─── notifyDevice: condition фильтр ───
-
-    test('notifyDevice condition=always → проходит', () async {
-      final device = createTestDevice(
-        properties: {'notify_condition': 'always'},
-      );
-
-      await coordinator.notifyDevice(
-        device: device,
-        type: 'state_changed',
-        title: 'Test',
-        message: 'Test',
-        vkSettings: NotificationSettings(enabled: false),
-        smsSettings: SmsSettings(enabled: false),
-      );
-
-      expect(true, true);
-    });
-
-    // ─── notifyDevice: cooldown ───
-
-    test('notifyDevice антидребезг блокирует повтор', () async {
-      final device = createTestDevice(properties: {
-        'notify_cooldown_min': 10,
-      });
 
       final vk = NotificationSettings(
         enabled: true,
         vkToken: 'token',
         vkUserId: '123',
         notifyDevices: true,
-        vkCooldownMin: 10,
       );
 
-      // Первый вызов — проходит (но VK не настроен реально, просто не падает)
       await coordinator.notifyDevice(
         device: device,
         type: 'state_changed',
-        title: 'First',
-        message: 'First',
+        title: 'Test',
+        message: 'Test',
         vkSettings: vk,
         smsSettings: SmsSettings(enabled: false),
       );
 
-      // Второй вызов — должен быть заблокирован антидребезгом
-      // (внутри coordinator._lastNotification)
-      await coordinator.notifyDevice(
-        device: device,
-        type: 'state_changed',
-        title: 'Second',
-        message: 'Second',
-        vkSettings: vk,
-        smsSettings: SmsSettings(enabled: false),
-      );
-
-      // Не падаем
-      expect(true, true);
+      // state_changed не в notify_types → VK не вызван
+      expect(sender.sent, isEmpty);
     });
 
-    // ─── notifyFrigateEvent ───
-
-    test('notifyFrigateEvent не шлёт, если label не в notify_labels', () async {
-      final camera = createTestDevice(
-        type: DeviceType.camera,
+    test('notifyDevice шлёт, если type в notify_types', () async {
+      final device = createTestDevice(
         properties: {
-          'source': 'frigate',
-          'notify_labels': ['person'],  // только person
+          'notify_types': ['state_changed'],
         },
       );
 
-      // car не в списке — пропуск
-      await coordinator.notifyFrigateEvent(
-        camera: camera,
-        event: _createFrigateEvent(label: 'car'),
-        vkSettings: NotificationSettings(enabled: false),
+      final vk = NotificationSettings(
+        enabled: true,
+        vkToken: 'token',
+        vkUserId: '123',
+        notifyDevices: true,
+        vkCooldownMin: 1,
+      );
+
+      await coordinator.notifyDevice(
+        device: device,
+        type: 'state_changed',
+        title: 'Test',
+        message: 'Test',
+        vkSettings: vk,
         smsSettings: SmsSettings(enabled: false),
       );
 
-      expect(true, true);
+      // type в notify_types → VK вызван
+      expect(sender.sent.length, 1);
+      expect(sender.sent.first, contains('Test'));
     });
+
+    test('notifyDevice шлёт, если notify_types null', () async {
+      final device = createTestDevice(properties: {});
+
+      final vk = NotificationSettings(
+        enabled: true,
+        vkToken: 'token',
+        vkUserId: '123',
+        notifyDevices: true,
+      );
+
+      await coordinator.notifyDevice(
+        device: device,
+        type: 'state_changed',
+        title: 'Test',
+        message: 'Test',
+        vkSettings: vk,
+        smsSettings: SmsSettings(enabled: false),
+      );
+
+      expect(sender.sent.length, 1);
+    });
+
+    // ─── notifyDevice: condition ───
+
+    test('notifyDevice condition=away — не шлёт, если кто-то дома', () async {
+      final device = createTestDevice(
+        properties: {'notify_condition': 'away'},
+      );
+
+      final vk = NotificationSettings(
+        enabled: true,
+        vkToken: 'token',
+        vkUserId: '123',
+        notifyDevices: true,
+      );
+
+      // PresenceDetector пустой → isNobodyHome = false → condition не выполнено
+      await coordinator.notifyDevice(
+        device: device,
+        type: 'state_changed',
+        title: 'Test',
+        message: 'Test',
+        vkSettings: vk,
+        smsSettings: SmsSettings(enabled: false),
+      );
+
+      expect(sender.sent, isEmpty);
+    });
+
+    // ─── notifyDevice: антидребезг ───
+
+    test('notifyDevice антидребезг блокирует повтор в течение cooldown',
+            () async {
+          final device = createTestDevice(properties: {
+            'notify_cooldown_min': 10,
+          });
+
+          final vk = NotificationSettings(
+            enabled: true,
+            vkToken: 'token',
+            vkUserId: '123',
+            notifyDevices: true,
+            vkCooldownMin: 10,
+          );
+
+          // Первый вызов — проходит
+          await coordinator.notifyDevice(
+            device: device,
+            type: 'state_changed',
+            title: 'First',
+            message: 'First',
+            vkSettings: vk,
+            smsSettings: SmsSettings(enabled: false),
+          );
+          expect(sender.sent.length, 1);
+
+          // Второй вызов — антидребезг (10 мин) блокирует
+          await coordinator.notifyDevice(
+            device: device,
+            type: 'state_changed',
+            title: 'Second',
+            message: 'Second',
+            vkSettings: vk,
+            smsSettings: SmsSettings(enabled: false),
+          );
+          expect(sender.sent.length, 1); // всё ещё 1
+        });
+
+    test('notifyDevice антидребезг: разные устройства не блокируют друг друга',
+            () async {
+          final device1 = createTestDevice(id: 'dev_1');
+          final device2 = createTestDevice(id: 'dev_2');
+
+          final vk = NotificationSettings(
+            enabled: true,
+            vkToken: 'token',
+            vkUserId: '123',
+            notifyDevices: true,
+            vkCooldownMin: 10,
+          );
+
+          await coordinator.notifyDevice(
+            device: device1,
+            type: 'state_changed',
+            title: 'D1',
+            message: 'D1',
+            vkSettings: vk,
+            smsSettings: SmsSettings(enabled: false),
+          );
+
+          await coordinator.notifyDevice(
+            device: device2,
+            type: 'state_changed',
+            title: 'D2',
+            message: 'D2',
+            vkSettings: vk,
+            smsSettings: SmsSettings(enabled: false),
+          );
+
+          // Разные устройства → оба отправлены
+          expect(sender.sent.length, 2);
+        });
+
+    // ─── notifyFrigateEvent ───
+
+    test('notifyFrigateEvent не шлёт, если label не в notify_labels',
+            () async {
+          final camera = createTestDevice(
+            type: DeviceType.camera,
+            properties: {
+              'source': 'frigate',
+              'notify_labels': ['person'],
+            },
+          );
+
+          await coordinator.notifyFrigateEvent(
+            camera: camera,
+            event: createFrigateEvent(label: 'car'),
+            vkSettings: NotificationSettings(enabled: false),
+            smsSettings: SmsSettings(enabled: false),
+          );
+
+          // car не в notify_labels → ничего не отправлено
+          expect(sender.sent, isEmpty);
+        });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'stats_overview_tab.dart';
 import 'stats_devices_tab.dart';
+import 'stats_energy_tab.dart';   // ← NEW
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -15,7 +16,7 @@ class _StatsScreenState extends State<StatsScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 2, vsync: this);
+    _tab = TabController(length: 3, vsync: this);   // ← было 2
   }
 
   @override
@@ -34,6 +35,7 @@ class _StatsScreenState extends State<StatsScreen>
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Обзор'),
             Tab(icon: Icon(Icons.devices), text: 'Устройства'),
+            Tab(icon: Icon(Icons.bolt), text: 'Энергия'),   // ← NEW
           ],
         ),
       ),
@@ -42,6 +44,7 @@ class _StatsScreenState extends State<StatsScreen>
         children: const [
           StatsOverviewTab(),
           StatsDevicesTab(),
+          StatsEnergyTab(),   // ← NEW
         ],
       ),
     );

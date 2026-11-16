@@ -11,7 +11,6 @@ import '../../presentation/screens/scan_devices_screen.dart';
 import '../../presentation/screens/rooms_manage_screen.dart';
 import '../../presentation/screens/events_screen.dart';
 import '../../presentation/screens/timers_screen.dart';
-import '../../presentation/screens/statistics_screen.dart';
 import '../../presentation/screens/settings_screen.dart';
 import '../../presentation/screens/cloud_settings_screen.dart';
 import '../../presentation/screens/notification_channels_screen.dart';
@@ -99,15 +98,10 @@ final router = GoRouter(
       builder: (context, state) => const TimersScreen(),
     ),
 
-    GoRoute(
-      path: '/stats',
-      builder: (context, state) => const StatsScreen(),
-    ),
-
     // Статистика
     GoRoute(
       path: '/statistics',
-      builder: (context, state) => const StatisticsScreen(),
+      builder: (context, state) => const StatsScreen(),
     ),
 
     // Энергия

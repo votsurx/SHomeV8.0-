@@ -307,7 +307,7 @@ class SmsSettingsScreen extends ConsumerWidget {
                 return;
               }
               final phone = settings.phones.first;
-              await SmsNotificationService.sendSms(
+              await SmsNotificationService().sendSms(
                 phoneNumber: phone.phone,
                 message: '✅ Тестовое SMS из SHome!',
               );

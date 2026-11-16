@@ -5,6 +5,54 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/services.dart';
 import 'package:shome/domain/models/frigate_models.dart';
+import 'package:shome/domain/repositories/scene_repository.dart';
+import 'package:shome/data/services/notification_sender.dart';
+import 'package:talker/talker.dart';
+import 'package:shome/data/services/presence_detector.dart';
+import 'package:shome/di/injection.dart';
+import 'package:shome/data/services/sms_notification_service.dart';
+
+void setupGetItForTests() {
+  // Talker — нужен NotificationCoordinator, EventLogger, AdaptivePoller
+  if (!getIt.isRegistered<Talker>()) {
+    getIt.registerLazySingleton<Talker>(
+          () => Talker(settings: TalkerSettings(enabled: false)),
+    );
+  }
+  // PresenceDetector — нужен isConditionMet('away')
+  if (!getIt.isRegistered<PresenceDetector>()) {
+    getIt.registerLazySingleton<PresenceDetector>(() => PresenceDetector());
+  }
+}
+
+/// Мок SceneRepository — хранит сцены в памяти, записывает вызовы executeScene.
+class MockSceneRepository implements SceneRepository {
+  final List<Scene> _scenes = [];
+  final List<String> executedSceneIds = [];
+
+  @override
+  Future<List<Scene>> getAllScenes() async => List.from(_scenes);
+
+  @override
+  Future<void> saveScene(Scene scene) async {
+    final idx = _scenes.indexWhere((s) => s.id == scene.id);
+    if (idx != -1) {
+      _scenes[idx] = scene;
+    } else {
+      _scenes.add(scene);
+    }
+  }
+
+  @override
+  Future<void> deleteScene(String id) async {
+    _scenes.removeWhere((s) => s.id == id);
+  }
+
+  @override
+  Future<void> executeScene(Scene scene) async {
+    executedSceneIds.add(scene.id);
+  }
+}
 
 FrigateEvent createFrigateEvent({
   String id = 'evt_1',
@@ -110,4 +158,52 @@ Scene createTestScene({
     actions: actions ?? [const SceneAction(deviceId: 'dev_1', command: 'turnOn')],
     trigger: trigger,
   );
+}
+/// Мок VK-sender для тестов NotificationCoordinator.
+class MockNotificationSender implements NotificationSender {
+  final List<String> sent = [];
+  bool shouldFail = false;
+
+  @override
+  Future<bool> send(String message) async {
+    if (shouldFail) return false;
+    sent.add(message);
+    return true;
+  }
+
+  void reset() {
+    sent.clear();
+    shouldFail = false;
+  }
+}
+/// Мок SMS-сервиса для тестов.
+class MockSmsService implements SmsNotificationService {
+  final List<String> sentSms = [];
+  final List<String> sentAlarms = [];
+  bool shouldFail = false;
+
+  @override
+  Future<bool> requestPermission() async => !shouldFail;
+
+  @override
+  Future<bool> sendSms({
+    required String phoneNumber,
+    required String message,
+  }) async {
+    if (shouldFail) return false;
+    sentSms.add('$phoneNumber: $message');
+    return true;
+  }
+
+  @override
+  Future<bool> sendAlarm({
+    required String phoneNumber,
+    required String cameraName,
+    required String event,
+    double? percent,
+  }) async {
+    if (shouldFail) return false;
+    sentAlarms.add('$phoneNumber: $cameraName:$event');
+    return true;
+  }
 }
