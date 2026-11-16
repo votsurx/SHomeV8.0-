@@ -124,6 +124,10 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   void updateDeviceState(String id, bool isOn) {
     final device = state.firstWhere((d) => d.id == id);
+
+    // P2: не notify если isOn не изменилось
+    if (device.properties['isOn'] == isOn) return;
+
     final updated = device.copyWith(
       properties: {
         ...device.properties,
@@ -145,6 +149,10 @@ class DevicesNotifier extends StateNotifier<List<Device>> {
 
   void updateOnlineState(String id, bool isOnline) {
     final device = state.firstWhere((d) => d.id == id);
+
+    // P2: не notify если состояние не изменилось
+    if (device.isOnline == isOnline) return;
+
     final wasOnline = device.isOnline;
     final updated = device.copyWith(
       isOnline: isOnline,

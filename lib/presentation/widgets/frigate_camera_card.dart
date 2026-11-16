@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/device.dart';
+import '../../application/state/devices_provider.dart';
 import '../../di/injection.dart';
 import '../../data/services/frigate_service.dart';
 import 'frigate_camera_settings.dart';
@@ -40,10 +41,22 @@ class _FrigateCameraCardState extends ConsumerState<FrigateCameraCard> {
 
   @override
   Widget build(BuildContext context) {
+    // P1: live-устройство из провайдера (только своё)
+    final liveDevice = ref.watch(
+      devicesProvider.select(
+            (list) => list.firstWhere(
+              (d) => d.id == widget.device.id,
+          orElse: () => widget.device,
+        ),
+      ),
+    );
+
     final service = getIt<FrigateService>();
-    final cameraName = widget.device.properties['camera_name'] as String? ?? widget.device.name;
-    final isDetecting = widget.device.properties['isDetecting'] as bool? ?? false;
-    final snapshotUrl = 'http://${service.host}:${service.port}/api/$cameraName/latest.jpg?t=$_tick';
+    final cameraName =
+        liveDevice.properties['camera_name'] as String? ?? liveDevice.name;
+    final isDetecting = liveDevice.properties['isDetecting'] as bool? ?? false;
+    final snapshotUrl =
+        'http://${service.host}:${service.port}/api/$cameraName/latest.jpg?t=$_tick';
 
     return Card(
       elevation: isDetecting ? 8 : 4,
@@ -83,29 +96,36 @@ class _FrigateCameraCardState extends ConsumerState<FrigateCameraCard> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7)
+                  ],
                 ),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                borderRadius:
+                const BorderRadius.vertical(bottom: Radius.circular(16)),
               ),
               child: Row(
                 children: [
                   Icon(
-                    widget.device.isOnline ? Icons.circle : Icons.circle_outlined,
+                    liveDevice.isOnline ? Icons.circle : Icons.circle_outlined,
                     size: 12,
-                    color: widget.device.isOnline ? Colors.green : Colors.grey,
+                    color: liveDevice.isOnline ? Colors.green : Colors.grey,
                   ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      widget.device.name,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      liveDevice.name,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.settings,
+                        color: Colors.white, size: 20),
                     tooltip: 'Настройки',
-                    onPressed: () => FrigateCameraSettings.show(context, ref, widget.device),
+                    onPressed: () =>
+                        FrigateCameraSettings.show(context, ref, liveDevice),
                   ),
                 ],
               ),
@@ -117,14 +137,18 @@ class _FrigateCameraCardState extends ConsumerState<FrigateCameraCard> {
               top: 8,
               right: 8,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'LIVE',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
                 ),
               ),
             ),

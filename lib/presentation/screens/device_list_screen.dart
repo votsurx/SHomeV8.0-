@@ -154,16 +154,16 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
                         // 🎥 Frigate-камера — своя карточка
                         if (device.type == DeviceType.camera &&
                             device.properties['source'] == 'frigate') {
-                          return FrigateCameraCard(
+                          return RepaintBoundary(
                             key: ValueKey(device.id),
-                            device: device,
+                            child: FrigateCameraCard(device: device),
                           );
                         }
 
                         // Остальные устройства (Tuya, Zigbee)
-                        return DeviceCard(
+                        return RepaintBoundary(
                           key: ValueKey(device.id),
-                          device: device,
+                          child: DeviceCard(device: device),
                         );
                       }).toList(),
                       onReorder: (oldIndex, newIndex) {

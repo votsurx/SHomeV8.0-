@@ -1,5 +1,20 @@
 # История изменений SHome
 
+## v8.2.9 — Device UI Optimization — 2026-11-16
+
+### ⚡ Производительность карточек
+- **P0**: `RepaintBoundary` на каждой карточке — независимый repaint
+- **P1**: `FrigateCameraCard` → `ref.watch(devicesProvider.select(...))` — только своё устройство
+- **P2**: `updateOnlineState` / `updateDeviceState` — ранний `return` если состояние не изменилось
+
+### 📊 Результат
+- Меньше rebuild'ов: карточка перестраивается только при изменении **своего** устройства
+- Меньше notify: poller каждые 2 сек не дёргает UI, если ничего не изменилось
+- Меньше repaint: `RepaintBoundary` изолирует GPU-слои
+
+### 🔧 versionCode
+- `versionCode` = **80209**
+
 ## v8.2.8 — StatsCache (in-memory events + instant badge) — 2026-11-16
 
 ### 🧠 StatsCache
