@@ -1,5 +1,25 @@
 # История изменений SHome
 
+## v8.2.3 — Frigate Statistics — 2026-11-16
+
+### 🎥 Видеостатистика
+- **`StatsVideoTab`**: 4-я вкладка в `StatsScreen` (Обзор / Устройства / Энергия / Видео)
+- **Детекции по типам** — donut chart (person/car/dog/...) из `events`
+- **По камерам** — bar chart (какая камера ловит больше)
+- **Тепловая карта** — день × час (когда активность)
+- Сегменты 24ч / 7д / 30д
+
+### 🗄️ SQL-хелперы
+- `getFrigateDetectionsByLabel` — детекции по типам
+- `getFrigateDetectionsByCamera` — по камерам
+- `getFrigateHourlyHeatmap` — date × hour → count
+
+### 📦 Архитектура
+- Виджеты (`DetectionDonut`, `CameraBarChart`, `HourHeatmap`) — **внутри** `stats_video_tab.dart` (private, переиспользование не нужно)
+
+### 🔧 versionCode
+- `versionCode` = **80203**
+
 ## v8.2.2 — Energy Statistics — 2026-11-16
 
 ### ⚡ Энергомониторинг

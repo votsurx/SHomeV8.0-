@@ -552,4 +552,68 @@ class AppDatabase {
     await db.insert('stats_settings', {'key': key, 'value': value},
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Frigate детекции (из events)
+  // ═══════════════════════════════════════════════════════════
+
+  /// Детекции по типам (person, car, dog, ...).
+  static Future<Map<String, int>> getFrigateDetectionsByLabel({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT event, COUNT(*) AS cnt
+      FROM events
+      WHERE event LIKE 'frigate_%'
+        AND timestamp >= ? AND timestamp < ?
+      GROUP BY event
+    ''', [fromDate, '$toDate 23:59:59']);
+    final result = <String, int>{};
+    for (final r in rows) {
+      final label = (r['event'] as String).replaceFirst('frigate_', '');
+      result[label] = (r['cnt'] as num).toInt();
+    }
+    return result;
+  }
+
+  /// Детекции по камерам (deviceName = camera).
+  static Future<Map<String, int>> getFrigateDetectionsByCamera({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT deviceName, COUNT(*) AS cnt
+      FROM events
+      WHERE event LIKE 'frigate_%'
+        AND timestamp >= ? AND timestamp < ?
+        AND deviceName IS NOT NULL
+      GROUP BY deviceName
+    ''', [fromDate, '$toDate 23:59:59']);
+    final result = <String, int>{};
+    for (final r in rows) {
+      result[r['deviceName'] as String] = (r['cnt'] as num).toInt();
+    }
+    return result;
+  }
+
+  /// Тепловая карта: date × hour → count.
+  static Future<List<Map<String, Object?>>> getFrigateHourlyHeatmap({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT
+        substr(timestamp, 1, 10) AS date,
+        CAST(substr(timestamp, 12, 2) AS INTEGER) AS hour,
+        COUNT(*) AS count
+      FROM events
+      WHERE event LIKE 'frigate_%'
+        AND timestamp >= ? AND timestamp < ?
+      GROUP BY date, hour
+      ORDER BY date ASC, hour ASC
+    ''', [fromDate, '$toDate 23:59:59']);
+  }
 }
