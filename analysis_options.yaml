@@ -36,3 +36,6 @@ analyzer:
     - web/**
     - macos/**
     - linux/**
+  errors:
+    # Flutter 3.47+ переезжает на material_ui — игнорируем до Flutter 4.0
+    deprecated_member_use: ignore

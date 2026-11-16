@@ -1,5 +1,29 @@
 # История изменений SHome
 
+## v8.2.7 — Room-Filtered Today Drawer — 2026-11-16
+
+### 🏠 Контекстная статистика по комнате
+- **`currentRoomIdProvider`** — `StateProvider<String?>` (null = все комнаты)
+- **`TodayDrawer`** — реактивный, читает `currentRoomIdProvider`
+- **Фильтрация по комнате**: online, алерты, действия, энергия, температура, аномалии
+- **`DeviceListScreen`** — при выборе комнаты (`RoomSelector`) обновляет `currentRoomIdProvider`
+- **`'all'`** → `null` (все комнаты)
+- **`TodayDrawer({roomId})`** — опциональный параметр (если null — из provider)
+
+### 🗄️ SQL-хелперы с `roomId`
+- `getTodayStatsByRoom(date, roomId)` — алерты/действия через `JOIN devices`
+- `getTodayEnergyByRoom(date, roomId)` — энергия/температура через `JOIN devices`
+- `getOnlineCount(roomId)` / `getTotalCount(roomId)` — счётчики устройств
+- `getAnomaliesByRoom(date, roomId)` — battery/linkquality/offline/energy только комнаты
+- **Старые** версии (без `roomId`) **сохранены** — используются в `stats_*_tab.dart`
+
+### ⚠️ Ограничения
+- **Frigate** — `deviceId: 'frigate_<camera>'` не в `devices` → не попадает в комнату (общая система)
+- **Сцены** — `sceneName`, не `deviceId` → не привязаны к комнате (глобальные)
+
+### 🔧 versionCode
+- `versionCode` = **80207**
+
 ## v8.2.6 — Today Drawer + Anomalies — 2026-11-16
 
 ### 🎯 «Сегодня» — EndDrawer на главном

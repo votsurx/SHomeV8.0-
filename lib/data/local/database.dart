@@ -1020,4 +1020,194 @@ class AppDatabase {
       return {};
     }
   }
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Сегодня С ФИЛЬТРОМ ПО КОМНАТЕ (v8.2.7)
+  // ═══════════════════════════════════════════════════════════
+
+  /// Алерты/действия за сегодня. Если [roomId] != null — только устройства комнаты.
+  static Future<Map<String, int>> getTodayStatsByRoom({
+    required String date,
+    String? roomId,
+  }) async {
+    final db = await database;
+    if (roomId == null) {
+      return getTodayStats(date);
+    }
+    final r = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(CASE WHEN e.event LIKE 'alarm_%' OR e.event LIKE 'frigate_%' THEN 1 ELSE 0 END), 0) AS alerts,
+        COALESCE(SUM(CASE WHEN e.event IN ('turnOn','turnOff') THEN 1 ELSE 0 END), 0) AS actions
+      FROM events e
+      JOIN devices d ON d.id = e.deviceId
+      WHERE d.roomId = ? AND e.timestamp >= ? AND e.timestamp < ?
+    ''', [roomId, date, '$date 23:59:59']);
+    final m = r.first;
+    return {
+      'alerts': (m['alerts'] as num).toInt(),
+      'actions': (m['actions'] as num).toInt(),
+    };
+  }
+
+  /// Энергия + средняя температура за сегодня. Если [roomId] != null — только комнаты.
+  static Future<Map<String, double>> getTodayEnergyByRoom({
+    required String date,
+    String? roomId,
+  }) async {
+    final db = await database;
+    if (roomId == null) {
+      return getTodayEnergy(date);
+    }
+    final energyR = await db.rawQuery('''
+      SELECT COALESCE(SUM(e.totalEnergy), 0) AS kwh
+      FROM energy_log e
+      JOIN devices d ON d.id = e.deviceId
+      WHERE d.roomId = ? AND e.date = ?
+    ''', [roomId, date]);
+    final tempR = await db.rawQuery('''
+      SELECT COALESCE(AVG(s.temperature), 0) AS avg_temp
+      FROM sensor_log s
+      JOIN devices d ON d.id = s.deviceId
+      WHERE d.roomId = ? AND s.timestamp >= ? AND s.timestamp < ?
+        AND s.temperature IS NOT NULL
+    ''', [roomId, date, '$date 23:59:59']);
+    final e = energyR.first;
+    final t = tempR.first;
+    return {
+      'kwh': (e['kwh'] as num).toDouble(),
+      'avg_temp': (t['avg_temp'] as num).toDouble(),
+    };
+  }
+
+  /// Количество online-устройств в комнате (или всех).
+  static Future<int> getOnlineCount({String? roomId}) async {
+    final db = await database;
+    final r = roomId == null
+        ? await db.rawQuery('SELECT COUNT(*) AS cnt FROM devices WHERE isOnline = 1')
+        : await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM devices WHERE isOnline = 1 AND roomId = ?',
+      [roomId],
+    );
+    return (r.first['cnt'] as num).toInt();
+  }
+
+  /// Общее количество устройств в комнате (или всех).
+  static Future<int> getTotalCount({String? roomId}) async {
+    final db = await database;
+    final r = roomId == null
+        ? await db.rawQuery('SELECT COUNT(*) AS cnt FROM devices')
+        : await db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM devices WHERE roomId = ?',
+      [roomId],
+    );
+    return (r.first['cnt'] as num).toInt();
+  }
+
+  /// Аномалии за сегодня. Если [roomId] != null — только устройства комнаты.
+  static Future<List<Map<String, Object?>>> getAnomaliesByRoom({
+    required String date,
+    String? roomId,
+  }) async {
+    final db = await database;
+    final result = <Map<String, Object?>>[];
+
+    // 1. Battery < 20% / Linkquality < 30 (из devices.properties)
+    final devices = roomId == null
+        ? await db.query('devices')
+        : await db.query('devices', where: 'roomId = ?', whereArgs: [roomId]);
+    for (final d in devices) {
+      final propsRaw = d['properties'] as String?;
+      if (propsRaw == null) continue;
+      try {
+        final props = _parseProps(propsRaw);
+        final battery = (props['battery'] as num?)?.toInt();
+        if (battery != null && battery < 20) {
+          result.add({
+            'type': 'battery',
+            'title': '🔋 ${d['name']}',
+            'subtitle': 'Батарея $battery%',
+          });
+        }
+        final lq = (props['linkquality'] as num?)?.toInt();
+        if (lq != null && lq < 30) {
+          result.add({
+            'type': 'linkquality',
+            'title': '📶 ${d['name']}',
+            'subtitle': 'Linkquality $lq (плохо)',
+          });
+        }
+      } catch (_) {}
+    }
+
+    // 2. Offline > 5 раз за сегодня (join по devices, если roomId)
+    final offlineSql = roomId == null
+        ? '''
+          SELECT e.deviceId, e.deviceName, COUNT(*) AS cnt
+          FROM events e
+          WHERE e.event = 'offline' AND e.timestamp >= ? AND e.timestamp < ?
+          GROUP BY e.deviceId
+          HAVING cnt > 5
+        '''
+        : '''
+          SELECT e.deviceId, e.deviceName, COUNT(*) AS cnt
+          FROM events e
+          JOIN devices d ON d.id = e.deviceId
+          WHERE e.event = 'offline' AND d.roomId = ?
+            AND e.timestamp >= ? AND e.timestamp < ?
+          GROUP BY e.deviceId
+          HAVING cnt > 5
+        ''';
+    final offlineArgs = roomId == null
+        ? [date, '$date 23:59:59']
+        : [roomId, date, '$date 23:59:59'];
+    final offlineRows = await db.rawQuery(offlineSql, offlineArgs);
+    for (final r in offlineRows) {
+      result.add({
+        'type': 'offline',
+        'title': '📡 ${r['deviceName'] ?? '—'}',
+        'subtitle': 'Offline ${r['cnt']} раз сегодня',
+      });
+    }
+
+    // 3. Энергия > 1.5× avg за 30 дней
+    final energySql = roomId == null
+        ? '''
+          WITH avg30 AS (
+            SELECT deviceId, AVG(totalEnergy) AS avg_kwh
+            FROM energy_log
+            WHERE date >= date('now', '-30 days') AND date < ?
+            GROUP BY deviceId
+          )
+          SELECT e.deviceId, e.deviceName, e.totalEnergy, a.avg_kwh
+          FROM energy_log e
+          JOIN avg30 a ON a.deviceId = e.deviceId
+          WHERE e.date = ? AND e.totalEnergy > a.avg_kwh * 1.5
+        '''
+        : '''
+          WITH avg30 AS (
+            SELECT deviceId, AVG(totalEnergy) AS avg_kwh
+            FROM energy_log
+            WHERE date >= date('now', '-30 days') AND date < ?
+            GROUP BY deviceId
+          )
+          SELECT e.deviceId, e.deviceName, e.totalEnergy, a.avg_kwh
+          FROM energy_log e
+          JOIN avg30 a ON a.deviceId = e.deviceId
+          JOIN devices d ON d.id = e.deviceId
+          WHERE e.date = ? AND d.roomId = ? AND e.totalEnergy > a.avg_kwh * 1.5
+        ''';
+    final energyArgs = roomId == null
+        ? [date, date]
+        : [date, date, roomId];
+    final energyAnomalies = await db.rawQuery(energySql, energyArgs);
+    for (final r in energyAnomalies) {
+      result.add({
+        'type': 'energy',
+        'title': '⚡ ${r['deviceName'] ?? '—'}',
+        'subtitle':
+        '${(r['totalEnergy'] as num).toStringAsFixed(2)} кВт·ч (норма ${(r['avg_kwh'] as num).toStringAsFixed(2)})',
+      });
+    }
+
+    return result;
+  }
 }

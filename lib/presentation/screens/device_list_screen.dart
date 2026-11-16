@@ -18,6 +18,7 @@ import 'dart:async';
 import 'dart:convert';
 import '../widgets/edge_handle.dart';
 import '../widgets/today_drawer.dart';
+import '../../application/state/current_room_provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import '../../application/onboarding_manager.dart';
 import '../widgets/frigate_camera_card.dart';
@@ -34,6 +35,13 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
   DeviceType _selectedType = DeviceType.outlet;
   AdaptivePoller? _poller;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _onRoomSelected(String roomId) {
+    setState(() => _selectedRoomId = roomId);
+    final effective = roomId == 'all' ? null : roomId;
+    // обновляем глобальный провайдер (для TodayDrawer)
+    ref.read(currentRoomIdProvider.notifier).state = effective;
+  }
 
   @override
   void initState() {
@@ -91,8 +99,8 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
         : allDevices.where((d) => d.roomId == _selectedRoomId).toList();
 
     return Scaffold(
-      key: _scaffoldKey,                                    // ← NEW
-      endDrawer: const TodayDrawer(),                       // ← NEW
+      key: _scaffoldKey,
+      endDrawer: const TodayDrawer(),
       appBar: AppBar(
         title: const Row(
           children: [
@@ -116,7 +124,7 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
             children: [
               RoomSelector(
                 selectedRoomId: _selectedRoomId,
-                onRoomSelected: (room) => setState(() => _selectedRoomId = room.id),
+                onRoomSelected: (room) => _onRoomSelected(room.id),
               ),
               const Divider(),
               Expanded(
