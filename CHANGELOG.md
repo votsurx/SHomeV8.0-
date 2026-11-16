@@ -1,5 +1,27 @@
 # История изменений SHome
 
+## v8.2.5 — Notifications & Noise — 2026-11-16
+
+### 🔔 Статистика уведомлений
+- **`StatsNotificationsTab`**: 8-я плитка в `StatsScreen`
+- **Отправлено / Подавлено** — счётчики за 24ч / 7д / 30д
+- **По каналам**: VK vs SMS (отправлено + подавлено)
+- **По категориям**: bar chart + список (water_leak, smoke, person, offline, ...)
+- Процент подавленных cooldown
+
+### 🗄️ База данных v11
+- **`notification_stats_daily`**: date, channel, category, sent, suppressed_by_cooldown
+- SQL: `incrementNotificationSent`, `incrementNotificationSuppressed`, `getNotificationByCategory`, `getNotificationByChannel`, `getNotificationTotals`
+
+### 🔔 NotificationCoordinator
+- `_logSent(channel, category)` — после успешной отправки VK/SMS
+- `_logSuppressed(channel, category)` — при срабатывании cooldown
+- VK: `try/catch` вокруг `_vkSender.send`
+- SMS: `_logSent` **до** цикла по телефонам (один раз на уведомление)
+
+### 🔧 versionCode
+- `versionCode` = **80205**
+
 ## v8.2.4 — Scenes, Presence, Climate — 2026-11-16
 
 ### 🎬 Сцены

@@ -27,7 +27,7 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 10, // ← NEW: было 9
+      version: 11,
       onCreate: (db, version) async {
         // ─── существующие таблицы ───
         await db.execute('''
@@ -111,6 +111,17 @@ class AppDatabase {
             triggerRepeat TEXT
           )
         ''');
+        // notification_stats_daily — отправки уведомлений
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS notification_stats_daily (
+            date TEXT NOT NULL,
+            channel TEXT NOT NULL,
+            category TEXT NOT NULL,
+            sent INTEGER NOT NULL DEFAULT 0,
+            suppressed_by_cooldown INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (date, channel, category)
+          )
+        ''');
 
         // ─── индексы ───
         await db.execute('CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)');
@@ -192,7 +203,6 @@ class AppDatabase {
           await db.execute('CREATE INDEX IF NOT EXISTS idx_energy_log_device_date ON energy_log(deviceId, date)');
           await _createStatsTables(db);
         }
-        // ─── NEW: миграция v9 → v10 (presence_daily) ───
         if (oldVersion < 10) {
           await db.execute('''
             CREATE TABLE IF NOT EXISTS presence_daily (
@@ -202,6 +212,18 @@ class AppDatabase {
               away_sec INTEGER NOT NULL DEFAULT 0,
               unknown_sec INTEGER NOT NULL DEFAULT 0,
               cloud_fallback_count INTEGER NOT NULL DEFAULT 0
+            )
+          ''');
+        }
+        if (oldVersion < 11) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS notification_stats_daily (
+              date TEXT NOT NULL,
+              channel TEXT NOT NULL,
+              category TEXT NOT NULL,
+              sent INTEGER NOT NULL DEFAULT 0,
+              suppressed_by_cooldown INTEGER NOT NULL DEFAULT 0,
+              PRIMARY KEY (date, channel, category)
             )
           ''');
         }
@@ -786,5 +808,99 @@ class AppDatabase {
         AND (temperature IS NOT NULL OR humidity IS NOT NULL)
       ORDER BY timestamp ASC
     ''', [deviceId, fromDate, '$toDate 23:59:59']);
+  }
+  // ═══════════════════════════════════════════════════════════
+  // STATS: Уведомления (notification_stats_daily)
+  // ═══════════════════════════════════════════════════════════
+
+  /// Инкремент отправленного уведомления.
+  static Future<void> incrementNotificationSent({
+    required String date,
+    required String channel,   // 'vk' | 'sms'
+    required String category,
+  }) async {
+    final db = await database;
+    await db.rawInsert('''
+      INSERT INTO notification_stats_daily (date, channel, category, sent)
+      VALUES (?, ?, ?, 1)
+      ON CONFLICT(date, channel, category) DO UPDATE SET sent = sent + 1
+    ''', [date, channel, category]);
+  }
+
+  /// Инкремент подавленного cooldown.
+  static Future<void> incrementNotificationSuppressed({
+    required String date,
+    required String channel,
+    required String category,
+  }) async {
+    final db = await database;
+    await db.rawInsert('''
+      INSERT INTO notification_stats_daily
+        (date, channel, category, suppressed_by_cooldown)
+      VALUES (?, ?, ?, 1)
+      ON CONFLICT(date, channel, category) DO UPDATE SET
+        suppressed_by_cooldown = suppressed_by_cooldown + 1
+    ''', [date, channel, category]);
+  }
+
+  /// Топ категорий по отправкам.
+  static Future<List<Map<String, Object?>>> getNotificationByCategory({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    return db.rawQuery('''
+      SELECT category,
+        SUM(sent) AS sent,
+        SUM(suppressed_by_cooldown) AS suppressed
+      FROM notification_stats_daily
+      WHERE date BETWEEN ? AND ?
+      GROUP BY category
+      ORDER BY sent DESC
+    ''', [fromDate, toDate]);
+  }
+
+  /// По каналам (VK vs SMS).
+  static Future<Map<String, Map<String, int>>> getNotificationByChannel({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final rows = await db.rawQuery('''
+      SELECT channel,
+        SUM(sent) AS sent,
+        SUM(suppressed_by_cooldown) AS suppressed
+      FROM notification_stats_daily
+      WHERE date BETWEEN ? AND ?
+      GROUP BY channel
+    ''', [fromDate, toDate]);
+    final result = <String, Map<String, int>>{};
+    for (final r in rows) {
+      result[r['channel'] as String] = {
+        'sent': (r['sent'] as num).toInt(),
+        'suppressed': (r['suppressed'] as num).toInt(),
+      };
+    }
+    return result;
+  }
+
+  /// Суммарно за период.
+  static Future<Map<String, int>> getNotificationTotals({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    final db = await database;
+    final r = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(sent), 0) AS sent,
+        COALESCE(SUM(suppressed_by_cooldown), 0) AS suppressed
+      FROM notification_stats_daily
+      WHERE date BETWEEN ? AND ?
+    ''', [fromDate, toDate]);
+    final m = r.first;
+    return {
+      'sent': (m['sent'] as num).toInt(),
+      'suppressed': (m['suppressed'] as num).toInt(),
+    };
   }
 }

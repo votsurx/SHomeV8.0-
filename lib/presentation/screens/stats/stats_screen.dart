@@ -3,9 +3,10 @@ import 'stats_overview_tab.dart';
 import 'stats_devices_tab.dart';
 import 'stats_energy_tab.dart';
 import 'stats_video_tab.dart';
-import 'stats_scenes_tab.dart';      // ← NEW (пока не создан — закомментируй)
-import 'stats_presence_tab.dart';    // ← NEW (пока не создан — закомментируй)
-import 'stats_climate_tab.dart';     // ← NEW (пока не создан — закомментируй)
+import 'stats_scenes_tab.dart';
+import 'stats_presence_tab.dart';
+import 'stats_climate_tab.dart';
+import 'stats_notifications_tab.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -24,6 +25,7 @@ class _StatsScreenState extends State<StatsScreen> {
     _StatTab(label: 'Сцены', icon: Icons.movie),
     _StatTab(label: 'Присутствие', icon: Icons.location_on),
     _StatTab(label: 'Климат', icon: Icons.thermostat),
+    _StatTab(label: 'Уведомления', icon: Icons.notifications),
   ];
 
   Widget _buildContent() {
@@ -35,6 +37,7 @@ class _StatsScreenState extends State<StatsScreen> {
       case 4: return const StatsScenesTab();
       case 5: return const StatsPresenceTab();
       case 6: return const StatsClimateTab();
+      case 7: return const StatsNotificationsTab();
       default: return const StatsOverviewTab();
     }
   }

@@ -19,6 +19,7 @@ import 'sms_notification_service.dart';
 import 'vk_notification_service.dart';
 import 'package:flutter/foundation.dart';
 import 'notification_sender.dart';
+import '../local/database.dart';
 
 class NotificationCoordinator {
   static final NotificationCoordinator _instance =
@@ -33,6 +34,35 @@ class NotificationCoordinator {
   // 🆕 Инъекция для тестов
   NotificationSender _vkSender = VkNotificationSender();
   SmsNotificationService _smsService = SmsNotificationService();
+
+  String _todayDate() {
+    final d = DateTime.now();
+    return '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Логирует отправку уведомления.
+  Future<void> _logSent(String channel, String category) async {
+    try {
+      await AppDatabase.incrementNotificationSent(
+        date: _todayDate(),
+        channel: channel,
+        category: category,
+      );
+    } catch (_) {}
+  }
+
+  /// Логирует подавление cooldown.
+  Future<void> _logSuppressed(String channel, String category) async {
+    try {
+      await AppDatabase.incrementNotificationSuppressed(
+        date: _todayDate(),
+        channel: channel,
+        category: category,
+      );
+    } catch (_) {}
+  }
 
   @visibleForTesting
   void setSendersForTest({
@@ -135,7 +165,14 @@ class NotificationCoordinator {
           _isVkTypeEnabled(vkSettings, type, device)) {
         final key = 'vk_${type}_${device.id}';
         if (_checkDebounce(key, vkCooldown)) {
-          await _vkSender.send('$title\n$message');
+          try {
+            await _vkSender.send('$title\n$message');
+            await _logSent('vk', type);
+          } catch (e) {
+            // логируем ошибку, но не роняем notifyDevice
+          }
+        } else {
+          await _logSuppressed('vk', type);
         }
       }
 
@@ -144,12 +181,19 @@ class NotificationCoordinator {
           _isSmsTypeEnabled(smsSettings, type, device)) {
         final key = 'sms_${type}_${device.id}';
         if (_checkDebounce(key, smsCooldown)) {
+          await _logSent('sms', type);
           for (final phone in smsSettings.phones.where((p) => p.enabled)) {
-            await _smsService.sendSms(
-              phoneNumber: phone.phone,
-              message: 'SHome: $title\n$message',
-            );
+            try {
+              await _smsService.sendSms(
+                phoneNumber: phone.phone,
+                message: 'SHome: $title\n$message',
+              );
+            } catch (e) {
+              // не роняем, если один телефон не отправился
+            }
           }
+        } else {
+          await _logSuppressed('sms', type);
         }
       }
     } catch (e) {
