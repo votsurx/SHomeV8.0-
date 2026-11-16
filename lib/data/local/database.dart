@@ -1249,4 +1249,28 @@ class AppDatabase {
     final db = await database;
     return db.delete('events', where: 'timestamp < ?', whereArgs: [cutoff]);
   }
+  /// События из БД, исключая те, что уже в памяти (по ключу).
+  /// [excludeKeys] — ключи из StatsCache (timestamp|event|deviceId).
+  static Future<List<EventEntity>> getEventsPaginated({
+    required int limit,
+    required int offset,
+    required Set<String> excludeKeys,
+  }) async {
+    final db = await database;
+    final maps = await db.query(
+      'events',
+      orderBy: 'id DESC',
+      limit: limit,
+      offset: offset,
+    );
+    final result = <EventEntity>[];
+    for (final m in maps) {
+      final e = EventEntity.fromMap(m);
+      final key = '${e.timestamp}|${e.event}|${e.deviceId ?? ''}';
+      if (!excludeKeys.contains(key)) {
+        result.add(e);
+      }
+    }
+    return result;
+  }
 }

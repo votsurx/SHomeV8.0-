@@ -1,5 +1,24 @@
 # История изменений SHome
 
+## v8.3.0 — Events Screen on StatsCache (pagination) — 2026-11-16
+
+### 📜 Журнал событий на StatsCache
+- **`events_screen.dart`** — переписан: читает из `StatsCache` (200 в памяти) + БД (пагинация)
+- **Мгновенное открытие** — 200 последних из памяти (0 SQL)
+- **Мгновенные новые события** — через `StatsCache.addListener` (без refresh)
+- **Пагинация** — скролл вниз → подгрузка по 50 из БД
+- **Дедупликация** память ↔ БД по ключу `timestamp|event|deviceId`
+- **Очистка** — чистит БД + `StatsCache.clear()`
+
+### 🗄️ SQL
+- `AppDatabase.getEventsPaginated(limit, offset, excludeKeys)` — пагинация с исключением памяти
+
+### 🧠 StatsCache
+- `clear()` — очистка кэша (при очистке журнала)
+
+### 🔧 versionCode
+- `versionCode` = **80300**
+
 ## v8.2.9 — Device UI Optimization — 2026-11-16
 
 ### ⚡ Производительность карточек

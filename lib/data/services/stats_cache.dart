@@ -21,6 +21,8 @@ class StatsCache extends ChangeNotifier {
   int get anomalyCount => _anomalyCount;
   bool get isLoaded => _loaded;
 
+  String keyOf(EventEntity e) => '${e.timestamp}|${e.event}|${e.deviceId ?? ''}';
+
   /// Загрузка последних 200 событий из БД при старте.
   Future<void> loadFromDb() async {
     if (_loaded) return;
@@ -35,6 +37,12 @@ class StatsCache extends ChangeNotifier {
     } catch (e) {
       debugPrint('StatsCache.loadFromDb error: $e');
     }
+  }
+  /// Очистить кэш (при очистке журнала).
+  void clear() {
+    _recentEvents.clear();
+    _anomalyCount = 0;
+    notifyListeners();
   }
 
   /// Добавить событие в кэш (вызывается из EventLogger.log).
