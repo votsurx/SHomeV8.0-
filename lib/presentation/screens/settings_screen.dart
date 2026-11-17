@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../../application/services/update_service.dart';
+import '../../data/services/adaptive_poller.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
 import 'package:restart_app/restart_app.dart';
@@ -15,7 +15,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  int _pollInterval = 2;
+  int _pollIntervalMs = AdaptivePoller.defaultIntervalMs;
 
   @override
   void initState() {
@@ -24,10 +24,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
+    final ms = await AdaptivePoller.readIntervalMs();
     if (!mounted) return;
     setState(() {
-      _pollInterval = prefs.getInt('poll_interval') ?? 2;
+      _pollIntervalMs = ms;
     });
   }
 
@@ -147,30 +147,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ListTile(
               leading: const Icon(Icons.timer, color: Colors.orange),
               title: const Text('Интервал опроса'),
-              subtitle: Text('$_pollInterval сек'),
+              subtitle: Text(AdaptivePoller.formatIntervalMs(_pollIntervalMs)),
               onTap: () async {
                 final selected = await showDialog<int>(
                   context: context,
                   builder: (ctx) => SimpleDialog(
                     title: const Text('Интервал опроса'),
-                    children: [2, 5, 10, 30]
-                        .map((s) => SimpleDialogOption(
-                      onPressed: () => Navigator.pop(ctx, s),
-                      child: Text('$s секунд'),
+                    children: AdaptivePoller.intervalOptions.entries
+                        .map((e) => SimpleDialogOption(
+                      onPressed: () => Navigator.pop(ctx, e.key),
+                      child: Text(e.value),
                     ))
                         .toList(),
                   ),
                 );
                 if (!context.mounted) return;
                 if (selected != null) {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setInt('poll_interval', selected);
+                  await AdaptivePoller.writeIntervalMs(selected);
                   if (!context.mounted) return;
-                  setState(() => _pollInterval = selected);
+                  setState(() => _pollIntervalMs = selected);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Интервал изменён на $selected сек. Перезапустите приложение.',
+                        'Интервал изменён на '
+                            '${AdaptivePoller.formatIntervalMs(selected)}. '
+                            'Перезапустите приложение.',
                       ),
                     ),
                   );
@@ -191,23 +192,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text('${snap.data ?? '30'} дней'),
               ),
               onTap: () async {
-                final current = await AppDatabase.getStatsSetting(
-                    'events_retention_days');
+                final current = await AppDatabase.getStatsSetting('events_retention_days') ?? '30';
+                if (!context.mounted) return;
                 final selected = await showDialog<int>(
                   context: context,
                   builder: (ctx) => SimpleDialog(
                     title: const Text('Хранить события'),
-                    children: [30, 60, 90, 365]
-                        .map((d) => SimpleDialogOption(
+                    children: [30, 60, 90, 365].map((d) => SimpleDialogOption(
                       onPressed: () => Navigator.pop(ctx, d),
-                      child: Text('$d дней'),
-                    ))
-                        .toList(),
+                      child: Row(
+                        children: [
+                          if (d.toString() == current)
+                            const Icon(Icons.check, color: Colors.green, size: 18),
+                          const SizedBox(width: 8),
+                          Text('$d дней'),
+                        ],
+                      ),
+                    )).toList(),
                   ),
                 );
                 if (selected != null) {
-                  await AppDatabase.setStatsSetting(
-                      'events_retention_days', '$selected');
+                  await AppDatabase.setStatsSetting('events_retention_days', '$selected');
                   if (mounted) setState(() {});
                 }
               },

@@ -21,6 +21,7 @@ import '../../application/state/notification_settings_provider.dart';
 import '../../application/state/sms_settings_provider.dart';
 import 'notification_coordinator.dart';
 import '../local/database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdaptivePoller {
   final TuyaProtocol _tuyaProtocol;
@@ -51,6 +52,54 @@ class AdaptivePoller {
         this.onSensorUpdate,
         Duration normalInterval = const Duration(seconds: 2),
       }) : _normalInterval = normalInterval;
+
+  // ═══════════════════════════════════════════════════════════
+  // ИНТЕРВАЛ ОПРОСА (SharedPreferences + миграция)
+  // ═══════════════════════════════════════════════════════════
+
+  static const _prefsKey = 'poll_interval_ms';
+  static const _legacyKey = 'poll_interval';
+  static const defaultIntervalMs = 2000;
+
+  /// Доступные интервалы (мс) с подписями.
+  static const intervalOptions = <int, String>{
+    500: '500 мс',
+    1000: '1 сек',
+    2000: '2 сек',
+    5000: '5 сек',
+    10000: '10 сек',
+    30000: '30 сек',
+  };
+
+  /// Читает интервал из prefs (с миграцией из старого `poll_interval` в сек).
+  static Future<int> readIntervalMs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ms = prefs.getInt(_prefsKey);
+    if (ms != null) return ms;
+
+    // Миграция: старый poll_interval (сек) → poll_interval_ms
+    final legacySec = prefs.getInt(_legacyKey);
+    if (legacySec != null) {
+      final migrated = legacySec * 1000;
+      await prefs.setInt(_prefsKey, migrated);
+      await prefs.remove(_legacyKey);
+      return migrated;
+    }
+
+    return defaultIntervalMs;
+  }
+
+  /// Сохраняет интервал (мс).
+  static Future<void> writeIntervalMs(int ms) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsKey, ms);
+  }
+
+  /// Форматирует мс в человекочитаемое.
+  static String formatIntervalMs(int ms) {
+    if (ms < 1000) return '$ms мс';
+    return '${ms ~/ 1000} сек';
+  }
 
   Future<void> pollOnce(String deviceId) {
     final completer = Completer<void>();

@@ -10,7 +10,6 @@ import '../../application/state/devices_provider.dart';
 import '../widgets/device_card.dart';
 import '../widgets/room_selector.dart';
 import '../../data/services/adaptive_poller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talker/talker.dart';
 import '../../di/injection.dart';
 import '../../data/protocols/tuya_protocol.dart';
@@ -58,9 +57,8 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
   }
 
   Future<void> _initPoller() async {
-    final prefs = await SharedPreferences.getInstance();
-    final seconds = prefs.getInt('poll_interval') ?? 2;
-    final interval = Duration(seconds: seconds);
+    final ms = await AdaptivePoller.readIntervalMs();
+    final interval = Duration(milliseconds: ms);
 
     if (!mounted) return;
 
@@ -118,9 +116,9 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
           ),
         ],
       ),
-      body: Stack(                                          // ← NEW: Stack
+      body: Stack(
         children: [
-          Column(                                           // ← существующий body
+          Column(
             children: [
               RoomSelector(
                 selectedRoomId: _selectedRoomId,
