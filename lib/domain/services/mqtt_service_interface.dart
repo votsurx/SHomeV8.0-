@@ -1,6 +1,4 @@
-/// Интерфейс MQTT сервиса — заготовка на будущее.
-/// Определяет методы для подключения к MQTT брокеру, подписки и публикации.
-/// Реализован в MqttServiceImpl (не используется активно).
+
 import 'dart:async';
 
 abstract class MqttService {
@@ -14,8 +12,12 @@ abstract class MqttService {
   Future<void> publish(String topic, String message);
   /// Поток входящих сообщений
   Stream<MqttMessageData> get messageStream;
+  /// Поток состояния подключения (true = connected, false = disconnected)
+  Stream<bool> get connectionStream;   // ← NEW
   /// Проверяет, подключён ли клиент
   bool get isConnected;
+  /// Закрыть ресурсы (контроллеры, соединение)
+  Future<void> dispose();   // ← NEW
 }
 
 /// Данные входящего MQTT сообщения.

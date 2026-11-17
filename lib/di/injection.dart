@@ -20,6 +20,7 @@ import '../domain/services/mqtt_service_interface.dart';
 import '../data/services/mqtt_service_impl.dart';
 import '../data/services/frigate_service.dart';
 import '../data/services/frigate_bridge.dart';
+import '../data/services/mqtt_connection_manager.dart';
 
 final getIt = GetIt.instance;
 
@@ -38,6 +39,13 @@ void configureDependencies() {
 
   getIt.registerLazySingleton<MqttService>(
         () => MqttServiceImpl(getIt<Talker>()),
+  );
+
+  getIt.registerLazySingleton<MqttConnectionManager>(
+        () => MqttConnectionManager(
+      getIt<MqttService>(),
+      getIt<Talker>(),
+    ),
   );
 
   // ============================================================

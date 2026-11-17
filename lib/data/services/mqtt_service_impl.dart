@@ -1,7 +1,4 @@
-/// Реализация MQTT клиента (заготовка на будущее).
-/// Позволяет подключаться к MQTT брокеру, подписываться на топики,
-/// публиковать сообщения и слушать входящие.
-/// Не используется в текущей версии — устройства управляются через TuyaProtocol.
+
 library;
 import 'dart:async';
 import 'package:mqtt_client/mqtt_client.dart';
@@ -13,8 +10,21 @@ class MqttServiceImpl implements MqttService {
   final Talker _talker;
   /// MQTT клиент
   MqttServerClient? _client;
+
+  /// Подписка на поток сообщений клиента.
+  StreamSubscription<dynamic>? _updatesSubscription;
+
+  /// Защита от повторного dispose.
+  bool _disposed = false;
   /// Поток входящих сообщений
   final _messageController = StreamController<MqttMessageData>.broadcast();
+
+  /// Поток состояния подключения (true = connected, false = disconnected)
+  final _connectionController = StreamController<bool>.broadcast();
+
+  /// Поток состояния подключения.
+  @override
+  Stream<bool> get connectionStream => _connectionController.stream;
 
   MqttServiceImpl(this._talker);
 
@@ -30,54 +40,104 @@ class MqttServiceImpl implements MqttService {
   /// Подписывается на входящие сообщения и передаёт их в messageStream.
   @override
   Future<void> connect(String broker, {int port = 1883}) async {
+    if (_disposed) {
+      throw StateError('MqttServiceImpl уже закрыт');
+    }
+
     try {
       _talker.info('Connecting to MQTT broker: $broker:$port');
 
-      _client = MqttServerClient(broker, 'shome_client_01');  // ← ФИКСИРОВАННЫЙ ID
-      _client!.port = port;
-      _client!.keepAlivePeriod = 20;
-      _client!.logging(on: false);
-      _client!.setProtocolV311();  // ← MQTT 3.1.1 (поддержка больших сообщений)
-      _client!.onDisconnected = _onDisconnected;
-      _client!.onConnected = _onConnected;
+      // Убираем подписку и клиент от предыдущей попытки.
+      await _updatesSubscription?.cancel();
+      _updatesSubscription = null;
+      _client?.disconnect();
+
+      final client = MqttServerClient(broker, 'shome_client_01');
+      _client = client;
+
+      client.port = port;
+      client.keepAlivePeriod = 20;
+      client.logging(on: false);
+      client.setProtocolV311();
+
+      // Повторными попытками управляет MqttConnectionManager.
+      client.autoReconnect = false;
+
+      client.onDisconnected = _onDisconnected;
+      client.onConnected = _onConnected;
 
       final connMessage = MqttConnectMessage()
           .withClientIdentifier('shome_client_01')
-      // ❌ НЕ ВЫЗЫВАЕМ .startClean() → сессия сохраняется
+      // Сессию не сбрасываем.
           .withWillQos(MqttQos.atMostOnce);
-      _client!.connectionMessage = connMessage;
+      client.connectionMessage = connMessage;
 
-      await _client!.connect();
+      await client.connect();
 
-      // Слушаем входящие сообщения
-      _client!.updates!.listen((List<MqttReceivedMessage<MqttMessage?>> messages) {
-        for (final msg in messages) {
-          final recMessage = msg.payload as MqttPublishMessage;
-          final payload = MqttPublishPayload.bytesToStringAsString(
-            recMessage.payload.message,
-          );
-          final mqttMessage = MqttMessageData(topic: msg.topic, payload: payload);
-          _messageController.add(mqttMessage);
-        }
-      });
+      // connect() может завершиться без исключения, но без соединения.
+      if (!isConnected) {
+        throw StateError(
+          'MQTT-клиент не подключился: '
+              '${client.connectionStatus?.state}',
+        );
+      }
+
+      final updates = client.updates;
+      if (updates == null) {
+        throw StateError('MQTT-клиент не предоставил поток updates');
+      }
+
+      // Слушатель сообщений устанавливаем до уведомления менеджера
+      // об успешном подключении.
+      _updatesSubscription = updates.listen(
+            (List<MqttReceivedMessage<MqttMessage?>> messages) {
+          for (final msg in messages) {
+            final recMessage = msg.payload as MqttPublishMessage;
+            final payload = MqttPublishPayload.bytesToStringAsString(
+              recMessage.payload.message,
+            );
+
+            _messageController.add(
+              MqttMessageData(topic: msg.topic, payload: payload),
+            );
+          }
+        },
+      );
 
       _talker.info('Connected to MQTT broker');
+      if (!_connectionController.isClosed) {
+        _connectionController.add(true);
+      }
     } catch (e, stackTrace) {
       _talker.error('Failed to connect to MQTT broker', e, stackTrace);
+
+      if (!_connectionController.isClosed) {
+        _connectionController.add(false);
+      }
+
+      rethrow;
     }
   }
 
   void _onDisconnected() {
     _talker.warning('⚠️ MQTT disconnected');
+
+    if (!_connectionController.isClosed) {
+      _connectionController.add(false);
+    }
   }
 
   void _onConnected() {
-    _talker.info('✅ MQTT reconnected');
+    // Успех первоначального подключения будет отправлен из connect()
+    // после настройки updates.listen.
+    _talker.info('✅ MQTT connected');
   }
 
   /// Отключается от MQTT брокера.
   @override
   Future<void> disconnect() async {
+    await _updatesSubscription?.cancel();
+    _updatesSubscription = null;
     _client?.disconnect();
   }
 
@@ -100,6 +160,25 @@ class MqttServiceImpl implements MqttService {
       final builder = MqttClientPayloadBuilder();
       builder.addString(message);
       _client!.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+    }
+  }
+  /// Закрыть контроллеры.
+  @override
+  Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
+
+    await _updatesSubscription?.cancel();
+    _updatesSubscription = null;
+
+    _client?.disconnect();
+    _client = null;
+
+    if (!_messageController.isClosed) {
+      await _messageController.close();
+    }
+    if (!_connectionController.isClosed) {
+      await _connectionController.close();
     }
   }
 }

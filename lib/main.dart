@@ -33,9 +33,14 @@ import 'application/state/devices_provider.dart';
 import 'di/global_container.dart';
 import 'data/services/stats_aggregator.dart';
 import 'data/local/database.dart';
+import 'data/services/mqtt_connection_manager.dart';
 
 /// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
 MqttService? globalMqttService;
+
+StreamSubscription<MqttState>? _mqttStateSubscription;
+Future<void> _mqttBridgeOperations = Future<void>.value();
+Future<void>? _mqttShutdownFuture;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +71,43 @@ void main() async {
       child: SHomeAppObserver(child: SHomeApp()),
     ),
   );
+}
+
+Future<void> _shutdownMqttResources() {
+  return _mqttShutdownFuture ??= _performMqttShutdown();
+}
+
+Future<void> _performMqttShutdown() async {
+  await _mqttStateSubscription?.cancel();
+  _mqttStateSubscription = null;
+
+  await _mqttBridgeOperations;
+
+  try {
+    await getIt<ZigbeeBridge>().stop();
+  } catch (e, st) {
+    getIt<Talker>().error('❌ ZigbeeBridge shutdown error', e, st);
+  }
+
+  try {
+    await getIt<FrigateBridge>().stop();
+  } catch (e, st) {
+    getIt<Talker>().error('❌ FrigateBridge shutdown error', e, st);
+  }
+
+  try {
+    final manager = getIt<MqttConnectionManager>();
+    await manager.disconnect();
+    await manager.dispose();
+  } catch (e, st) {
+    getIt<Talker>().error('❌ MQTT manager shutdown error', e, st);
+  }
+
+  try {
+    await getIt<MqttService>().dispose();
+  } catch (e, st) {
+    getIt<Talker>().error('❌ MQTT service shutdown error', e, st);
+  }
 }
 
 class SHomeAppObserver extends StatefulWidget {
@@ -109,7 +151,7 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
   void dispose() {
     _themeTimer?.cancel();
     HeartbeatServer.stop();
-    _cleanupTimer?.cancel();
+    unawaited(_shutdownMqttResources());
     super.dispose();
   }
 
@@ -156,56 +198,71 @@ class _SHomeAppObserverState extends State<SHomeAppObserver> {
         return;
       }
 
-      final service = getIt<MqttService>();
-      await service.connect(mqttHost, port: mqttPort);
-      getIt<Talker>().info('✅ MQTT подключён: $mqttHost:$mqttPort');
-
-      // ═══════════════════════════════════════════════════════════
-      // 🐝 ZIGBEE
-      // ═══════════════════════════════════════════════════════════
-      final zigbeeBridge = getIt<ZigbeeBridge>();
-
-      getIt<Talker>().info('🐝 ZigbeeBridge запущен');
-
-      zigbeeBridge.onState = (friendlyName, newState) {
-        _updateZigbeeDeviceState(friendlyName, newState);
-      };
-
-      zigbeeBridge.onAvailability = (friendlyName, isOnline) {
-        _updateZigbeeAvailability(friendlyName, isOnline);
-      };
-      await zigbeeBridge.start();
-
-      getIt<Talker>().info('🐝 onState + onAvailability привязаны');
-
-      // ═══════════════════════════════════════════════════════════
-      // 🎥 FRIGATE
-      // ═══════════════════════════════════════════════════════════
-      final frigateBridge = getIt<FrigateBridge>();
-      await frigateBridge.start();
-      getIt<Talker>().info('🎥 FrigateBridge запущен');
-
-      frigateBridge.onEvent = (event) {
-        _onFrigateEvent(event);
-      };
-      getIt<Talker>().info('🎥 onEvent привязан');
-
       final frigateHost = prefs.getString('frigate_host') ?? mqttHost;
       final frigatePort = prefs.getInt('frigate_port') ?? 5000;
       final rtspPassword =
           await EncryptedKeys().getFrigateRtspPassword() ?? '';
 
-      final frigateService = getIt<FrigateService>();
-      frigateService.configure(
+      getIt<FrigateService>().configure(
         host: frigateHost,
         port: frigatePort,
         rtspPassword: rtspPassword,
       );
       getIt<Talker>()
           .info('🎥 FrigateService настроен: $frigateHost:$frigatePort');
-    } catch (e) {
-      getIt<Talker>().error('❌ MQTT init error: $e');
+
+      // Назначаем обработчики до подключения: менеджер может сразу
+      // сообщить о connected и запустить мосты.
+      final zigbeeBridge = getIt<ZigbeeBridge>();
+      zigbeeBridge.onState = _updateZigbeeDeviceState;
+      zigbeeBridge.onAvailability = _updateZigbeeAvailability;
+
+      final frigateBridge = getIt<FrigateBridge>();
+      frigateBridge.onEvent = _onFrigateEvent;
+
+      // Подписываемся до connect(), чтобы не пропустить первое состояние.
+      await _mqttStateSubscription?.cancel();
+      _mqttStateSubscription =
+          getIt<MqttConnectionManager>().stateStream.listen((state) {
+            _queueMqttBridgeOperation(() => _applyMqttState(state));
+          });
+
+      await getIt<MqttConnectionManager>().connect(mqttHost, mqttPort);
+    } catch (e, st) {
+      getIt<Talker>().error('❌ MQTT init error', e, st);
     }
+  }
+
+  void _queueMqttBridgeOperation(Future<void> Function() operation) {
+    _mqttBridgeOperations = _mqttBridgeOperations
+        .then((_) => operation())
+        .catchError((Object error, StackTrace stackTrace) {
+      getIt<Talker>().error(
+        '❌ MQTT bridge lifecycle error',
+        error,
+        stackTrace,
+      );
+    });
+  }
+
+  Future<void> _applyMqttState(MqttState state) async {
+    final zigbeeBridge = getIt<ZigbeeBridge>();
+    final frigateBridge = getIt<FrigateBridge>();
+
+    if (state == MqttState.connected) {
+      // start() у мостов идемпотентен: повторное connected
+      // не создаст дублирующие подписки.
+      await zigbeeBridge.start();
+      await frigateBridge.start();
+
+      getIt<Talker>().info('✅ MQTT подключён; мосты запущены');
+      return;
+    }
+
+    // При failed/disconnected/connecting мосты не должны работать
+    // на неподключённом MQTT.
+    await zigbeeBridge.stop();
+    await frigateBridge.stop();
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -681,6 +738,10 @@ class _LifecycleObserver extends WidgetsBindingObserver {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       EventLogger.flushNow();
+    }
+    if (state == AppLifecycleState.detached) {
+      // приложение умирает — закрываем MQTT (fire-and-forget)
+      unawaited(_shutdownMqttResources());
     }
   }
 }

@@ -33,21 +33,22 @@ class ZigbeeBridge {
   Future<void> start() async {
     if (_isRunning) return;
 
+    _isRunning = true;
+
     try {
-      // ✅ СНАЧАЛА СЛУШАЕМ (чтобы не потерять retained)
+      // Сначала слушаем поток, чтобы не потерять retained-сообщения.
       _subscription = _mqttService.messageStream.listen(
         _handleMessage,
         onError: (error) => _talker.error('❌ ZigbeeBridge error', error),
       );
 
-      // ✅ ПОТОМ ПОДПИСЫВАЕМСЯ
+      // Затем подписываемся на топики.
       await _mqttService.subscribe('zigbee2mqtt/bridge/devices');
       await _mqttService.subscribe('zigbee2mqtt/bridge/event');
       await _mqttService.subscribe('zigbee2mqtt/bridge/state');
       await _mqttService.subscribe('zigbee2mqtt/#');
       await _mqttService.subscribe('zigbee2mqtt/+/availability');
 
-      // ✅ ЗАПРОС СПИСКА (fallback)
       await Future.delayed(const Duration(milliseconds: 500));
       await _mqttService.publish(
         'zigbee2mqtt/bridge/request/devices',
@@ -55,17 +56,26 @@ class ZigbeeBridge {
       );
       _talker.info('🐝 Запрос списка устройств (bridge/request/devices)');
 
-      _isRunning = true;
       _talker.info('🐝 ZigbeeBridge started');
     } catch (e) {
+      _isRunning = false;
+      await _subscription?.cancel();
+      _subscription = null;
+
       _talker.error('❌ Failed to start ZigbeeBridge', e);
       rethrow;
     }
   }
 
-  void stop() {
-    _subscription?.cancel();
+  Future<void> stop() async {
+    if (!_isRunning && _subscription == null) return;
+
     _isRunning = false;
+
+    final subscription = _subscription;
+    _subscription = null;
+    await subscription?.cancel();
+
     _talker.info('🐝 ZigbeeBridge stopped');
   }
 

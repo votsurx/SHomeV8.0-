@@ -30,29 +30,42 @@ class FrigateBridge {
   Future<void> start() async {
     if (_isRunning) return;
 
+    // Сразу блокируем повторный start, пока выполняются подписки.
+    _isRunning = true;
+
     try {
+      // Сначала слушаем поток, затем подписываемся на топики.
+      _subscription = _mqttService.messageStream.listen(
+        _handleMessage,
+        onError: (error) => _talker.error('❌ FrigateBridge error', error),
+      );
+
       await _mqttService.subscribe('frigate/events');
       await _mqttService.subscribe('frigate/+/person');
       await _mqttService.subscribe('frigate/+/motion');
       await _mqttService.subscribe('frigate/+/availability');
       await _mqttService.subscribe('frigate/available');
 
-      _subscription = _mqttService.messageStream.listen(
-        _handleMessage,
-        onError: (error) => _talker.error('❌ FrigateBridge error', error),
-      );
-
-      _isRunning = true;
       _talker.info('🎥 FrigateBridge started');
     } catch (e) {
+      _isRunning = false;
+      await _subscription?.cancel();
+      _subscription = null;
+
       _talker.error('❌ Failed to start FrigateBridge', e);
       rethrow;
     }
   }
 
-  void stop() {
-    _subscription?.cancel();
+  Future<void> stop() async {
+    if (!_isRunning && _subscription == null) return;
+
     _isRunning = false;
+
+    final subscription = _subscription;
+    _subscription = null;
+    await subscription?.cancel();
+
     _talker.info('🎥 FrigateBridge stopped');
   }
 

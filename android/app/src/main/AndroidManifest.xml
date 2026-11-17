@@ -9,6 +9,26 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Движок умного дома: постоянный foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Предусловие connectedDevice + нужно для Tuya UDP/multicast -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
+    <!-- Восстановление движка после ребута/потери питания -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Точные таймеры (Android 12+; на 13+ выдаётся не по умолчанию) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <!-- Вывод из оптимизации батареи (вендорные прошивки) -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
         android:label="shome"
@@ -16,6 +36,43 @@
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true">
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- 🧠 ДВИЖОК: MQTT + Tuya-опрос + heartbeat + таймеры      -->
+        <!-- foregroundServiceType=connectedDevice: обмен с внешними -->
+        <!-- устройствами по сети. dataSync НЕ подходит — Play-политика -->
+        <!-- требует пользовательского триггера и режет 6ч/24ч на API 35+ -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <service
+            android:name=".EngineForegroundService"
+            android:foregroundServiceType="connectedDevice"
+            android:exported="false"
+            android:stopWithTask="false" />
+
+        <!-- Восстановление после ребута и после обновления APK -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Пользователь выдал/отозвал разрешение на точные алармы -->
+        <receiver
+            android:name=".ExactAlarmPermissionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Выстрел таймера: только startForegroundService и выход -->
+        <receiver
+            android:name=".TimerAlarmReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

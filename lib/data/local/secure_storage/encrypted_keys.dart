@@ -12,6 +12,8 @@ class EncryptedKeys {
   final _storage = const FlutterSecureStorage(
   );
 
+  static const _backupKey = 'backup_encryption_key_v1';
+
   // ─── Префиксы ───
   static const deviceKeyPrefix = 'device_key_';
   static const _vkTokenKey = 'vk_token';
@@ -74,4 +76,14 @@ class EncryptedKeys {
 
   Future<void> deleteFrigateRtspPassword() =>
       delete(_frigateRtspPasswordKey);
+
+  // получение, сохранение, удаление AES ключа
+  Future<void> saveBackupEncryptionKey(String key) =>
+      save(_backupKey, key);
+
+  Future<String?> getBackupEncryptionKey() =>
+      get(_backupKey);
+
+  Future<void> deleteBackupEncryptionKey() =>
+      delete(_backupKey);
 }

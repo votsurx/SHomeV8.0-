@@ -1,8 +1,10 @@
 /// Экран журнала событий.
 /// Читает из StatsCache (последние 200) + БД (старые, пагинация).
 library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../data/local/database.dart';
 import '../../data/services/stats_cache.dart';
 import '../../application/state/devices_provider.dart';
@@ -19,9 +21,10 @@ class EventsScreen extends ConsumerStatefulWidget {
 class _EventsScreenState extends ConsumerState<EventsScreen> {
   static const _pageSize = 50;
 
-  // события из памяти (StatsCache) — всегда сверху
+  // События из памяти (StatsCache) — всегда сверху.
   List<dynamic> _cacheEvents = [];
-  // события из БД (старше памяти) — подгружаются при скролле
+
+  // События из БД (старше памяти) — подгружаются при скролле.
   final List<dynamic> _dbEvents = [];
   int _dbOffset = 0;
   bool _loading = true;
@@ -57,13 +60,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Future<void> _loadInitial() async {
     setState(() => _loading = true);
-    // из памяти (синхронно)
+
+    // Из памяти (синхронно).
     _cacheEvents = StatsCache.instance.recentEvents.reversed.toList();
 
-    // из БД (первая страница, исключая память)
+    // Из БД (первая страница, исключая память).
     final exclude = _cacheEvents
         .map((e) => '${e.timestamp}|${e.event}|${e.deviceId ?? ''}')
         .toSet();
+
     final dbEvents = await AppDatabase.getEventsPaginated(
       limit: _pageSize,
       offset: 0,
@@ -88,6 +93,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final exclude = _cacheEvents
         .map((e) => '${e.timestamp}|${e.event}|${e.deviceId ?? ''}')
         .toSet();
+
     final more = await AppDatabase.getEventsPaginated(
       limit: _pageSize,
       offset: _dbOffset,
@@ -117,22 +123,45 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   List<dynamic> get _filteredEvents {
     return _allEvents.where((e) {
       final event = e.event as String? ?? '';
+
       switch (_category) {
         case EventCategory.alerts:
-          if (!event.startsWith('alarm_') && !event.startsWith('frigate_')) return false;
+          if (!event.startsWith('alarm_') &&
+              !event.startsWith('frigate_')) {
+            return false;
+          }
           break;
+
         case EventCategory.actions:
-          if (!['turnOn', 'turnOff', 'scene', 'roomAdded', 'roomRemoved',
-            'timer', 'deviceAdded', 'deviceRemoved', 'sceneCreated',
-            'sceneDeleted'].contains(event)) return false;
+          if (![
+            'turnOn',
+            'turnOff',
+            'scene',
+            'roomAdded',
+            'roomRemoved',
+            'timer',
+            'deviceAdded',
+            'deviceRemoved',
+            'sceneCreated',
+            'sceneDeleted',
+          ].contains(event)) {
+            return false;
+          }
           break;
+
         case EventCategory.errors:
-          if (!['offline', 'online', 'error'].contains(event)) return false;
+          if (!['offline', 'online', 'error'].contains(event)) {
+            return false;
+          }
           break;
+
         case EventCategory.all:
           break;
       }
-      if (_selectedDeviceId != null && e.deviceId != _selectedDeviceId) return false;
+
+      if (_selectedDeviceId != null && e.deviceId != _selectedDeviceId) {
+        return false;
+      }
       return true;
     }).toList();
   }
@@ -141,39 +170,70 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   IconData _eventIcon(String event) {
     switch (event) {
-      case 'turnOn': return Icons.power_settings_new;
-      case 'turnOff': return Icons.power_off;
-      case 'scene': return Icons.movie;
-      case 'roomAdded': return Icons.add_home;
-      case 'roomRemoved': return Icons.remove_circle;
-      case 'timer': return Icons.timer;
-      case 'deviceAdded': return Icons.add_circle;
-      case 'deviceRemoved': return Icons.delete;
-      case 'sceneCreated': return Icons.movie_creation;
-      case 'sceneDeleted': return Icons.movie_filter;
+      case 'turnOn':
+        return Icons.power_settings_new;
+      case 'turnOff':
+        return Icons.power_off;
+      case 'scene':
+        return Icons.movie;
+      case 'roomAdded':
+        return Icons.add_home;
+      case 'roomRemoved':
+        return Icons.remove_circle;
+      case 'timer':
+        return Icons.timer;
+      case 'deviceAdded':
+        return Icons.add_circle;
+      case 'deviceRemoved':
+        return Icons.delete;
+      case 'sceneCreated':
+        return Icons.movie_creation;
+      case 'sceneDeleted':
+        return Icons.movie_filter;
     }
+
     if (event == 'alarm_water_leak') return Icons.water_drop;
     if (event == 'alarm_smoke') return Icons.local_fire_department;
     if (event == 'alarm_gas') return Icons.gas_meter;
     if (event == 'alarm_motion') return Icons.directions_run;
-    if (event == 'alarm_contact_open' || event == 'alarm_contact_closed') return Icons.door_front_door;
-    if (event == 'alarm_temperature_above' || event == 'alarm_temperature_below') return Icons.thermostat;
-    if (event == 'alarm_humidity_above' || event == 'alarm_humidity_below') return Icons.water;
+
+    if (event == 'alarm_contact_open' ||
+        event == 'alarm_contact_closed') {
+      return Icons.door_front_door;
+    }
+
+    if (event == 'alarm_temperature_above' ||
+        event == 'alarm_temperature_below') {
+      return Icons.thermostat;
+    }
+
+    if (event == 'alarm_humidity_above' ||
+        event == 'alarm_humidity_below') {
+      return Icons.water;
+    }
+
     if (event == 'frigate_person') return Icons.person;
     if (event == 'frigate_car') return Icons.directions_car;
     if (event == 'frigate_dog' || event == 'frigate_cat') return Icons.pets;
     if (event == 'frigate_bird') return Icons.flutter_dash;
     if (event.startsWith('frigate_')) return Icons.videocam;
+
     switch (event) {
-      case 'online': return Icons.wifi;
-      case 'offline': return Icons.wifi_off;
-      case 'error': return Icons.error;
+      case 'online':
+        return Icons.wifi;
+      case 'offline':
+        return Icons.wifi_off;
+      case 'error':
+        return Icons.error;
     }
+
     return Icons.circle;
   }
 
   Color _eventColor(String event) {
-    if (event.startsWith('alarm_') || event.startsWith('frigate_')) return Colors.red;
+    if (event.startsWith('alarm_') || event.startsWith('frigate_')) {
+      return Colors.red;
+    }
     if (event == 'offline') return Colors.grey;
     if (event == 'online') return Colors.green;
     if (event == 'error') return Colors.orange;
@@ -185,17 +245,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   String _eventLabel(String event) {
     switch (event) {
-      case 'turnOn': return 'Включено';
-      case 'turnOff': return 'Выключено';
-      case 'scene': return 'Сцена';
-      case 'roomAdded': return 'Комната добавлена';
-      case 'roomRemoved': return 'Комната удалена';
-      case 'timer': return 'Таймер';
-      case 'deviceAdded': return 'Устройство добавлено';
-      case 'deviceRemoved': return 'Устройство удалено';
-      case 'sceneCreated': return 'Сцена создана';
-      case 'sceneDeleted': return 'Сцена удалена';
+      case 'turnOn':
+        return 'Включено';
+      case 'turnOff':
+        return 'Выключено';
+      case 'scene':
+        return 'Сцена';
+      case 'roomAdded':
+        return 'Комната добавлена';
+      case 'roomRemoved':
+        return 'Комната удалена';
+      case 'timer':
+        return 'Таймер';
+      case 'deviceAdded':
+        return 'Устройство добавлено';
+      case 'deviceRemoved':
+        return 'Устройство удалено';
+      case 'sceneCreated':
+        return 'Сцена создана';
+      case 'sceneDeleted':
+        return 'Сцена удалена';
     }
+
     if (event == 'alarm_water_leak') return '💧 Протечка';
     if (event == 'alarm_smoke') return '🔥 Дым';
     if (event == 'alarm_gas') return '💨 Газ';
@@ -206,15 +277,21 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     if (event == 'alarm_temperature_below') return '🌡️ Температура <';
     if (event == 'alarm_humidity_above') return '💧 Влажность >';
     if (event == 'alarm_humidity_below') return '💧 Влажность <';
+
     if (event.startsWith('frigate_')) {
       final label = event.replaceFirst('frigate_', '');
       return '🎥 $label';
     }
+
     switch (event) {
-      case 'online': return 'В сети';
-      case 'offline': return 'Не в сети';
-      case 'error': return 'Ошибка';
+      case 'online':
+        return 'В сети';
+      case 'offline':
+        return 'Не в сети';
+      case 'error':
+        return 'Ошибка';
     }
+
     return event;
   }
 
@@ -229,9 +306,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         .map((e) => e.deviceId as String?)
         .whereType<String>()
         .toSet();
-    final availableDevices = devices
-        .where((d) => eventDeviceIds.contains(d.id))
-        .toList();
+
+    final availableDevices =
+    devices.where((d) => eventDeviceIds.contains(d.id)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -250,17 +327,25 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text('Очистить события?'),
-                  content: const Text('Все события будут удалены безвозвратно.'),
+                  content: const Text(
+                    'Все события будут удалены безвозвратно.',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Отмена'),
+                    ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
                       child: const Text('Очистить'),
                     ),
                   ],
                 ),
               );
+
               if (confirm == true) {
                 await AppDatabase.clearEvents();
                 StatsCache.instance.clear();
@@ -303,13 +388,20 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     border: OutlineInputBorder(),
                   ),
                   items: [
-                    const DropdownMenuItem<String?>(value: null, child: Text('Все устройства')),
-                    ...availableDevices.map((d) => DropdownMenuItem<String?>(
-                      value: d.id,
-                      child: Text(d.name),
-                    )),
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('Все устройства'),
+                    ),
+                    ...availableDevices.map(
+                          (d) => DropdownMenuItem<String?>(
+                        value: d.id,
+                        child: Text(d.name),
+                      ),
+                    ),
                   ],
-                  onChanged: (v) => setState(() => _selectedDeviceId = v),
+                  onChanged: (v) {
+                    setState(() => _selectedDeviceId = v);
+                  },
                 ),
               ],
             ),
@@ -317,25 +409,63 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           const Divider(height: 1),
           Expanded(
             child: filtered.isEmpty
-                ? const Center(child: Text('Нет событий по фильтру'))
+                ? const Center(
+              child: Text('Нет событий по фильтру'),
+            )
                 : ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(8),
-              itemCount: filtered.length + (_loadingMore ? 1 : 0),
+              itemCount:
+              filtered.length + (_loadingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= filtered.length) {
                   return const Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
                   );
                 }
+
                 final event = filtered[index];
-                final timestamp = event.timestamp;
-                if (timestamp == null) return const SizedBox.shrink();
-                final time = DateTime.parse(timestamp);
+                final timestamp = event.timestamp?.toString();
+                if (timestamp == null) {
+                  return const SizedBox.shrink();
+                }
+
+                final dateTime = DateTime.tryParse(timestamp);
+                if (dateTime == null) {
+                  return const SizedBox.shrink();
+                }
+
+                final dateStr =
+                    '${dateTime.day.toString().padLeft(2, '0')}.'
+                    '${dateTime.month.toString().padLeft(2, '0')}.'
+                    '${dateTime.year}';
+
                 final timeStr =
-                    '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
-                final eventType = event.event ?? '';
+                    '${dateTime.hour.toString().padLeft(2, '0')}:'
+                    '${dateTime.minute.toString().padLeft(2, '0')}:'
+                    '${dateTime.second.toString().padLeft(2, '0')}';
+
+                final eventType = event.event as String? ?? '';
+                final details = event.value?.toString();
+                final sceneName = event.sceneName?.toString();
+                final deviceName = event.deviceName?.toString();
+
+                final title = sceneName ?? (deviceName?.isNotEmpty == true
+                    ? deviceName!
+                    : eventType == 'error'
+                    ? 'Системная ошибка'
+                    : '');
+
+                final subtitle = sceneName != null
+                    ? 'Сцена выполнена'
+                    : eventType == 'error' &&
+                    details != null &&
+                    details.isNotEmpty
+                    ? '${_eventLabel(eventType)}\n$details'
+                    : _eventLabel(eventType);
 
                 return Card(
                   child: ListTile(
@@ -344,26 +474,40 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       color: _eventColor(eventType),
                     ),
                     title: Text(
-                      event.sceneName != null
-                          ? '${event.sceneName}'
-                          : (event.deviceName ?? ''),
+                      title,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
                     subtitle: Text(
-                      event.sceneName != null
-                          ? 'Сцена выполнена'
-                          : _eventLabel(eventType),
+                      subtitle,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: _eventColor(eventType),
                         fontSize: 12,
                       ),
                     ),
-                    trailing: Text(
-                      timeStr,
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    trailing: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          dateStr,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 11,
+                          ),
+                        ),
+                        Text(
+                          timeStr,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );

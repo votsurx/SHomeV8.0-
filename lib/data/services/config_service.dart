@@ -19,34 +19,45 @@ import '../local/entities/scene_entity.dart';
 import '../local/secure_storage/encrypted_keys.dart';
 import '../../domain/models/device_timer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'backup_crypto_service.dart';
 
 class ConfigService {
-  static const String _encryptKey = 'SHomeBackup2026!';
 
   // ═══════════════════════════════════════════════════════
   // ШИФРОВАНИЕ
   // ═══════════════════════════════════════════════════════
+  static final BackupCryptoService _backupCrypto =
+  BackupCryptoService();
 
-  /// Шифрует строку (XOR + Base64).
-  static String encrypt(String text) {
-    final key = utf8.encode(_encryptKey);
-    final data = utf8.encode(text);
-    final result = <int>[];
-    for (var i = 0; i < data.length; i++) {
-      result.add(data[i] ^ key[i % key.length]);
-    }
-    return base64Encode(result);
+  /// Проверяет, создан ли ключ резервного копирования.
+  static Future<bool> hasBackupKey() {
+    return _backupCrypto.hasKey();
   }
 
-  /// Дешифрует строку (Base64 + XOR).
-  static String decrypt(String encrypted) {
-    final key = utf8.encode(_encryptKey);
-    final data = base64Decode(encrypted);
-    final result = <int>[];
-    for (var i = 0; i < data.length; i++) {
-      result.add(data[i] ^ key[i % key.length]);
-    }
-    return utf8.decode(result);
+  /// Генерирует новый ключ AES-256-GCM и сохраняет его
+  /// в flutter_secure_storage.
+  ///
+  /// Повторный вызов заменит существующий ключ.
+  /// Старые бекапы после этого расшифровать нельзя.
+  static Future<void> generateBackupKey() {
+    return _backupCrypto.generateKey();
+  }
+
+  /// Шифрует полный JSON конфигурации.
+  static Future<String> encryptBackup(String json) {
+    return _backupCrypto.encrypt(json);
+  }
+
+  /// Расшифровывает полный контейнер резервной копии.
+  static Future<String> decryptBackup(String encrypted) {
+    return _backupCrypto.decrypt(encrypted);
+  }
+
+  /// Возвращает ключ резервного копирования.
+  ///
+  /// Используется только для формирования QR-кода.
+  static Future<String?> getBackupKey() {
+    return _backupCrypto.getKey();
   }
 
   // ═══════════════════════════════════════════════════════
@@ -57,7 +68,7 @@ class ConfigService {
   /// Пользователь может сохранить куда угодно: облако, почту, Telegram.
   static Future<void> exportConfig() async {
     final json = await buildConfigJson();
-    final encrypted = encrypt(json);
+    final encrypted = await encryptBackup(json);
 
     final dir = await getTemporaryDirectory();
     final now = DateTime.now();
@@ -95,12 +106,7 @@ class ConfigService {
     final bytes = await picked.readAsBytes();
     final encrypted = utf8.decode(bytes);
 
-    String json;
-    try {
-      json = decrypt(encrypted);
-    } catch (_) {
-      json = encrypted; // старый формат без шифрования
-    }
+    final json = await decryptBackup(encrypted);
 
     await restoreFromJson(json);
   }
@@ -157,11 +163,6 @@ class ConfigService {
       expandedDevices.add(map);
     }
 
-    final encryptedVkToken =
-    vkToken.isNotEmpty ? encrypt(vkToken) : '';
-    final encryptedCloudPassword =
-    cloudPassword.isNotEmpty ? encrypt(cloudPassword) : '';
-
     final config = {
       'version': '8.1',
       'exported_at': DateTime.now().toIso8601String(),
@@ -180,10 +181,10 @@ class ConfigService {
         'mqtt_broker': mqttBroker,
         'mqtt_port': mqttPort,
         'mqtt_username': mqttUsername,
-        'mqtt_password_encrypted': mqttPassword.isNotEmpty ? encrypt(mqttPassword) : '',
+        'mqtt_password': mqttPassword,
         'cloud_login': cloudLogin,
-        'cloud_password_encrypted': encryptedCloudPassword,
-        'vk_token_encrypted': encryptedVkToken,
+        'cloud_password': cloudPassword,
+        'vk_token': vkToken,
         'vk_user_id': vkUserId,
       },
     };
@@ -288,19 +289,15 @@ class ConfigService {
           await keys.saveMqttUsername(mqttUsername);
         }
 
-        final mqttPassEnc = settings['mqtt_password_encrypted']?.toString();
-        if (mqttPassEnc != null && mqttPassEnc.isNotEmpty) {
-          try {
-            await keys.saveMqttPassword(decrypt(mqttPassEnc));
-          } catch (_) {}
+        final mqttPassword = settings['mqtt_password']?.toString();
+        if (mqttPassword != null && mqttPassword.isNotEmpty) {
+          await keys.saveMqttPassword(mqttPassword);
         }
 
         // VK-токен → SecureStorage
-        final vkEnc = settings['vk_token_encrypted']?.toString();
-        if (vkEnc != null && vkEnc.isNotEmpty) {
-          try {
-            await keys.saveVkToken(decrypt(vkEnc));
-          } catch (_) {}
+        final vkToken = settings['vk_token']?.toString();
+        if (vkToken != null && vkToken.isNotEmpty) {
+          await keys.saveVkToken(vkToken);
         }
 
         final vkUserId = settings['vk_user_id']?.toString();
@@ -310,14 +307,14 @@ class ConfigService {
 
         // Cloud Mail.ru → SecureStorage через EncryptedKeys
         final cloudLogin = settings['cloud_login']?.toString();
-        final cloudPassEnc = settings['cloud_password_encrypted']?.toString();
+        final cloudPassword = settings['cloud_password']?.toString();
+
         if (cloudLogin != null && cloudLogin.isNotEmpty) {
           await keys.saveCloudLogin(cloudLogin);
         }
-        if (cloudPassEnc != null && cloudPassEnc.isNotEmpty) {
-          try {
-            await keys.saveCloudPassword(decrypt(cloudPassEnc));
-          } catch (_) {}
+
+        if (cloudPassword != null && cloudPassword.isNotEmpty) {
+          await keys.saveCloudPassword(cloudPassword);
         }
       }
     } catch (e, stackTrace) {
