@@ -6,6 +6,7 @@ import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
 import 'package:restart_app/restart_app.dart';
 import '../../data/local/database.dart';
+import 'package:shome/presentation/screens/screen_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -176,6 +177,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   );
                 }
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 🖥️ Настройки экрана
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.display_settings, color: Colors.blue),
+              title: const Text('Настройки экрана'),
+              subtitle: const Text('Заставка и отображение'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ScreenSettingsScreen(),
+                  ),
+                );
               },
             ),
           ),
