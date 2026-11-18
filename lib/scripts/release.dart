@@ -131,9 +131,11 @@ int _calcVersionCode(String version) {
 /// Обновляет версию во всех файлах
 Future<void> _updateVersionFiles(String newVersion, String content, File pubspec) async {
   // 1. pubspec.yaml
+  final versionCode = _calcVersionCode(newVersion);
+
   content = content.replaceAll(
     RegExp(r'version: \d+\.\d+\.\d+\+\d+'),
-    'version: $newVersion+1',
+    'version: $newVersion+$versionCode',
   );
   content = content.replaceAll(
     RegExp(r'description: SHome v\d+\.\d+\.\d+'),
@@ -166,7 +168,6 @@ Future<void> _updateVersionFiles(String newVersion, String content, File pubspec
     );
 
     // versionCode = 8.1.18 → 80118
-    final versionCode = _calcVersionCode(newVersion);
     gradleContent = gradleContent.replaceAll(
       RegExp(r'versionCode = \d+'),
       'versionCode = $versionCode',

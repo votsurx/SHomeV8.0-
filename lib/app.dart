@@ -49,7 +49,9 @@ class _SHomeAppState extends State<SHomeApp> {
                 return ScreenSaverHost(
                   enabled: config.enabled,
                   idleTimeout: Duration(seconds: config.idleTimeoutSeconds),
+                  motionWakeEnabled: config.motionWakeEnabled,
                   iconSize: 180,
+                  motionSensitivity: config.motionSensitivity,
                   screenSaverBuilder: (context) {
                     return Lottie.asset(
                       'assets/animations/Home.json',

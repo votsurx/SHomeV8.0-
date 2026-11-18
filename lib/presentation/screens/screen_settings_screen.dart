@@ -21,7 +21,9 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
 
   bool _isLoading = true;
   bool _enabled = true;
+  bool _motionWakeEnabled = false;
   int _idleTimeoutSeconds = 120;
+  int _motionSensitivity = 50;
 
   @override
   void initState() {
@@ -35,11 +37,23 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
     if (!mounted) return;
 
     final config = ScreenSaverSettings.value.value;
+
     setState(() {
       _enabled = config.enabled;
       _idleTimeoutSeconds = config.idleTimeoutSeconds;
+      _motionWakeEnabled = config.motionWakeEnabled;
+      _motionSensitivity = config.motionSensitivity;
       _isLoading = false;
     });
+  }
+  Future<void> _setMotionSensitivity(int sensitivity) async {
+    setState(() => _motionSensitivity = sensitivity);
+    await ScreenSaverSettings.setMotionSensitivity(sensitivity);
+  }
+
+  Future<void> _setMotionWakeEnabled(bool enabled) async {
+    setState(() => _motionWakeEnabled = enabled);
+    await ScreenSaverSettings.setMotionWakeEnabled(enabled);
   }
 
   Future<void> _setEnabled(bool enabled) async {
@@ -82,6 +96,76 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
               ),
               value: _enabled,
               onChanged: _setEnabled,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: SwitchListTile(
+              secondary: const Icon(
+                Icons.directions_run,
+                color: Colors.teal,
+              ),
+              title: const Text('Сбрасывать заставку по движению'),
+              subtitle: const Text(
+                'Использовать фронтальную камеру, пока показана заставка',
+              ),
+              value: _motionWakeEnabled,
+              onChanged: _enabled ? _setMotionWakeEnabled : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.tune),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Чувствительность: $_motionSensitivity%',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _motionSensitivity.toDouble(),
+                    min: 0,
+                    max: 100,
+                    divisions: 20,
+                    label: '$_motionSensitivity%',
+                    onChanged: !_enabled || !_motionWakeEnabled
+                        ? null
+                        : (value) {
+                      setState(() {
+                        _motionSensitivity = value.round();
+                      });
+                    },
+                    onChangeEnd: !_enabled || !_motionWakeEnabled
+                        ? null
+                        : (value) {
+                      _setMotionSensitivity(value.round());
+                    },
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Низкая'),
+                      Text('Высокая'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Если заставка срабатывает без движения, '
+                        'уменьшите чувствительность.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
