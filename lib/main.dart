@@ -35,9 +35,6 @@ import 'data/services/stats_aggregator.dart';
 import 'data/local/database.dart';
 import 'data/services/mqtt_connection_manager.dart';
 
-/// Глобальный доступ к MQTT сервису (для Zigbee и Frigate)
-MqttService? globalMqttService;
-
 StreamSubscription<MqttState>? _mqttStateSubscription;
 Future<void> _mqttBridgeOperations = Future<void>.value();
 Future<void>? _mqttShutdownFuture;

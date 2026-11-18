@@ -13,11 +13,11 @@ abstract class MqttService {
   /// Поток входящих сообщений
   Stream<MqttMessageData> get messageStream;
   /// Поток состояния подключения (true = connected, false = disconnected)
-  Stream<bool> get connectionStream;   // ← NEW
+  Stream<bool> get connectionStream;
   /// Проверяет, подключён ли клиент
   bool get isConnected;
   /// Закрыть ресурсы (контроллеры, соединение)
-  Future<void> dispose();   // ← NEW
+  Future<void> dispose();
 }
 
 /// Данные входящего MQTT сообщения.

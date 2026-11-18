@@ -94,7 +94,7 @@ class _TodayDrawerState extends ConsumerState<TodayDrawer> {
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  childAspectRatio: 1.8,
+                  childAspectRatio: 1.5,
                   children: [
                     _MiniCard(
                       label: 'Online',
@@ -234,16 +234,36 @@ class _MiniCard extends StatelessWidget {
                 Icon(icon, color: color, size: 16),
                 const SizedBox(width: 4),
                 Expanded(
-                  child: Text(label,
-                      style: const TextStyle(fontSize: 10, color: Colors.grey),
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(value,
-                style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+            SizedBox(
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
