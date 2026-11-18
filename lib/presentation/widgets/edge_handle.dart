@@ -31,13 +31,14 @@ class _EdgeHandleState extends State<EdgeHandle> {
 
   @override
   Widget build(BuildContext context) {
+    final isPhone = MediaQuery.sizeOf(context).width < 600;
     final color = Theme.of(context).colorScheme.primary;
     final hasAnomalies = StatsCache.instance.anomalyCount > 0;
     final badgeColor = hasAnomalies ? Colors.red : Colors.green;
 
     return Positioned(
       right: 0,
-      top: MediaQuery.of(context).size.height * 0.42,
+      top: MediaQuery.sizeOf(context).height * (isPhone ? 0.38 : 0.42),
       child: GestureDetector(
         onTap: widget.onOpen,
         onHorizontalDragEnd: (details) {
@@ -49,8 +50,8 @@ class _EdgeHandleState extends State<EdgeHandle> {
           clipBehavior: Clip.none,
           children: [
             Container(
-              width: 20,
-              height: 64,
+              width: isPhone ? 16 : 20,
+              height: isPhone ? 48 : 64,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius:

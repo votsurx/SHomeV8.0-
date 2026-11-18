@@ -19,16 +19,21 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPhone = MediaQuery.sizeOf(context).width < 600;
+    final avatarRadius = isPhone ? 16.0 : 20.0;
+    final padding = isPhone ? 8.0 : 12.0;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(padding),
         child: Row(
           children: [
             CircleAvatar(
+              radius: avatarRadius,
               backgroundColor: color.withValues(alpha: 0.15),
-              child: Icon(icon, color: color),
+              child: Icon(icon, color: color, size: isPhone ? 16 : 24),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: isPhone ? 8 : 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,20 +41,33 @@ class StatCard extends StatelessWidget {
                 children: [
                   Text(
                     value,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: color,
+                      fontSize: isPhone ? 16 : 22,
                     ),
                   ),
                   Text(
                     label,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: isPhone ? 10 : 12,
+                    ),
                   ),
                   if (subtitle != null)
                     Text(
                       subtitle!,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelSmall
+                          ?.copyWith(
                         color: Colors.grey,
+                        fontSize: isPhone ? 9 : 11,
                       ),
                     ),
                 ],

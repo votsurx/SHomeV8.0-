@@ -61,7 +61,10 @@ class _TodayDrawerState extends ConsumerState<TodayDrawer> {
       if (next != prev) _load();
     });
 
+    final isPhone = MediaQuery.sizeOf(context).width < 600;
+
     return Drawer(
+      width: isPhone ? MediaQuery.sizeOf(context).width * 0.88 : null,
       child: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,
