@@ -43,31 +43,7 @@
         <!-- устройствами по сети. dataSync НЕ подходит — Play-политика -->
         <!-- требует пользовательского триггера и режет 6ч/24ч на API 35+ -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <service
-            android:name=".EngineForegroundService"
-            android:foregroundServiceType="connectedDevice"
-            android:exported="false"
-            android:stopWithTask="false" />
 
-        <!-- Восстановление после ребута и после обновления APK -->
-        <receiver
-            android:name=".BootReceiver"
-            android:exported="true"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Пользователь выдал/отозвал разрешение на точные алармы -->
-        <receiver
-            android:name=".ExactAlarmPermissionReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
-            </intent-filter>
-        </receiver>
 
         <!-- Выстрел таймера: только startForegroundService и выход -->
         <receiver

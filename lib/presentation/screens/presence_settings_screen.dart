@@ -99,8 +99,8 @@ class PresenceSettingsScreen extends ConsumerWidget {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // КАРТОЧКА ТЕЛЕФОНА
-  // ═══════════════════════════════════════════════════════════════
+// КАРТОЧКА ТЕЛЕФОНА
+// ═══════════════════════════════════════════════════════════════
 
   Widget _buildPhoneCard(
       BuildContext context,
@@ -112,7 +112,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
     final status = presence?.status ?? PhonePresenceStatus.unknown;
     final source = presence?.source ?? PresenceSource.unknown;
 
-    // ─── Определяем иконку, цвет, текст ───
     IconData icon;
     Color color;
     String statusText;
@@ -120,17 +119,21 @@ class PresenceSettingsScreen extends ConsumerWidget {
 
     if (status == PhonePresenceStatus.home) {
       if (source == PresenceSource.heartbeat) {
-        // 🟢 Дома по Wi-Fi — точно дома
+        // Дома по локальному Wi-Fi heartbeat.
         icon = Icons.wifi;
         color = Colors.green;
         statusText = 'Дома (Wi-Fi)';
         subtitle = 'Heartbeat активен';
       } else if (source == PresenceSource.cloud) {
-        // 🟡 Дома по облаку — Companion сказал "home" без Wi-Fi
+        // Дома по облаку; показываем GPS-расстояние, если оно известно.
         icon = Icons.cloud_done;
         color = Colors.lightGreen;
         statusText = 'Дома (облако)';
-        subtitle = 'Wi-Fi не активен, но Companion дома';
+
+        final distance = presence?.distanceFromHome;
+        subtitle = distance == null
+            ? 'Wi-Fi не активен · GPS недоступен'
+            : 'Wi-Fi не активен · ${_formatDistance(distance)} от дома';
       } else {
         icon = Icons.home;
         color = Colors.green;
@@ -138,13 +141,14 @@ class PresenceSettingsScreen extends ConsumerWidget {
         subtitle = null;
       }
     } else if (status == PhonePresenceStatus.away) {
-      final dist = presence?.distanceFromHome;
+      final distance = presence?.distanceFromHome;
+
       icon = Icons.directions_walk;
       color = Colors.orange;
       statusText = 'Ушёл';
-      subtitle = dist != null
-          ? 'Расстояние: ${dist.round()} м'
-          : null;
+      subtitle = distance == null
+          ? null
+          : 'Расстояние: ${_formatDistance(distance)} от дома';
     } else {
       icon = Icons.help_outline;
       color = Colors.grey;
@@ -212,7 +216,10 @@ class PresenceSettingsScreen extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       'ID: ${phone.phoneId}',
-                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
@@ -221,10 +228,10 @@ class PresenceSettingsScreen extends ConsumerWidget {
               ),
               Switch(
                 value: phone.enabled,
-                onChanged: (val) {
+                onChanged: (value) {
                   notifier.updatePhone(
                     phone.phoneId,
-                    phone.copyWith(enabled: val),
+                    phone.copyWith(enabled: value),
                   );
                 },
               ),
@@ -235,9 +242,9 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // КАРТОЧКА НАСТРОЙКИ
-  // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// КАРТОЧКА НАСТРОЙКИ
+// ═══════════════════════════════════════════════════════════════
 
   Widget _buildCard({
     required BuildContext context,
@@ -262,6 +269,13 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
+  String _formatDistance(double meters) {
+    if (meters < 1000) {
+      return '${meters.round()} м';
+    }
+
+    return '${(meters / 1000).toStringAsFixed(1)} км';
+  }
   // ═══════════════════════════════════════════════════════════════
   // ДИАЛОГИ
   // ═══════════════════════════════════════════════════════════════

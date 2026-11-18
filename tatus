@@ -1,0 +1,427 @@
+[33mcommit b586d1f34b0dde8161d17437855fe56cf2a79b3e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Wed Nov 18 12:17:21 2026 +0300
+
+    feat: add motion wake for screen saver
+
+[33mcommit 42c642d3bc9d6384cbe99ea6e6b32d6d50be6f98[m[33m ([m[1;33mtag: [m[1;33mv8.3.3[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Wed Nov 18 11:31:35 2026 +0300
+
+    release: v8.3.3
+
+[33mcommit d0bcf4a1557f0b12435c494b95d0cdada387c216[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Wed Nov 18 11:29:51 2026 +0300
+
+    Release v8.3.3: configurable screen saver
+
+[33mcommit e64c64bc8e873572c61debafb36791d963057385[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Wed Nov 18 10:39:53 2026 +0300
+
+    adaptaciya statistiki pod smartfon
+
+[33mcommit 9a48dd0e2b9fb15ebf241b1a206f460622c64b85[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Wed Nov 18 10:01:27 2026 +0300
+
+    erace globalmqtt in main.dart
+
+[33mcommit 00b4ff0bdaba96596c710cdc3fb5653411d85dcb[m[33m ([m[1;33mtag: [m[1;33mv8.3.1[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Tue Nov 17 15:22:14 2026 +0300
+
+    release: v8.3.1
+
+[33mcommit bbb87602c770de59cd676f9e948d735202cbbb93[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Tue Nov 17 15:21:10 2026 +0300
+
+    feat: add resilient MQTT reconnection
+
+[33mcommit 902ece403c7ebd8e3f9c664260445e4a746cdda9[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Tue Nov 17 08:36:26 2026 +0300
+
+    feat(poller): fast poll intervals (500ms/1s) + ms migration
+    
+    - AdaptivePoller.readIntervalMs/writeIntervalMs — poll_interval_ms (мс)
+    - Миграция poll_interval (сек) → poll_interval_ms (мс) ×1000
+    - intervalOptions: 500 / 1000 / 2000 / 5000 / 10000 / 30000
+    - settings_screen: 6 вариантов + formatIntervalMs
+    - device_list_screen: читает poll_interval_ms
+    - fix: retention — подсветка текущего выбора (Icons.check)
+    - fix: use_build_context_synchronously (context.mounted)
+
+[33mcommit 33da0cb704309618cce4ba265c64f236c5d5f4cd[m[33m ([m[1;33mtag: [m[1;33mv8.3.0[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 16:40:44 2026 +0300
+
+    ci: increase Gradle heap to 4g (fix OOM on CI)
+
+[33mcommit 0f8da5e82ee9491939b36fb1530281c3c0541d3b[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 16:08:14 2026 +0300
+
+    release: v8.3.0
+
+[33mcommit 6dda011d93a11fdc2fc97e7206b84694284f3fce[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 16:07:19 2026 +0300
+
+    feat(events): events screen on StatsCache with pagination
+    
+    - events_screen: читает из StatsCache (200) + БД (пагинация 50)
+    - Мгновенное открытие + мгновенные новые события
+    - Дедупликация память ↔ БД по timestamp|event|deviceId
+    - getEventsPaginated(limit, offset, excludeKeys)
+    - StatsCache.clear() при очистке журнала
+    - Fix: очистка теперь чистит и память, и БД
+
+[33mcommit b53ad558d678ab86c5e17e6e9a54c8f0795b7145[m[33m ([m[1;33mtag: [m[1;33mv8.2.9[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 15:47:47 2026 +0300
+
+    release: v8.2.9
+
+[33mcommit c5afa586c5dacb3560ca0e8a6f5a015aac91e35e[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 15:46:06 2026 +0300
+
+    perf(device-ui): RepaintBoundary + select() + skip-unchanged notify
+    
+    - P0: RepaintBoundary на карточках (device_list_screen)
+    - P1: FrigateCameraCard → ref.watch(devicesProvider.select(...))
+    - P2: updateOnlineState/updateDeviceState — ранний return если не изменилось
+    - Меньше rebuild/notify/repaint при poller каждые 2 сек
+
+[33mcommit e0474d52dc237633172771ff5face6bbaab9979b[m[33m ([m[1;33mtag: [m[1;33mv8.2.8[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 15:32:00 2026 +0300
+
+    release: v8.2.8
+
+[33mcommit eab05355d5ed5d8b81f87cab7577364155075b50[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 15:31:21 2026 +0300
+
+    feat(stats): StatsCache in-memory events + instant badge
+    
+    - StatsCache (Singleton, ChangeNotifier): 200 последних событий в памяти
+    - loadFromDb при старте, add() из EventLogger
+    - Кольцевой буфер 200
+    - refreshAnomalies(roomId) с debounce 500мс
+    - EdgeHandle → StatefulWidget, слушает StatsCache
+    - Бейдж мгновенно: зелёный/красный
+    - Удалён anomalies_provider.dart
+    - Гибрид: БД — правда (батчинг), StatsCache — кэш для чтения
+
+[33mcommit 237393d645866e49b09f8bea25cb719631fa1249[m[33m ([m[1;33mtag: [m[1;33mv8.2.7[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 12:58:16 2026 +0300
+
+    release: v8.2.7
+
+[33mcommit 8bebffd65548935724f1f444d05171e3b6c00445[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 12:57:58 2026 +0300
+
+    feat(today): room-filtered statistics in TodayDrawer
+    
+    - currentRoomIdProvider: StateProvider<String?> (null = все)
+    - TodayDrawer: реактивный, фильтрует по комнате (online/алерты/действия/энергия/температура/аномалии)
+    - DeviceListScreen: обновляет currentRoomIdProvider при выборе комнаты
+    - SQL: getTodayStatsByRoom, getTodayEnergyByRoom, getOnlineCount, getTotalCount, getAnomaliesByRoom
+    - 'all' → null
+    - Frigate не привязан к комнате (общая система)
+
+[33mcommit bb484b520f9e9c6e0ff540708944f3668c9bf5d4[m[33m ([m[1;33mtag: [m[1;33mv8.2.6[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 12:27:25 2026 +0300
+
+    release: v8.2.6
+
+[33mcommit 3f0a117e2b874d0f24bd7e8d03f416a1b3154e6f[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 12:27:02 2026 +0300
+
+    feat(today): EdgeHandle + TodayDrawer with anomalies
+    
+    - EdgeHandle: прозрачный хвостик справа, тап/свайп → EndDrawer
+    - TodayDrawer: мини-карточки (online/алерты/действия/энергия/температура)
+    - Аномалии: battery < 20%, linkquality < 30, offline > 5/день, energy > 1.5×
+    - SQL: getTodayStats, getTodayEnergy, getAnomalies
+    - DeviceListScreen: Scaffold endDrawer + Stack + EdgeHandle
+    - Fix: unused_import в today_drawer
+
+[33mcommit a80683af56dc6032d6028b0179a030cadb49d5bb[m[33m ([m[1;33mtag: [m[1;33mv8.2.5[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 11:51:06 2026 +0300
+
+    release: v8.2.5
+
+[33mcommit e5d309192538e34a4c09513f9363611a8f13e759[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 11:50:45 2026 +0300
+
+    feat(stats): notifications statistics + DB v11
+    
+    - StatsNotificationsTab: отправлено/подавлено, VK vs SMS, по категориям
+    - DB v11: notification_stats_daily
+    - SQL: incrementNotificationSent/Suppressed, getNotificationByCategory/Channel/Totals
+    - NotificationCoordinator: _logSent/_logSuppressed для VK и SMS
+    - 8-я плитка «Уведомления» в StatsScreen
+
+[33mcommit d99e088f38373450b04a9f8a0afb967517dd72c7[m[33m ([m[1;33mtag: [m[1;33mv8.2.4[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 11:19:19 2026 +0300
+
+    release: v8.2.4
+
+[33mcommit 4cb0ebe96afa6530664d8efe722b0ffd3f122959[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 11:18:51 2026 +0300
+
+    feat(stats): Scenes, Presence, Climate tabs + DB v10
+    
+    - StatsScenesTab: топ сцен, забытые сцены
+    - StatsPresenceTab: время дома/рядом/ушёл, cloud fallback
+    - StatsClimateTab: min/max/avg температуры/влажности
+    - DB v10: presence_daily
+    - StatsScreen: плитки вместо TabBar (горизонтальный скролл)
+    - SQL: getSceneStats, getForgottenScenes, getPresenceTotals, getClimateStats
+    - Fix: curly_braces в stats_aggregator
+
+[33mcommit d2cdf496622f1040358c2988fe2264fe0241ef48[m[33m ([m[1;33mtag: [m[1;33mv8.2.3[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 10:26:52 2026 +0300
+
+    release: v8.2.3
+
+[33mcommit 8ae92c3e09816525fbed9c962935b4e7cd0abc2b[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 10:26:32 2026 +0300
+
+    feat(stats): Frigate video statistics — detections, cameras, heatmap
+    
+    - StatsVideoTab: 4-я вкладка в StatsScreen
+    - DetectionDonut: детекции по типам (person/car/dog) из events
+    - CameraBarChart: по камерам
+    - HourHeatmap: тепловая карта день × час
+    - SQL: getFrigateDetectionsByLabel / ByCamera / HourlyHeatmap
+    - Виджеты внутри stats_video_tab.dart (private)
+
+[33mcommit ac78ae35616fe789a315429bf076466b975cb2e7[m[33m ([m[1;33mtag: [m[1;33mv8.2.2[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 10:01:07 2026 +0300
+
+    release: v8.2.2
+
+[33mcommit cdabab5795ef6266215205eb67cbffc611eea8f3[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 10:00:44 2026 +0300
+
+    feat(stats): energy_log writes + StatsEnergyTab + tariff
+    
+    - AdaptivePoller: upsertEnergyLog для power-датчиков (UPSERT по deviceId+date)
+    - StatsEnergyTab: потребление, стоимость, топ устройств за 24ч/7д/30д
+    - Тариф в SettingsScreen (stats_settings.electricity_tariff_rub_per_kwh)
+    - Удалён statistics_screen.dart (дублировал StatsScreen)
+    - Роут /statistics → /stats
+
+[33mcommit 4ad3af856950d571f0ee04e17d236f94a1004767[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 09:05:49 2026 +0300
+
+    test: PresenceDetector (haversine distance, isAnyoneHome/isNobodyHome)
+
+[33mcommit 46878d7a841801b5bd994bdd81dc04dada0da566[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 09:04:45 2026 +0300
+
+    test: AutomationEngine (time triggers через @visibleForTesting)
+
+[33mcommit ee71db952b942379e4293b755ad77ad8f47fefab[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 09:01:44 2026 +0300
+
+    test: NotificationCoordinator (условия, фильтры, антидребезг)
+
+[33mcommit 59e35a7eb2cd80ddb32c6a0f779939918330e54c[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 08:58:49 2026 +0300
+
+    test: общие хелперы для тестов (моки, фабрики)
+
+[33mcommit 397c63bd2cf5c2ed8d01f2447d6668d41a993a17[m[33m ([m[1;33mtag: [m[1;33mv8.2.1[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 08:16:30 2026 +0300
+
+    release: v8.2.1
+
+[33mcommit 5319678d5b80c74f88897e3068958598afb258da[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Mon Nov 16 08:15:57 2026 +0300
+
+    feat(events): Zigbee alerts, Frigate detections, availability logging
+    
+    - _logZigbeeAlerts: water_leak, smoke, gas, motion, contact, temperature, humidity
+    - _onFrigateEvent: frigate_person/car/dog с deviceId (камера)
+    - Zigbee availability: online/offline с _isStartupGrace
+    - EventLogger.log без await в горячих путях
+    - firstOrNull вместо firstWhere
+    - Многоканальники: задержка 3с
+    - Порядок _logZigbeeAlerts → updateDeviceLocal (антидребезг)
+
+[33mcommit 96cd579b02050b9eab01d2339e86f94d5f38d5f7[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Sun Nov 15 09:33:12 2026 +0300
+
+    fix: события журнала, Zigbee availability, многоканальные устройства
+
+[33mcommit be88453701c1fdd37965b8439ef0e9360cd4ed86[m[33m ([m[1;33mtag: [m[1;33mv8.1.50[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 16:48:00 2026 +0300
+
+    release: v8.1.50
+
+[33mcommit 63e91341bd8b3142aec2a4051043d8f7e4e440e4[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 16:47:16 2026 +0300
+
+    feat(stats): DB v9 + StatsAggregator + EventLogger hook
+    
+    - AppDatabase v9: device_stats_daily, system_health_daily, stats_settings
+    - Индексы для events / sensor_log / energy_log
+    - StatsAggregator: event-driven агрегация + backfill из events
+    - EventLogger.log() вызывает StatsAggregator.onEvent()
+    - main.dart: backfillIfNeeded() при старте
+
+[33mcommit 4bdcbeb873f4154666c565a81fab3837e27f9002[m[33m ([m[1;33mtag: [m[1;33mv8.1.49[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 15:54:49 2026 +0300
+
+    release: v8.1.49
+
+[33mcommit d78b585671206a7a29d2e9f61fd0db4176bf93c4[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 15:52:52 2026 +0300
+
+    feat(notifications): per-device settings + coordinator + events filters
+    
+    - DeviceNotificationsScreen: per-device condition, cooldown, thresholds, types
+    - NotificationCoordinator: unified VK/SMS logic (per-device + global checks)
+    - AdaptivePoller: Tuya offline + sensor thresholds + compound low_battery
+    - DevicesNotifier: use NotificationCoordinator
+    - EventsScreen: chips filters (All/Alerts/Actions/Errors) + dropdown devices
+    - Zigbee/Frigate: EventLogger + notifications via Coordinator
+    - Removed dead MailruCloudService.autoSync()
+    - globalContainer in lib/di/global_container.dart
+    
+    versionCode = 80149
+
+[33mcommit 03acf274df2f7446a1882023ba11421393e764af[m[33m ([m[1;33mtag: [m[1;33mv8.1.48[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 13:05:29 2026 +0300
+
+    release: v8.1.48
+
+[33mcommit d6ed405a5cb352ea1cf8b5cb141a92ad93be03f7[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 12:55:49 2026 +0300
+
+    fix: Frigate duplicates/roomId→name, Zigbee availability, secure storage 11.2.0
+    
+    - Frigate: дубликаты камер, удаление обеих, roomId → name
+    - Frigate: настройки камеры (bottom sheet) + шестерёнка на карточке
+    - Zigbee: availability (Wi-Fi иконка), onState → isOnline: true
+    - Zigbee-датчики в сценах (были только Tuya)
+    - flutter_secure_storage 9.2.4 → 11.2.0, device_key_* восстановлены
+    - removed: локальный автобекап облака, autoSync() из MailruCloudService
+
+[33mcommit 950157c5252e43fd300287c3afec14d9298fd2a1[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 12:55:48 2026 +0300
+
+    refactor: extract globalContainer to lib/di/global_container.dart
+
+[33mcommit dd8b9018d3f4c0e2831b970ca8a75ac3c379d4dc[m[33m ([m[1;33mtag: [m[1;33mv8.1.47[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 09:27:57 2026 +0300
+
+    release: v8.1.47
+
+[33mcommit ab5525ea37c7b192aa4eef858ab5c432355d607b[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 09:27:17 2026 +0300
+
+    docs: README + CHANGELOG for v8.1.47 (Frigate UX, Zigbee availability)
+
+[33mcommit d97400b4b44a6843c089e39fcbe8bb427d4817a7[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 08:29:57 2026 +0300
+
+    feat(frigate): unified camera management + full settings dialog
+    
+    Bugfix: duplicate camera on '+' and deletion of both cameras
+    
+    Changes:
+    - Remove 'Add camera' button (only '+' on available cards)
+    - Filter added cameras from 'Available in Frigate' list
+    - Added cameras disappear immediately, deleted ones return
+    - Prevent double-add: check alreadyExists before add
+    - Fix room display: resolve roomId to name via roomsProvider
+      (was showing UUID instead of '🛋️ Гостиная')
+    - New FrigateCameraSettings dialog:
+      - Name editing
+      - Room dropdown (no 'other' duplication)
+      - Notification labels (person, car, dog, cat, bird, etc.)
+      - Snapshot interval (5/10/30 sec)
+      - RTSP port (default 8554)
+      - Delete button
+    - FrigateCameraCard: gear icon opens settings dialog
+    - didUpdateWidget: restart timer when snapshot_interval changes
+    - Safe room fallback if roomId not found in roomsProvider
+
+[33mcommit ef83717d6edf0c120629d6ab61da8480ea6c0e56[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 05:54:00 2026 +0300
+
+    chore: bump version to 8.1.46 + update README
+
+[33mcommit b5815dde81d0c90e74cd479624557561b98faade[m[33m ([m[1;33mtag: [m[1;33mv8.1.46[m[33m)[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Fri Nov 13 04:25:18 2026 +0300
+
+    ci: bump JDK to 21 for AGP 9 / Lint compatibility
+
+[33mcommit 1a618b0c297880dd0fd51f07eedcb0501558a8b0[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Thu Nov 12 18:58:20 2026 +0300
+
+    docs: fix Gradle version in v8.1.46 (9.6.0)
+
+[33mcommit 0d187c286d364d0bb7df2bdf09e07c2cefc488c1[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Thu Nov 12 16:46:28 2026 +0300
+
+    docs: add v8.1.45 changelog (AGP 9 + Built-in Kotlin migration)
+
+[33mcommit 3c2dad3dca94841adaf33586f1c6cb11a789f350[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Thu Nov 12 16:25:44 2026 +0300
+
+    Remove vlc_player, reduce APK size from 198MB to 71MB
+
+[33mcommit 0cc20eedd68d2ee3fedd764a1d80ff3f31805c29[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Thu Nov 12 15:55:08 2026 +0300
+
+    Migrate to AGP 9 + Built-in Kotlin, update dependencies
+
+[33mcommit 3b0ad7755cd837a90397a5a69703d650f5ffc4eb[m
+Author: votsurx <nicmus@mail.ru>
+Date:   Thu Nov 12 12:15:15 2026 +0300
+
+    Initial commit: copy of SHomeV8.0 before Built-in Kotlin migration

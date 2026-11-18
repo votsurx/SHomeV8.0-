@@ -11,6 +11,14 @@ import '../../application/state/devices_provider.dart';
 
 enum EventCategory { all, alerts, actions, errors }
 
+enum _PresenceVisualState {
+  away,
+  homeCloud,
+  homeWifi,
+  home,
+  unknown,
+}
+
 class EventsScreen extends ConsumerStatefulWidget {
   const EventsScreen({super.key});
 
@@ -21,11 +29,12 @@ class EventsScreen extends ConsumerStatefulWidget {
 class _EventsScreenState extends ConsumerState<EventsScreen> {
   static const _pageSize = 50;
 
-  // События из памяти (StatsCache) — всегда сверху.
+  // Последние события из StatsCache — показываются сверху.
   List<dynamic> _cacheEvents = [];
 
-  // События из БД (старше памяти) — подгружаются при скролле.
+  // Более старые события из БД — подгружаются при прокрутке.
   final List<dynamic> _dbEvents = [];
+
   int _dbOffset = 0;
   bool _loading = true;
   bool _loadingMore = false;
@@ -34,7 +43,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   EventCategory _category = EventCategory.all;
   String? _selectedDeviceId;
 
-  final _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -51,22 +60,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     super.dispose();
   }
 
+  bool _isPresenceEvent(String event) {
+    return event.startsWith('Присутствие:');
+  }
+
   void _onCacheChanged() {
     if (!mounted) return;
+
     setState(() {
       _cacheEvents = StatsCache.instance.recentEvents.reversed.toList();
     });
   }
 
   Future<void> _loadInitial() async {
-    setState(() => _loading = true);
+    if (mounted) {
+      setState(() => _loading = true);
+    }
 
-    // Из памяти (синхронно).
     _cacheEvents = StatsCache.instance.recentEvents.reversed.toList();
 
-    // Из БД (первая страница, исключая память).
     final exclude = _cacheEvents
-        .map((e) => '${e.timestamp}|${e.event}|${e.deviceId ?? ''}')
+        .map((event) =>
+    '${event.timestamp}|${event.event}|${event.deviceId ?? ''}')
         .toSet();
 
     final dbEvents = await AppDatabase.getEventsPaginated(
@@ -76,6 +91,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     );
 
     if (!mounted) return;
+
     setState(() {
       _dbEvents
         ..clear()
@@ -88,10 +104,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Future<void> _loadMoreFromDb() async {
     if (_loadingMore || !_hasMoreDb) return;
+
     setState(() => _loadingMore = true);
 
     final exclude = _cacheEvents
-        .map((e) => '${e.timestamp}|${e.event}|${e.deviceId ?? ''}')
+        .map((event) =>
+    '${event.timestamp}|${event.event}|${event.deviceId ?? ''}')
         .toSet();
 
     final more = await AppDatabase.getEventsPaginated(
@@ -101,6 +119,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     );
 
     if (!mounted) return;
+
     setState(() {
       _dbEvents.addAll(more);
       _dbOffset += _pageSize;
@@ -110,6 +129,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   }
 
   void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       _loadMoreFromDb();
@@ -121,8 +142,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   List<dynamic> get _allEvents => [..._cacheEvents, ..._dbEvents];
 
   List<dynamic> get _filteredEvents {
-    return _allEvents.where((e) {
-      final event = e.event as String? ?? '';
+    return _allEvents.where((eventEntity) {
+      final event = eventEntity.event as String? ?? '';
 
       switch (_category) {
         case EventCategory.alerts:
@@ -133,7 +154,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           break;
 
         case EventCategory.actions:
-          if (![
+          const actionEvents = {
             'turnOn',
             'turnOff',
             'scene',
@@ -144,13 +165,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             'deviceRemoved',
             'sceneCreated',
             'sceneDeleted',
-          ].contains(event)) {
+          };
+
+          if (!actionEvents.contains(event) && !_isPresenceEvent(event)) {
             return false;
           }
           break;
 
         case EventCategory.errors:
-          if (!['offline', 'online', 'error'].contains(event)) {
+          if (!{'offline', 'online', 'error'}.contains(event)) {
             return false;
           }
           break;
@@ -159,16 +182,98 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           break;
       }
 
-      if (_selectedDeviceId != null && e.deviceId != _selectedDeviceId) {
+      if (_selectedDeviceId != null &&
+          eventEntity.deviceId != _selectedDeviceId) {
         return false;
       }
+
       return true;
     }).toList();
+  }
+
+  // ═══ СОСТОЯНИЕ ПРИСУТСТВИЯ ═══
+
+  /// Возвращает часть после стрелки, то есть новое состояние.
+  ///
+  /// Для старых записей без стрелки использует доступный текст события.
+  String _presenceCurrentRaw(dynamic eventEntity) {
+    final value = eventEntity.value?.toString().trim();
+
+    if (value != null && value.isNotEmpty) {
+      final parts = value.split('→');
+      return parts.last.trim();
+    }
+
+    final event = eventEntity.event?.toString() ?? '';
+    final parts = event.split('→');
+
+    if (parts.length > 1) {
+      return parts.last.trim();
+    }
+
+    return event.replaceFirst('Присутствие:', '').trim();
+  }
+
+  _PresenceVisualState _presenceVisualState(dynamic eventEntity) {
+    final current = _presenceCurrentRaw(eventEntity).toLowerCase();
+
+    if (current.contains('ушёл') || current.contains('ушел')) {
+      return _PresenceVisualState.away;
+    }
+
+    if (current.contains('дома')) {
+      if (current.contains('облако')) {
+        return _PresenceVisualState.homeCloud;
+      }
+
+      if (current.contains('heartbeat') ||
+          current.contains('wi-fi') ||
+          current.contains('wifi')) {
+        return _PresenceVisualState.homeWifi;
+      }
+
+      return _PresenceVisualState.home;
+    }
+
+    return _PresenceVisualState.unknown;
+  }
+
+  String _presenceLabel(dynamic eventEntity) {
+    switch (_presenceVisualState(eventEntity)) {
+      case _PresenceVisualState.away:
+        return 'Ушёл';
+      case _PresenceVisualState.homeCloud:
+        return 'Дома (облако)';
+      case _PresenceVisualState.homeWifi:
+        return 'Дома (Wi-Fi)';
+      case _PresenceVisualState.home:
+        return 'Дома';
+      case _PresenceVisualState.unknown:
+        return 'Неизвестно';
+    }
+  }
+
+  Color _presenceColor(dynamic eventEntity) {
+    switch (_presenceVisualState(eventEntity)) {
+      case _PresenceVisualState.away:
+        return Colors.red;
+      case _PresenceVisualState.homeCloud:
+        return Colors.amber.shade800;
+      case _PresenceVisualState.homeWifi:
+      case _PresenceVisualState.home:
+        return Colors.green;
+      case _PresenceVisualState.unknown:
+        return Colors.grey;
+    }
   }
 
   // ═══ ИКОНКИ / ЦВЕТА / МЕТКИ ═══
 
   IconData _eventIcon(String event) {
+    if (_isPresenceEvent(event)) {
+      return Icons.person_pin_circle;
+    }
+
     switch (event) {
       case 'turnOn':
         return Icons.power_settings_new;
@@ -190,6 +295,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         return Icons.movie_creation;
       case 'sceneDeleted':
         return Icons.movie_filter;
+      case 'online':
+        return Icons.wifi;
+      case 'offline':
+        return Icons.wifi_off;
+      case 'error':
+        return Icons.error;
     }
 
     if (event == 'alarm_water_leak') return Icons.water_drop;
@@ -214,18 +325,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     if (event == 'frigate_person') return Icons.person;
     if (event == 'frigate_car') return Icons.directions_car;
-    if (event == 'frigate_dog' || event == 'frigate_cat') return Icons.pets;
+    if (event == 'frigate_dog' || event == 'frigate_cat') {
+      return Icons.pets;
+    }
     if (event == 'frigate_bird') return Icons.flutter_dash;
     if (event.startsWith('frigate_')) return Icons.videocam;
-
-    switch (event) {
-      case 'online':
-        return Icons.wifi;
-      case 'offline':
-        return Icons.wifi_off;
-      case 'error':
-        return Icons.error;
-    }
 
     return Icons.circle;
   }
@@ -240,10 +344,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     if (event == 'turnOn') return Colors.green;
     if (event == 'turnOff') return Colors.red;
     if (event == 'scene') return Colors.purple;
+
     return Colors.blue;
   }
 
   String _eventLabel(String event) {
+    if (_isPresenceEvent(event)) return 'Присутствие';
+
     switch (event) {
       case 'turnOn':
         return 'Включено';
@@ -265,6 +372,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         return 'Сцена создана';
       case 'sceneDeleted':
         return 'Сцена удалена';
+      case 'online':
+        return 'В сети';
+      case 'offline':
+        return 'Не в сети';
+      case 'error':
+        return 'Ошибка';
     }
 
     if (event == 'alarm_water_leak') return '💧 Протечка';
@@ -283,15 +396,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       return '🎥 $label';
     }
 
-    switch (event) {
-      case 'online':
-        return 'В сети';
-      case 'offline':
-        return 'Не в сети';
-      case 'error':
-        return 'Ошибка';
-    }
-
     return event;
   }
 
@@ -303,12 +407,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     final filtered = _filteredEvents;
 
     final eventDeviceIds = _allEvents
-        .map((e) => e.deviceId as String?)
+        .map((event) => event.deviceId as String?)
         .whereType<String>()
         .toSet();
 
     final availableDevices =
-    devices.where((d) => eventDeviceIds.contains(d.id)).toList();
+    devices.where((device) => eventDeviceIds.contains(device.id)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -325,18 +429,20 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
-                builder: (ctx) => AlertDialog(
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('Очистить события?'),
                   content: const Text(
                     'Все события будут удалены безвозвратно.',
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
+                      onPressed: () =>
+                          Navigator.pop(dialogContext, false),
                       child: const Text('Отмена'),
                     ),
                     ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx, true),
+                      onPressed: () =>
+                          Navigator.pop(dialogContext, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
@@ -349,7 +455,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
               if (confirm == true) {
                 await AppDatabase.clearEvents();
                 StatsCache.instance.clear();
-                _loadInitial();
+                await _loadInitial();
               }
             },
           ),
@@ -371,7 +477,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       const SizedBox(width: 4),
                       _buildCategoryChip('Алерты', EventCategory.alerts),
                       const SizedBox(width: 4),
-                      _buildCategoryChip('Действия', EventCategory.actions),
+                      _buildCategoryChip(
+                        'Действия',
+                        EventCategory.actions,
+                      ),
                       const SizedBox(width: 4),
                       _buildCategoryChip('Ошибки', EventCategory.errors),
                     ],
@@ -393,14 +502,14 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                       child: Text('Все устройства'),
                     ),
                     ...availableDevices.map(
-                          (d) => DropdownMenuItem<String?>(
-                        value: d.id,
-                        child: Text(d.name),
+                          (device) => DropdownMenuItem<String?>(
+                        value: device.id,
+                        child: Text(device.name),
                       ),
                     ),
                   ],
-                  onChanged: (v) {
-                    setState(() => _selectedDeviceId = v);
+                  onChanged: (value) {
+                    setState(() => _selectedDeviceId = value);
                   },
                 ),
               ],
@@ -427,8 +536,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   );
                 }
 
-                final event = filtered[index];
-                final timestamp = event.timestamp?.toString();
+                final eventEntity = filtered[index];
+                final timestamp =
+                eventEntity.timestamp?.toString();
+
                 if (timestamp == null) {
                   return const SizedBox.shrink();
                 }
@@ -448,30 +559,41 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     '${dateTime.minute.toString().padLeft(2, '0')}:'
                     '${dateTime.second.toString().padLeft(2, '0')}';
 
-                final eventType = event.event as String? ?? '';
-                final details = event.value?.toString();
-                final sceneName = event.sceneName?.toString();
-                final deviceName = event.deviceName?.toString();
+                final eventType =
+                    eventEntity.event as String? ?? '';
+                final isPresence = _isPresenceEvent(eventType);
+                final eventColor = isPresence
+                    ? _presenceColor(eventEntity)
+                    : _eventColor(eventType);
 
-                final title = sceneName ?? (deviceName?.isNotEmpty == true
-                    ? deviceName!
-                    : eventType == 'error'
-                    ? 'Системная ошибка'
-                    : '');
+                final deviceName =
+                eventEntity.deviceName?.toString();
+                final sceneName =
+                eventEntity.sceneName?.toString();
 
-                final subtitle = sceneName != null
+                final title = sceneName ??
+                    (deviceName?.isNotEmpty == true
+                        ? deviceName!
+                        : eventType == 'error'
+                        ? 'Системная ошибка'
+                        : isPresence
+                        ? 'Телефон'
+                        : '');
+
+                final subtitle = isPresence
+                    ? _presenceLabel(eventEntity)
+                    : sceneName != null
                     ? 'Сцена выполнена'
-                    : eventType == 'error' &&
-                    details != null &&
-                    details.isNotEmpty
-                    ? '${_eventLabel(eventType)}\n$details'
+                    : eventType == 'error'
+                    ? '${_eventLabel(eventType)}'
+                    '${eventEntity.value != null ? '\n${eventEntity.value}' : ''}'
                     : _eventLabel(eventType);
 
                 return Card(
                   child: ListTile(
                     leading: Icon(
                       _eventIcon(eventType),
-                      color: _eventColor(eventType),
+                      color: eventColor,
                     ),
                     title: Text(
                       title,
@@ -482,11 +604,14 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     ),
                     subtitle: Text(
                       subtitle,
-                      maxLines: 3,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: _eventColor(eventType),
-                        fontSize: 12,
+                        color: eventColor,
+                        fontSize: 13,
+                        fontWeight: isPresence
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                     trailing: Column(

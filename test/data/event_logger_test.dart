@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 import 'package:shome/data/services/event_logger.dart';
 import 'package:shome/data/local/database.dart';
 
 void main() {
-  // Инициализируем sqflite для тестов
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -12,6 +14,9 @@ void main() {
 
   group('EventLogger', () {
     setUp(() async {
+      // Сначала сбрасываем возможные записи предыдущего теста,
+      // затем очищаем таблицу.
+      await EventLogger.flushNow();
       await AppDatabase.clearEvents();
     });
 
@@ -21,9 +26,11 @@ void main() {
         deviceId: 'dev_1',
         deviceName: 'Test Device',
       );
+      await EventLogger.flushNow();
 
       final events = await AppDatabase.getRecentEvents(limit: 10);
-      expect(events.length, 1);
+
+      expect(events, hasLength(1));
       expect(events.first.event, 'turnOn');
       expect(events.first.deviceName, 'Test Device');
     });
@@ -35,9 +42,11 @@ void main() {
         deviceName: 'Test Device',
         sceneName: 'Test Scene',
       );
+      await EventLogger.flushNow();
 
       final events = await AppDatabase.getRecentEvents(limit: 10);
-      expect(events.length, 1);
+
+      expect(events, hasLength(1));
       expect(events.first.event, 'scene');
       expect(events.first.sceneName, 'Test Scene');
     });
@@ -48,9 +57,11 @@ void main() {
         deviceId: 'dev_2',
         deviceName: 'New Device',
       );
+      await EventLogger.flushNow();
 
       final events = await AppDatabase.getRecentEvents(limit: 10);
-      expect(events.length, 1);
+
+      expect(events, hasLength(1));
       expect(events.first.event, 'deviceAdded');
     });
 
@@ -62,17 +73,25 @@ void main() {
           deviceName: 'Device $i',
         );
       }
+      await EventLogger.flushNow();
 
       final events = await AppDatabase.getRecentEvents(limit: 3);
-      expect(events.length, 3);
+
+      expect(events, hasLength(3));
     });
 
     test('Очистка событий', () async {
-      await EventLogger.log(event: 'turnOn', deviceId: 'dev_1', deviceName: 'Test');
+      await EventLogger.log(
+        event: 'turnOn',
+        deviceId: 'dev_1',
+        deviceName: 'Test',
+      );
+      await EventLogger.flushNow();
+
       await AppDatabase.clearEvents();
 
       final events = await AppDatabase.getRecentEvents(limit: 10);
-      expect(events.length, 0);
+      expect(events, isEmpty);
     });
   });
 }

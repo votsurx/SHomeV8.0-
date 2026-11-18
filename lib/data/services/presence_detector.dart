@@ -1,37 +1,40 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
+
 import 'heartbeat_server.dart';
 import 'mailru_cloud_service.dart';
+import 'event_logger.dart';
 import '../../application/models/presence_settings.dart';
 import '../local/secure_storage/encrypted_keys.dart';
 
 /// Статус присутствия для одного телефона.
 enum PhonePresenceStatus {
-  home,     // дома
-  away,     // ушёл
-  unknown,  // неизвестно
+  home, // дома
+  away, // ушёл
+  unknown, // неизвестно
 }
 
 /// Источник определения статуса.
 enum PresenceSource {
-  heartbeat,   // HTTP heartbeat (Wi-Fi, точно дома)
-  cloud,       // Mail.ru Cloud (может быть дома/рядом/ушёл)
-  unknown,     // нет данных
+  heartbeat, // HTTP heartbeat (Wi-Fi, точно дома)
+  cloud, // Mail.ru Cloud
+  unknown, // нет данных
 }
 
 class PhonePresence {
   final String phoneId;
   final String phoneName;
   PhonePresenceStatus status;
-  PresenceSource source;        // ← источник данных
+  PresenceSource source;
   double? lat;
   double? lng;
   int? battery;
   DateTime? lastSeen;
   bool viaWifi;
-  double? distanceFromHome;     // ← расстояние до дома в метрах
+  double? distanceFromHome;
 
   PhonePresence({
     required this.phoneId,
@@ -54,6 +57,7 @@ class PresenceDetector {
   bool _running = false;
 
   bool get isRunning => _running;
+
   Map<String, PhonePresence> get phones => _phones;
 
   void Function(
@@ -63,12 +67,16 @@ class PresenceDetector {
       )? onStatusChanged;
 
   bool get isAnyoneHome {
-    return _phones.values.any((p) => p.status == PhonePresenceStatus.home);
+    return _phones.values.any(
+          (phone) => phone.status == PhonePresenceStatus.home,
+    );
   }
 
   bool get isNobodyHome {
     return _phones.isNotEmpty &&
-        _phones.values.every((p) => p.status == PhonePresenceStatus.away);
+        _phones.values.every(
+              (phone) => phone.status == PhonePresenceStatus.away,
+        );
   }
 
   Future<void> start(PresenceSettings settings) async {
@@ -80,7 +88,7 @@ class PresenceDetector {
     _settings = settings;
     _phones.clear();
 
-    for (final phone in settings.phones.where((p) => p.enabled)) {
+    for (final phone in settings.phones.where((phone) => phone.enabled)) {
       _phones[phone.phoneId] = PhonePresence(
         phoneId: phone.phoneId,
         phoneName: phone.phoneName,
@@ -101,19 +109,57 @@ class PresenceDetector {
   Future<void> _checkAll() async {
     if (_settings == null) return;
 
-    final entries = List<MapEntry<String, PhonePresence>>.from(_phones.entries);
+    final entries = List<MapEntry<String, PhonePresence>>.from(
+      _phones.entries,
+    );
 
     for (final entry in entries) {
       if (!_running) return;
-      final phone = entry.value;
-      final oldStatus = phone.status;
 
+      final phone = entry.value;
       if (!_phones.containsKey(phone.phoneId)) continue;
+
+      final oldStatus = phone.status;
+      final oldSource = phone.source;
 
       await _checkPhone(phone);
 
-      if (phone.status != oldStatus) {
-        onStatusChanged?.call(phone.phoneId, oldStatus, phone.status);
+      final statusChanged = phone.status != oldStatus;
+      final sourceChanged = phone.source != oldSource;
+
+      if (statusChanged) {
+        onStatusChanged?.call(
+          phone.phoneId,
+          oldStatus,
+          phone.status,
+        );
+      }
+
+      // Записываем изменение статуса, а также смену источника известного
+      // статуса: например, «дома (облако) → дома (локальный heartbeat)».
+      // Повторные проверки без изменений в журнал не попадают.
+      final shouldLog =
+          statusChanged ||
+              (sourceChanged && phone.status != PhonePresenceStatus.unknown);
+
+      if (shouldLog) {
+        final oldDescription = _describePresence(oldStatus, oldSource);
+        final newDescription = _describePresence(phone.status, phone.source);
+        final transition = '$oldDescription → $newDescription';
+
+        try {
+          await EventLogger.log(
+            event: 'Присутствие: ${phone.phoneName}: $transition',
+            deviceId: phone.phoneId,
+            deviceName: phone.phoneName,
+            value: transition,
+          );
+        } catch (error, stackTrace) {
+          debugPrint(
+            '❌ Не удалось записать изменение присутствия '
+                'для ${phone.phoneName}: $error\n$stackTrace',
+          );
+        }
       }
     }
 
@@ -121,22 +167,24 @@ class PresenceDetector {
   }
 
   Future<void> _checkPhone(PhonePresence phone) async {
-    // ═══ 1. Локальный heartbeat — Companion в Wi-Fi сети ═══
+    // 1. Локальный heartbeat — Companion в Wi-Fi сети.
     if (HeartbeatServer.isAlive(phone.phoneId, maxAgeSec: 90)) {
-      final hb = HeartbeatServer.getHeartbeat(phone.phoneId);
+      final heartbeat = HeartbeatServer.getHeartbeat(phone.phoneId);
+
       phone.status = PhonePresenceStatus.home;
       phone.source = PresenceSource.heartbeat;
       phone.viaWifi = true;
-      phone.battery = hb?.battery;
+      phone.battery = heartbeat?.battery;
       phone.lastSeen = DateTime.now();
       phone.distanceFromHome = 0;
       phone.lat = null;
       phone.lng = null;
+
       debugPrint('🏠 ${phone.phoneName}: дома (HTTP heartbeat)');
       return;
     }
 
-    // ═══ 2. Нет heartbeat — читаем облако ═══
+    // 2. Нет heartbeat — читаем облако.
     final heartbeat = await _checkCloud(phone.phoneId);
 
     if (heartbeat == null) {
@@ -144,73 +192,118 @@ class PresenceDetector {
       phone.source = PresenceSource.unknown;
       phone.viaWifi = false;
       phone.distanceFromHome = null;
+
       debugPrint('❓ ${phone.phoneName}: unknown (нет данных)');
       return;
     }
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final ts = (heartbeat['ts'] as num?)?.toInt() ?? 0;
-    final age = now - ts;
-    final status = heartbeat['status'] as String? ?? 'unknown';
+    final timestamp = (heartbeat['ts'] as num?)?.toInt() ?? 0;
+    final age = now - timestamp;
+
+// Читаем статус безопасно: убираем пробелы и переводим в нижний регистр.
+    final rawStatus = heartbeat['status'];
+    final cloudStatus = rawStatus
+        ?.toString()
+        .trim()
+        .toLowerCase() ??
+        'unknown';
+
     final battery = (heartbeat['battery'] as num?)?.toInt();
+
     phone.battery = battery;
 
-    // ═══ 3. Данные старше 10 мин → unknown ═══
+    debugPrint(
+      '[PRESENCE CLOUD] '
+          'rawStatus=${jsonEncode(rawStatus)}, '
+          'normalized="$cloudStatus", '
+          'lat=${heartbeat['lat']}, '
+          'lng=${heartbeat['lng']}, '
+          'age=${age}ms',
+    );
+
+    // 3. Данные старше 10 минут — статус неизвестен.
     if (age > 10 * 60 * 1000) {
       phone.status = PhonePresenceStatus.unknown;
       phone.source = PresenceSource.cloud;
       phone.viaWifi = false;
       phone.distanceFromHome = null;
+
       debugPrint('❓ ${phone.phoneName}: unknown (данные старше 10 мин)');
       return;
     }
 
-    // ═══ 4. Читаем статус от Companion ═══
-    switch (status) {
+    // 4. Читаем статус от Companion.
+    switch (cloudStatus) {
       case 'home':
-      // Companion говорит "дома", но без Wi-Fi (возможно, GPS)
+        final lat = (heartbeat['lat'] as num?)?.toDouble();
+        final lng = (heartbeat['lng'] as num?)?.toDouble();
+
         phone.status = PhonePresenceStatus.home;
         phone.source = PresenceSource.cloud;
         phone.viaWifi = false;
-        phone.distanceFromHome = 0;
-        debugPrint('🏠 ${phone.phoneName}: дома (cloud)');
+        phone.lat = lat;
+        phone.lng = lng;
+
+        if (lat != null &&
+            lng != null &&
+            _settings!.homeLat != 0 &&
+            _settings!.homeLng != 0) {
+          phone.distanceFromHome = distance(
+            lat,
+            lng,
+            _settings!.homeLat,
+            _settings!.homeLng,
+          );
+
+          debugPrint(
+            '🏠 ${phone.phoneName}: дома (cloud, GPS '
+                '${phone.distanceFromHome!.round()} м)',
+          );
+        } else {
+          phone.distanceFromHome = null;
+          debugPrint(
+            '🏠 ${phone.phoneName}: дома, GPS координаты недоступны',
+          );
+        }
         break;
 
       case 'away':
         final lat = (heartbeat['lat'] as num?)?.toDouble();
         final lng = (heartbeat['lng'] as num?)?.toDouble();
+
         phone.lat = lat;
         phone.lng = lng;
         phone.source = PresenceSource.cloud;
         phone.viaWifi = false;
 
-        // Проверяем GPS в радиусе
         if (lat != null &&
             lng != null &&
             _settings!.homeLat != 0 &&
             _settings!.homeLng != 0) {
-          final dist = distance(
-            lat, lng, _settings!.homeLat, _settings!.homeLng,
+          final distanceFromHome = distance(
+            lat,
+            lng,
+            _settings!.homeLat,
+            _settings!.homeLng,
           );
-          phone.distanceFromHome = dist;
 
-          if (dist <= _settings!.homeRadius) {
-            // Companion сказал "away", но GPS в радиусе
-            // Это "рядом с домом" — на границе зоны
+          phone.distanceFromHome = distanceFromHome;
+
+          if (distanceFromHome <= _settings!.homeRadius) {
             phone.status = PhonePresenceStatus.home;
             debugPrint(
               '🏠 ${phone.phoneName}: рядом с домом '
-                  '(GPS, ${dist.round()} м)',
+                  '(GPS, ${distanceFromHome.round()} м)',
             );
           } else {
             phone.status = PhonePresenceStatus.away;
             debugPrint(
               '🚶 ${phone.phoneName}: ушёл '
-                  '(GPS, ${dist.round()} м)',
+                  '(GPS, ${distanceFromHome.round()} м)',
             );
           }
         } else {
-          // Нет координат → доверяем Companion
           phone.status = PhonePresenceStatus.away;
           phone.distanceFromHome = null;
           debugPrint('🚶 ${phone.phoneName}: ушёл (без GPS)');
@@ -222,7 +315,11 @@ class PresenceDetector {
         phone.source = PresenceSource.cloud;
         phone.viaWifi = false;
         phone.distanceFromHome = null;
-        debugPrint('❓ ${phone.phoneName}: unknown (status=$status)');
+
+        debugPrint(
+          '❓ ${phone.phoneName}: неизвестный cloud status '
+              '(raw=${jsonEncode(rawStatus)}, normalized="$cloudStatus")',
+        );
     }
   }
 
@@ -234,42 +331,80 @@ class PresenceDetector {
 
       if (login == null || password == null) return null;
 
-      final service = MailruCloudService(login: login, password: password);
+      final service = MailruCloudService(
+        login: login,
+        password: password,
+      );
+
       final content = await service.downloadPresence(phoneId: phoneId);
 
       if (content == null) return null;
+
       return jsonDecode(content) as Map<String, dynamic>;
-    } catch (e) {
-      debugPrint('❌ Ошибка чтения облака: $e');
+    } catch (error) {
+      debugPrint('❌ Ошибка чтения облака: $error');
       return null;
     }
   }
 
-  double distance(double lat1, double lng1, double lat2, double lng2) {
+  String _describePresence(
+      PhonePresenceStatus status,
+      PresenceSource source,
+      ) {
+    final statusText = switch (status) {
+      PhonePresenceStatus.home => 'дома',
+      PhonePresenceStatus.away => 'ушёл',
+      PhonePresenceStatus.unknown => 'неизвестно',
+    };
+
+    final sourceText = switch (source) {
+      PresenceSource.heartbeat => 'локальный heartbeat',
+      PresenceSource.cloud => 'облако',
+      PresenceSource.unknown => 'источник неизвестен',
+    };
+
+    return '$statusText ($sourceText)';
+  }
+
+  double distance(
+      double lat1,
+      double lng1,
+      double lat2,
+      double lng2,
+      ) {
     const earthRadius = 6371000.0;
-    final dLat = _toRadians(lat2 - lat1);
-    final dLng = _toRadians(lng2 - lng1);
-    final a = (0.5 -
-        0.5 * math.cos(dLat) +
+
+    final deltaLat = _toRadians(lat2 - lat1);
+    final deltaLng = _toRadians(lng2 - lng1);
+
+    final a = 0.5 -
+        0.5 * math.cos(deltaLat) +
         math.cos(_toRadians(lat1)) *
             math.cos(_toRadians(lat2)) *
-            (0.5 - 0.5 * math.cos(dLng)));
+            (0.5 - 0.5 * math.cos(deltaLng));
+
     return earthRadius * 2 * math.asin(math.sqrt(a));
   }
 
-  double _toRadians(double deg) => deg * math.pi / 180.0;
+  double _toRadians(double degrees) => degrees * math.pi / 180.0;
 
   void _logStatus() {
-    final homeCount =
-        _phones.values.where((p) => p.status == PhonePresenceStatus.home).length;
-    final awayCount =
-        _phones.values.where((p) => p.status == PhonePresenceStatus.away).length;
+    final homeCount = _phones.values
+        .where((phone) => phone.status == PhonePresenceStatus.home)
+        .length;
+
+    final awayCount = _phones.values
+        .where((phone) => phone.status == PhonePresenceStatus.away)
+        .length;
+
     final unknownCount = _phones.values
-        .where((p) => p.status == PhonePresenceStatus.unknown)
+        .where((phone) => phone.status == PhonePresenceStatus.unknown)
         .length;
 
     debugPrint(
-        '📊 Статус: дома=$homeCount, ушёл=$awayCount, неизвестно=$unknownCount');
+      '📊 Статус: дома=$homeCount, ушёл=$awayCount, '
+          'неизвестно=$unknownCount',
+    );
   }
 
   void stop() {

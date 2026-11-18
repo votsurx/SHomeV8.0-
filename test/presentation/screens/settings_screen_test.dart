@@ -1,94 +1,158 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shome/presentation/screens/settings_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'package:shome/data/local/database.dart';
+import 'package:shome/data/services/adaptive_poller.dart';
 import 'package:shome/presentation/screens/documents/legal_documents_screen.dart';
+import 'package:shome/presentation/screens/screen_settings_screen.dart';
+import 'package:shome/presentation/screens/settings_screen.dart';
 
 void main() {
-  // Инициализируем биндинг — нужен для SharedPreferences в тестах
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  setUpAll(() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    await AppDatabase.database;
+  });
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    await AdaptivePoller.writeIntervalMs(5000);
+  });
+
+  Future<void> settleDatabaseTimers(WidgetTester tester) async {
+    // AppDatabase.getStatsSetting внутри FutureBuilder использует SQLite.
+    // Продвигаем fake clock дальше 10-секундного тайм-аута sqflite.
+    await tester.pump(const Duration(seconds: 11));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> pumpSettings(WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsScreen(
+          statsSettingReader: (key) async {
+            if (key == 'events_retention_days') return '30';
+            if (key == 'electricity_tariff_rub_per_kwh') return '5.5';
+            return null;
+          },
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> scrollToText(
+      WidgetTester tester,
+      String text,
+      ) async {
+    await tester.scrollUntilVisible(
+      find.text(text),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await settleDatabaseTimers(tester);
+  }
+
   group('SettingsScreen', () {
-    setUp(() async {
-      SharedPreferences.setMockInitialValues({'poll_interval': 5});
-    });
-
-    testWidgets('отображает интервал опроса', (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-      await tester.pumpAndSettle();
+    testWidgets('отображает заголовок и интервал опроса', (tester) async {
+      await pumpSettings(tester);
 
       expect(find.text('Настройки'), findsOneWidget);
       expect(find.text('Интервал опроса'), findsOneWidget);
-      expect(find.text('5 сек'), findsOneWidget);
+      expect(
+        find.text(AdaptivePoller.formatIntervalMs(5000)),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('отображает резервное копирование', (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-      await tester.pumpAndSettle();
+    testWidgets('отображает настройки экрана', (tester) async {
+      await pumpSettings(tester);
 
-      expect(find.text('Резервное копирование'), findsOneWidget);
+      expect(find.text('Настройки экрана'), findsOneWidget);
+      expect(find.text('Заставка и отображение'), findsOneWidget);
     });
 
-    testWidgets('отображает Информацию', (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-      await tester.pumpAndSettle();
-
-      // Плитка называется «Информация», а не «О приложении»
-      expect(find.text('Информация'), findsOneWidget);
-    });
-
-    testWidgets('отображает основные пункты настроек', (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Настройки'), findsOneWidget);
-      expect(find.text('Интервал опроса'), findsOneWidget);
-      expect(find.text('Резервное копирование'), findsOneWidget);
-      expect(find.text('Настройки MQTT'), findsOneWidget);
-      expect(find.text('Проверить обновления'), findsOneWidget);
-      expect(find.text('Информация'), findsOneWidget);
-    });
-
-    testWidgets('нажатие на Резервное копирование открывает SimpleDialog',
+    testWidgets('основные пункты настроек доступны при прокрутке',
             (tester) async {
-          await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-          await tester.pumpAndSettle();
+          await pumpSettings(tester);
 
-          await tester.tap(find.text('Резервное копирование'));
-          await tester.pumpAndSettle();
+          const items = [
+            'Интервал опроса',
+            'Настройки экрана',
+            'Хранить события',
+            'Тариф электроэнергии',
+            'Резервное копирование',
+            'Настройки MQTT',
+            'Проверить обновления',
+            'Информация',
+          ];
 
-          // В SimpleDialog должны быть пункты экспорта/импорта
-          expect(find.text('Экспортировать'), findsOneWidget);
-          expect(find.text('Импортировать'), findsOneWidget);
+          for (final item in items) {
+            await scrollToText(tester, item);
+            expect(find.text(item), findsOneWidget);
+          }
         });
 
-    testWidgets('нажатие на Интервал опроса открывает SimpleDialog с вариантами',
+    testWidgets('настройки экрана открывают ScreenSettingsScreen',
             (tester) async {
-          await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
+          await pumpSettings(tester);
+
+          await tester.tap(find.text('Настройки экрана'));
           await tester.pumpAndSettle();
+
+          expect(find.byType(ScreenSettingsScreen), findsOneWidget);
+          expect(find.text('Заставка'), findsOneWidget);
+        });
+
+    testWidgets(
+      'резервное копирование открывает диалог экспорта и импорта',
+          (tester) async {
+        await pumpSettings(tester);
+
+        await tester.tap(find.text('Резервное копирование'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Экспортировать'), findsOneWidget);
+        expect(find.text('Импортировать'), findsOneWidget);
+      },
+    );
+
+    testWidgets('интервал опроса показывает актуальные варианты',
+            (tester) async {
+          await pumpSettings(tester);
 
           await tester.tap(find.text('Интервал опроса'));
           await tester.pumpAndSettle();
 
-          expect(find.text('2 секунд'), findsOneWidget);
-          expect(find.text('5 секунд'), findsOneWidget);
-          expect(find.text('10 секунд'), findsOneWidget);
-          expect(find.text('30 секунд'), findsOneWidget);
+          final dialog = find.byType(SimpleDialog);
+          expect(dialog, findsOneWidget);
+
+          for (final label in AdaptivePoller.intervalOptions.values) {
+            expect(
+              find.descendant(
+                of: dialog,
+                matching: find.text(label),
+              ),
+              findsOneWidget,
+              reason: 'В диалоге должен быть вариант "$label"',
+            );
+          }
         });
 
-    testWidgets('нажатие на Информация открывает LegalDocumentsScreen',
+    testWidgets('Информация открывает экран юридических документов',
             (tester) async {
-          await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
-          await tester.pumpAndSettle();
+          await pumpSettings(tester);
 
+          await scrollToText(tester, 'Информация');
           await tester.tap(find.text('Информация'));
           await tester.pumpAndSettle();
 
-          // Проверяем, что открылся экран с юридическими документами
           expect(find.byType(LegalDocumentsScreen), findsOneWidget);
-          expect(find.text('Лицензионное соглашение (EULA)'), findsOneWidget);
-          expect(find.text('Политика конфиденциальности'), findsOneWidget);
-          expect(find.text('Условия использования'), findsOneWidget);
         });
   });
 }

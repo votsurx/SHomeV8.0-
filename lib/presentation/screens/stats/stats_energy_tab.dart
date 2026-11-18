@@ -78,7 +78,7 @@ class _StatsEnergyTabState extends ConsumerState<StatsEnergyTab> {
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-              childAspectRatio: 1.9,
+              childAspectRatio: 1.2,
               children: [
                 StatCard(
                   label: 'Потребление',

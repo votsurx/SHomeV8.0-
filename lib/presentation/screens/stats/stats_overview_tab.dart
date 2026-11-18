@@ -90,7 +90,7 @@ class _StatsOverviewTabState extends ConsumerState<StatsOverviewTab> {
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-              childAspectRatio: 1.9,
+              childAspectRatio: 1.25,
               children: [
                 StatCard(
                   label: 'Алерты',

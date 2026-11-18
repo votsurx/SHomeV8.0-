@@ -1,0 +1,628 @@
+[1mdiff --git a/lib/app.dart b/lib/app.dart[m
+[1mindex 9ad53ce..e84c4bb 100644[m
+[1m--- a/lib/app.dart[m
+[1m+++ b/lib/app.dart[m
+[36m@@ -49,7 +49,9 @@[m [mclass _SHomeAppState extends State<SHomeApp> {[m
+                 return ScreenSaverHost([m
+                   enabled: config.enabled,[m
+                   idleTimeout: Duration(seconds: config.idleTimeoutSeconds),[m
+[32m+[m[32m                  motionWakeEnabled: config.motionWakeEnabled,[m
+                   iconSize: 180,[m
+[32m+[m[32m                  motionSensitivity: config.motionSensitivity,[m
+                   screenSaverBuilder: (context) {[m
+                     return Lottie.asset([m
+                       'assets/animations/Home.json',[m
+[1mdiff --git a/lib/data/services/screen_saver_settings.dart b/lib/data/services/screen_saver_settings.dart[m
+[1mindex 59c0846..189963d 100644[m
+[1m--- a/lib/data/services/screen_saver_settings.dart[m
+[1m+++ b/lib/data/services/screen_saver_settings.dart[m
+[36m@@ -5,19 +5,29 @@[m [mclass ScreenSaverConfig {[m
+   const ScreenSaverConfig({[m
+     this.enabled = true,[m
+     this.idleTimeoutSeconds = 120,[m
+[32m+[m[32m    this.motionWakeEnabled = false,[m
+[32m+[m[32m    this.motionSensitivity = 50,[m
+   });[m
+ [m
+   final bool enabled;[m
+   final int idleTimeoutSeconds;[m
+[32m+[m[32m  final bool motionWakeEnabled;[m
+[32m+[m[32m  final int motionSensitivity;[m
+ [m
+   ScreenSaverConfig copyWith({[m
+     bool? enabled,[m
+     int? idleTimeoutSeconds,[m
+[32m+[m[32m    bool? motionWakeEnabled,[m
+[32m+[m[32m    int? motionSensitivity,[m
+   }) {[m
+     return ScreenSaverConfig([m
+       enabled: enabled ?? this.enabled,[m
+       idleTimeoutSeconds:[m
+       idleTimeoutSeconds ?? this.idleTimeoutSeconds,[m
+[32m+[m[32m      motionWakeEnabled:[m
+[32m+[m[32m      motionWakeEnabled ?? this.motionWakeEnabled,[m
+[32m+[m[32m      motionSensitivity:[m
+[32m+[m[32m      motionSensitivity ?? this.motionSensitivity,[m
+     );[m
+   }[m
+ }[m
+[36m@@ -27,6 +37,8 @@[m [mclass ScreenSaverSettings {[m
+ [m
+   static const _enabledKey = 'screen_saver_enabled';[m
+   static const _timeoutKey = 'screen_saver_idle_timeout_seconds';[m
+[32m+[m[32m  static const _motionWakeKey = 'screen_saver_motion_wake_enabled';[m
+[32m+[m[32m  static const _motionSensitivityKey = 'screen_saver_motion_sensitivity';[m
+ [m
+   static final ValueNotifier<ScreenSaverConfig> value =[m
+   ValueNotifier(const ScreenSaverConfig());[m
+[36m@@ -39,24 +51,40 @@[m [mclass ScreenSaverSettings {[m
+ [m
+   static Future<void> _readSettings() async {[m
+     final prefs = await SharedPreferences.getInstance();[m
+[32m+[m[32m    motionSensitivity:prefs.getInt(_motionSensitivityKey) ?? 50;[m
+ [m
+     value.value = ScreenSaverConfig([m
+       enabled: prefs.getBool(_enabledKey) ?? true,[m
+       idleTimeoutSeconds: prefs.getInt(_timeoutKey) ?? 120,[m
+[32m+[m[32m      motionWakeEnabled: prefs.getBool(_motionWakeKey) ?? false,[m
+     );[m
+   }[m
+[32m+[m[32m  static Future<void> setMotionSensitivity(int sensitivity) async {[m
+[32m+[m[32m    final value = sensitivity.clamp(0, 100);[m
+[32m+[m[32m    final prefs = await SharedPreferences.getInstance();[m
+[32m+[m
+[32m+[m[32m    await prefs.setInt(_motionSensitivityKey, value);[m
+[32m+[m[32m    ScreenSaverSettings.value.value =[m
+[32m+[m[32m        ScreenSaverSettings.value.value.copyWith([m
+[32m+[m[32m          motionSensitivity: value,[m
+[32m+[m[32m        );[m
+[32m+[m[32m  }[m
+ [m
+   static Future<void> setEnabled(bool enabled) async {[m
+     final prefs = await SharedPreferences.getInstance();[m
+     await prefs.setBool(_enabledKey, enabled);[m
+[31m-[m
+     value.value = value.value.copyWith(enabled: enabled);[m
+   }[m
+ [m
+   static Future<void> setIdleTimeout(int seconds) async {[m
+     final prefs = await SharedPreferences.getInstance();[m
+     await prefs.setInt(_timeoutKey, seconds);[m
+[31m-[m
+     value.value = value.value.copyWith(idleTimeoutSeconds: seconds);[m
+   }[m
+[32m+[m
+[32m+[m[32m  static Future<void> setMotionWakeEnabled(bool enabled) async {[m
+[32m+[m[32m    final prefs = await SharedPreferences.getInstance();[m
+[32m+[m[32m    await prefs.setBool(_motionWakeKey, enabled);[m
+[32m+[m[32m    value.value = value.value.copyWith(motionWakeEnabled: enabled);[m
+[32m+[m[32m  }[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/lib/presentation/screens/screen_settings_screen.dart b/lib/presentation/screens/screen_settings_screen.dart[m
+[1mindex 17096d1..95b41bb 100644[m
+[1m--- a/lib/presentation/screens/screen_settings_screen.dart[m
+[1m+++ b/lib/presentation/screens/screen_settings_screen.dart[m
+[36m@@ -21,7 +21,9 @@[m [mclass _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {[m
+ [m
+   bool _isLoading = true;[m
+   bool _enabled = true;[m
+[32m+[m[32m  bool _motionWakeEnabled = false;[m
+   int _idleTimeoutSeconds = 120;[m
+[32m+[m[32m  int _motionSensitivity = 50;[m
+ [m
+   @override[m
+   void initState() {[m
+[36m@@ -35,12 +37,24 @@[m [mclass _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {[m
+     if (!mounted) return;[m
+ [m
+     final config = ScreenSaverSettings.value.value;[m
+[32m+[m
+     setState(() {[m
+       _enabled = config.enabled;[m
+       _idleTimeoutSeconds = config.idleTimeoutSeconds;[m
+[32m+[m[32m      _motionWakeEnabled = config.motionWakeEnabled;[m
+[32m+[m[32m      _motionSensitivity = config.motionSensitivity;[m
+       _isLoading = false;[m
+     });[m
+   }[m
+[32m+[m[32m  Future<void> _setMotionSensitivity(int sensitivity) async {[m
+[32m+[m[32m    setState(() => _motionSensitivity = sensitivity);[m
+[32m+[m[32m    await ScreenSaverSettings.setMotionSensitivity(sensitivity);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  Future<void> _setMotionWakeEnabled(bool enabled) async {[m
+[32m+[m[32m    setState(() => _motionWakeEnabled = enabled);[m
+[32m+[m[32m    await ScreenSaverSettings.setMotionWakeEnabled(enabled);[m
+[32m+[m[32m  }[m
+ [m
+   Future<void> _setEnabled(bool enabled) async {[m
+     setState(() => _enabled = enabled);[m
+[36m@@ -85,6 +99,76 @@[m [mclass _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {[m
+             ),[m
+           ),[m
+           const SizedBox(height: 12),[m
+[32m+[m[32m          Card([m
+[32m+[m[32m            child: SwitchListTile([m
+[32m+[m[32m              secondary: const Icon([m
+[32m+[m[32m                Icons.directions_run,[m
+[32m+[m[32m                color: Colors.teal,[m
+[32m+[m[32m              ),[m
+[32m+[m[32m              title: const Text('Сбрасывать заставку по движению'),[m
+[32m+[m[32m              subtitle: const Text([m
+[32m+[m[32m                'Использовать фронтальную камеру, пока показана заставка',[m
+[32m+[m[32m              ),[m
+[32m+[m[32m              value: _motionWakeEnabled,[m
+[32m+[m[32m              onChanged: _enabled ? _setMotionWakeEnabled : null,[m
+[32m+[m[32m            ),[m
+[32m+[m[32m          ),[m
+[32m+[m[32m          const SizedBox(height: 12),[m
+[32m+[m[32m          Card([m
+[32m+[m[32m            child: Padding([m
+[32m+[m[32m              padding: const EdgeInsets.all(16),[m
+[32m+[m[32m              child: Column([m
+[32m+[m[32m                crossAxisAlignment: CrossAxisAlignment.start,[m
+[32m+[m[32m                children: [[m
+[32m+[m[32m                  Row([m
+[32m+[m[32m                    children: [[m
+[32m+[m[32m                      const Icon(Icons.tune),[m
+[32m+[m[32m                      const SizedBox(width: 12),[m
+[32m+[m[32m                      Expanded([m
+[32m+[m[32m                        child: Text([m
+[32m+[m[32m                          'Чувствительность: $_motionSensitivity%',[m
+[32m+[m[32m                          style: Theme.of(context).textTheme.titleMedium,[m
+[32m+[m[32m                        ),[m
+[32m+[m[32m                      ),[m
+[32m+[m[32m                    ],[m
+[32m+[m[32m                  ),[m
+[32m+[m[32m                  Slider([m
+[32m+[m[32m                    value: _motionSensitivity.toDouble(),[m
+[32m+[m[32m                    min: 0,[m
+[32m+[m[32m                    max: 100,[m
+[32m+[m[32m                    divisions: 20,[m
+[32m+[m[32m                    label: '$_motionSensitivity%',[m
+[32m+[m[32m                    onChanged: !_enabled || !_motionWakeEnabled[m
+[32m+[m[32m                        ? null[m
+[32m+[m[32m                        : (value) {[m
+[32m+[m[32m                      setState(() {[m
+[32m+[m[32m                        _motionSensitivity = value.round();[m
+[32m+[m[32m                      });[m
+[32m+[m[32m                    },[m
+[32m+[m[32m                    onChangeEnd: !_enabled || !_motionWakeEnabled[m
+[32m+[m[32m                        ? null[m
+[32m+[m[32m                        : (value) {[m
+[32m+[m[32m                      _setMotionSensitivity(value.round());[m
+[32m+[m[32m                    },[m
+[32m+[m[32m                  ),[m
+[32m+[m[32m                  const Row([m
+[32m+[m[32m                    mainAxisAlignment: MainAxisAlignment.spaceBetween,[m
+[32m+[m[32m                    children: [[m
+[32m+[m[32m                      Text('Низкая'),[m
+[32m+[m[32m                      Text('Высокая'),[m
+[32m+[m[32m                    ],[m
+[32m+[m[32m                  ),[m
+[32m+[m[32m                  const SizedBox(height: 4),[m
+[32m+[m[32m                  Text([m
+[32m+[m[32m                    'Если заставка срабатывает без движения, '[m
+[32m+[m[32m                        'уменьшите чувствительность.',[m
+[32m+[m[32m                    style: Theme.of(context).textTheme.bodySmall,[m
+[32m+[m[32m                  ),[m
+[32m+[m[32m                ],[m
+[32m+[m[32m              ),[m
+[32m+[m[32m            ),[m
+[32m+[m[32m          ),[m
+[32m+[m[32m          const SizedBox(height: 12),[m
+           Card([m
+             child: ListTile([m
+               leading: const Icon(Icons.timer_outlined),[m
+[1mdiff --git a/lib/presentation/widgets/screen_saver_host.dart b/lib/presentation/widgets/screen_saver_host.dart[m
+[1mindex 4ed279f..9b8ceef 100644[m
+[1m--- a/lib/presentation/widgets/screen_saver_host.dart[m
+[1m+++ b/lib/presentation/widgets/screen_saver_host.dart[m
+[36m@@ -1,18 +1,23 @@[m
+ import 'dart:async';[m
+ import 'dart:math' as math;[m
+[32m+[m[32mimport 'dart:typed_data';[m
+ [m
+[32m+[m[32mimport 'package:camera/camera.dart';[m
+ import 'package:flutter/material.dart';[m
+ [m
+[31m-/// Оборачивает приложение и показывает заставку после периода бездействия.[m
+[32m+[m[32m/// Показывает заставку после периода бездействия.[m
+ ///[m
+[31m-/// Любое касание закрывает заставку и перезапускает таймер бездействия.[m
+[31m-/// Содержимое заставки передаётся через [screenSaverBuilder] — туда можно[m
+[31m-/// подставить анимированную иконку из экрана первого запуска.[m
+[32m+[m[32m/// Если включён motionWakeEnabled, фронтальная камера работает только[m
+[32m+[m[32m/// пока заставка видна и приложение находится на переднем плане.[m
+[32m+[m[32m/// Анализируются только яркостные значения кадров в памяти:[m
+[32m+[m[32m/// кадры не сохраняются и не отправляются.[m
+ class ScreenSaverHost extends StatefulWidget {[m
+   const ScreenSaverHost({[m
+     required this.child,[m
+     required this.screenSaverBuilder,[m
+     this.enabled = true,[m
+[32m+[m[32m    this.motionWakeEnabled = false,[m
+[32m+[m[32m    this.motionSensitivity = 50,[m
+     this.idleTimeout = const Duration(minutes: 2),[m
+     this.iconSize = 104,[m
+     this.backgroundColor = const Color(0xFF050505),[m
+[36m@@ -24,12 +29,16 @@[m [mclass ScreenSaverHost extends StatefulWidget {[m
+   final WidgetBuilder screenSaverBuilder;[m
+ [m
+   final bool enabled;[m
+[32m+[m[32m  final bool motionWakeEnabled;[m
+[32m+[m
+[32m+[m[32m  /// Диапазон 0–100: чем выше значение, тем чувствительнее детекция.[m
+[32m+[m[32m  final int motionSensitivity;[m
+[32m+[m
+   final Duration idleTimeout;[m
+   final double iconSize;[m
+   final Color backgroundColor;[m
+ [m
+[31m-  /// Позже пригодится для камеры: включать её при true и выключать при false.[m
+[31m-  /// true означает, что заставка видна и приложение на переднем плане.[m
+[32m+[m[32m  /// Вызывается, когда заставка показывается на переднем плане или скрывается.[m
+   final ValueChanged<bool>? onScreenSaverActiveChanged;[m
+ [m
+   @override[m
+[36m@@ -38,11 +47,22 @@[m [mclass ScreenSaverHost extends StatefulWidget {[m
+ [m
+ class _ScreenSaverHostState extends State<ScreenSaverHost>[m
+     with WidgetsBindingObserver {[m
+[32m+[m[32m  static const _cameraWarmupDuration = Duration(seconds: 3);[m
+[32m+[m[32m  static const _sampleStep = 8;[m
+[32m+[m
+   final math.Random _random = math.Random();[m
+ [m
+   Timer? _idleTimer;[m
+   Timer? _movementTimer;[m
+ [m
+[32m+[m[32m  CameraController? _motionCamera;[m
+[32m+[m[32m  bool _cameraStarting = false;[m
+[32m+[m[32m  bool _motionTriggered = false;[m
+[32m+[m
+[32m+[m[32m  DateTime? _ignoreMotionUntil;[m
+[32m+[m[32m  Uint8List? _previousSamples;[m
+[32m+[m[32m  int _consecutiveMotionFrames = 0;[m
+[32m+[m
+   bool _showingScreenSaver = false;[m
+   bool _appResumed = true;[m
+ [m
+[36m@@ -62,11 +82,25 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+     super.didUpdateWidget(oldWidget);[m
+ [m
+     if (!widget.enabled) {[m
+[31m-      _hideScreenSaver();[m
+       _idleTimer?.cancel();[m
+[31m-    } else if (!oldWidget.enabled || oldWidget.idleTimeout != widget.idleTimeout) {[m
+[32m+[m[32m      _hideScreenSaver();[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (!oldWidget.enabled ||[m
+[32m+[m[32m        oldWidget.idleTimeout != widget.idleTimeout) {[m
+       _scheduleIdleTimer();[m
+     }[m
+[32m+[m
+[32m+[m[32m    if (oldWidget.motionWakeEnabled != widget.motionWakeEnabled) {[m
+[32m+[m[32m      if (widget.motionWakeEnabled &&[m
+[32m+[m[32m          _showingScreenSaver &&[m
+[32m+[m[32m          _appResumed) {[m
+[32m+[m[32m        unawaited(_startMotionCamera());[m
+[32m+[m[32m      } else {[m
+[32m+[m[32m        unawaited(_stopMotionCamera());[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+   }[m
+ [m
+   @override[m
+[36m@@ -76,6 +110,7 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+     if (!_appResumed) {[m
+       _idleTimer?.cancel();[m
+       _movementTimer?.cancel();[m
+[32m+[m[32m      unawaited(_stopMotionCamera());[m
+       _notifyScreenSaverState();[m
+       return;[m
+     }[m
+[36m@@ -83,6 +118,10 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+     if (_showingScreenSaver) {[m
+       _startMovementTimer();[m
+       _notifyScreenSaverState();[m
+[32m+[m
+[32m+[m[32m      if (widget.motionWakeEnabled) {[m
+[32m+[m[32m        unawaited(_startMotionCamera());[m
+[32m+[m[32m      }[m
+     } else {[m
+       _scheduleIdleTimer();[m
+     }[m
+[36m@@ -109,20 +148,31 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+       _y = 0.5;[m
+     });[m
+ [m
+[32m+[m[32m    _motionTriggered = false;[m
+     _startMovementTimer();[m
+     _notifyScreenSaverState();[m
+[32m+[m
+[32m+[m[32m    if (widget.motionWakeEnabled) {[m
+[32m+[m[32m      unawaited(_startMotionCamera());[m
+[32m+[m[32m    }[m
+   }[m
+ [m
+   void _hideScreenSaver() {[m
+     _idleTimer?.cancel();[m
+     _movementTimer?.cancel();[m
+[32m+[m[32m    unawaited(_stopMotionCamera());[m
+ [m
+[31m-    if (_showingScreenSaver && mounted) {[m
+[31m-      setState(() {[m
+[31m-        _showingScreenSaver = false;[m
+[31m-      });[m
+[31m-      _notifyScreenSaverState();[m
+[32m+[m[32m    if (!_showingScreenSaver || !mounted) {[m
+[32m+[m[32m      return;[m
+     }[m
+[32m+[m
+[32m+[m[32m    setState(() {[m
+[32m+[m[32m      _showingScreenSaver = false;[m
+[32m+[m[32m    });[m
+[32m+[m
+[32m+[m[32m    _motionTriggered = false;[m
+[32m+[m[32m    _notifyScreenSaverState();[m
+[32m+[m[32m    _scheduleIdleTimer();[m
+   }[m
+ [m
+   void _onPointerDown(PointerDownEvent event) {[m
+[36m@@ -155,6 +205,210 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+     );[m
+   }[m
+ [m
+[32m+[m[32m  Future<void> _startMotionCamera() async {[m
+[32m+[m[32m    if (_cameraStarting ||[m
+[32m+[m[32m        _motionCamera != null ||[m
+[32m+[m[32m        !_canUseCamera) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    _cameraStarting = true;[m
+[32m+[m[32m    CameraController? controller;[m
+[32m+[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      final cameras = await availableCameras();[m
+[32m+[m
+[32m+[m[32m      if (!_canUseCamera || cameras.isEmpty) {[m
+[32m+[m[32m        return;[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      final frontCameras = cameras.where([m
+[32m+[m[32m            (camera) => camera.lensDirection == CameraLensDirection.front,[m
+[32m+[m[32m      );[m
+[32m+[m
+[32m+[m[32m      final camera = frontCameras.isNotEmpty[m
+[32m+[m[32m          ? frontCameras.first[m
+[32m+[m[32m          : cameras.first;[m
+[32m+[m
+[32m+[m[32m      controller = CameraController([m
+[32m+[m[32m        camera,[m
+[32m+[m[32m        ResolutionPreset.low,[m
+[32m+[m[32m        enableAudio: false,[m
+[32m+[m[32m        imageFormatGroup: ImageFormatGroup.yuv420,[m
+[32m+[m[32m      );[m
+[32m+[m
+[32m+[m[32m      await controller.initialize();[m
+[32m+[m
+[32m+[m[32m      if (!_canUseCamera) {[m
+[32m+[m[32m        await controller.dispose();[m
+[32m+[m[32m        return;[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      _motionCamera = controller;[m
+[32m+[m[32m      _previousSamples = null;[m
+[32m+[m[32m      _consecutiveMotionFrames = 0;[m
+[32m+[m
+[32m+[m[32m      // Даём камере время стабилизировать экспозицию и баланс белого.[m
+[32m+[m[32m      // Во время этого периода кадры только обновляют опорное изображение,[m
+[32m+[m[32m      // а движение не считается.[m
+[32m+[m[32m      _ignoreMotionUntil = DateTime.now().add(_cameraWarmupDuration);[m
+[32m+[m
+[32m+[m[32m      await controller.startImageStream(_onCameraImage);[m
+[32m+[m
+[32m+[m[32m      if (!_canUseCamera) {[m
+[32m+[m[32m        await _stopMotionCamera();[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } catch (_) {[m
+[32m+[m[32m      if (controller != null) {[m
+[32m+[m[32m        if (identical(_motionCamera, controller)) {[m
+[32m+[m[32m          _motionCamera = null;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        try {[m
+[32m+[m[32m          await controller.dispose();[m
+[32m+[m[32m        } catch (_) {[m
+[32m+[m[32m          // Ошибка камеры не должна ломать интерфейс SHome.[m
+[32m+[m[32m        }[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // Если камера недоступна или разрешение не выдано,[m
+[32m+[m[32m      // заставку всё равно можно закрыть касанием.[m
+[32m+[m[32m    } finally {[m
+[32m+[m[32m      _cameraStarting = false;[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  bool get _canUseCamera =>[m
+[32m+[m[32m      mounted &&[m
+[32m+[m[32m          _showingScreenSaver &&[m
+[32m+[m[32m          _appResumed &&[m
+[32m+[m[32m          widget.enabled &&[m
+[32m+[m[32m          widget.motionWakeEnabled &&[m
+[32m+[m[32m          !_motionTriggered;[m
+[32m+[m
+[32m+[m[32m  void _onCameraImage(CameraImage image) {[m
+[32m+[m[32m    if (!_canUseCamera ||[m
+[32m+[m[32m        image.planes.isEmpty ||[m
+[32m+[m[32m        image.format.group != ImageFormatGroup.yuv420) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // Первая плоскость YUV420 содержит яркостный канал.[m
+[32m+[m[32m    // Учитываем stride, чтобы корректно выбирать пиксели по строкам.[m
+[32m+[m[32m    final plane = image.planes.first;[m
+[32m+[m[32m    final bytes = plane.bytes;[m
+[32m+[m[32m    final pixelStride = plane.bytesPerPixel ?? 1;[m
+[32m+[m[32m    final samplesPerRow = (image.width + _sampleStep - 1) ~/ _sampleStep;[m
+[32m+[m[32m    final samplesPerColumn =[m
+[32m+[m[32m        (image.height + _sampleStep - 1) ~/ _sampleStep;[m
+[32m+[m
+[32m+[m[32m    if (samplesPerRow <= 0 ||[m
+[32m+[m[32m        samplesPerColumn <= 0 ||[m
+[32m+[m[32m        bytes.isEmpty) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    final samples = Uint8List(samplesPerRow * samplesPerColumn);[m
+[32m+[m[32m    var sampleIndex = 0;[m
+[32m+[m
+[32m+[m[32m    for (var y = 0; y < image.height; y += _sampleStep) {[m
+[32m+[m[32m      for (var x = 0; x < image.width; x += _sampleStep) {[m
+[32m+[m[32m        final byteIndex =[m
+[32m+[m[32m            y * plane.bytesPerRow + x * pixelStride;[m
+[32m+[m
+[32m+[m[32m        if (byteIndex >= bytes.length) {[m
+[32m+[m[32m          continue;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        samples[sampleIndex++] = bytes[byteIndex];[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (sampleIndex == 0) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    final currentSamples = sampleIndex == samples.length[m
+[32m+[m[32m        ? samples[m
+[32m+[m[32m        : Uint8List.fromList(samples.sublist(0, sampleIndex));[m
+[32m+[m
+[32m+[m[32m    final previous = _previousSamples;[m
+[32m+[m[32m    _previousSamples = currentSamples;[m
+[32m+[m
+[32m+[m[32m    // После запуска камеры кадры используются только для обновления[m
+[32m+[m[32m    // опорного изображения, чтобы исключить ложное срабатывание[m
+[32m+[m[32m    // из-за автоэкспозиции и настройки камеры.[m
+[32m+[m[32m    final ignoreUntil = _ignoreMotionUntil;[m
+[32m+[m[32m    if (ignoreUntil != null && DateTime.now().isBefore(ignoreUntil)) {[m
+[32m+[m[32m      _consecutiveMotionFrames = 0;[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (previous == null || previous.length != currentSamples.length) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    final sensitivity = widget.motionSensitivity.clamp(0, 100);[m
+[32m+[m
+[32m+[m[32m    // При высокой чувствительности меньшие изменения яркости считаются[m
+[32m+[m[32m    // движением, а доля кадра, которая должна измениться, уменьшается.[m
+[32m+[m[32m    final pixelDeltaThreshold = (40 - sensitivity * 0.28).round();[m
+[32m+[m[32m    final changedRatioThreshold = 0.35 - sensitivity * 0.0029;[m
+[32m+[m
+[32m+[m[32m    var changedSamples = 0;[m
+[32m+[m
+[32m+[m[32m    for (var i = 0; i < currentSamples.length; i++) {[m
+[32m+[m[32m      final difference =[m
+[32m+[m[32m      (currentSamples[i] - previous[i]).abs();[m
+[32m+[m
+[32m+[m[32m      if (difference >= pixelDeltaThreshold) {[m
+[32m+[m[32m        changedSamples++;[m
+[32m+[m[32m      }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    final changedRatio = changedSamples / currentSamples.length;[m
+[32m+[m
+[32m+[m[32m    // Требуем три последовательных кадра с движением, чтобы не будить[m
+[32m+[m[32m    // заставку от единичного шумового скачка.[m
+[32m+[m[32m    if (changedRatio >= changedRatioThreshold) {[m
+[32m+[m[32m      _consecutiveMotionFrames++;[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      _consecutiveMotionFrames = 0;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    if (_consecutiveMotionFrames >= 3) {[m
+[32m+[m[32m      _motionTriggered = true;[m
+[32m+[m[32m      _hideScreenSaver();[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  Future<void> _stopMotionCamera() async {[m
+[32m+[m[32m    final controller = _motionCamera;[m
+[32m+[m[32m    _motionCamera = null;[m
+[32m+[m
+[32m+[m[32m    _previousSamples = null;[m
+[32m+[m[32m    _consecutiveMotionFrames = 0;[m
+[32m+[m[32m    _ignoreMotionUntil = null;[m
+[32m+[m
+[32m+[m[32m    if (controller == null) {[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      if (controller.value.isStreamingImages) {[m
+[32m+[m[32m        await controller.stopImageStream();[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } catch (_) {[m
+[32m+[m[32m      // Поток мог уже остановиться при смене состояния приложения.[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      await controller.dispose();[m
+[32m+[m[32m    } catch (_) {[m
+[32m+[m[32m      // Освобождение камеры не должно ломать интерфейс.[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m
+   void _notifyScreenSaverState() {[m
+     widget.onScreenSaverActiveChanged?.call([m
+       _showingScreenSaver && _appResumed,[m
+[36m@@ -184,7 +438,6 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+                   );[m
+ [m
+                   return Listener([m
+[31m-                    // Поглощает касание заставки: оно не попадёт в кнопки под ней.[m
+                     behavior: HitTestBehavior.opaque,[m
+                     onPointerDown: _onPointerDown,[m
+                     child: ColoredBox([m
+[36m@@ -217,6 +470,7 @@[m [mclass _ScreenSaverHostState extends State<ScreenSaverHost>[m
+     WidgetsBinding.instance.removeObserver(this);[m
+     _idleTimer?.cancel();[m
+     _movementTimer?.cancel();[m
+[32m+[m[32m    unawaited(_stopMotionCamera());[m
+     super.dispose();[m
+   }[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/lib/scripts/release.dart b/lib/scripts/release.dart[m
+[1mindex 98ceae8..a3cb791 100644[m
+[1m--- a/lib/scripts/release.dart[m
+[1m+++ b/lib/scripts/release.dart[m
+[36m@@ -131,9 +131,11 @@[m [mint _calcVersionCode(String version) {[m
+ /// Обновляет версию во всех файлах[m
+ Future<void> _updateVersionFiles(String newVersion, String content, File pubspec) async {[m
+   // 1. pubspec.yaml[m
+[32m+[m[32m  final versionCode = _calcVersionCode(newVersion);[m
+[32m+[m
+   content = content.replaceAll([m
+     RegExp(r'version: \d+\.\d+\.\d+\+\d+'),[m
+[31m-    'version: $newVersion+1',[m
+[32m+[m[32m    'version: $newVersion+$versionCode',[m
+   );[m
+   content = content.replaceAll([m
+     RegExp(r'description: SHome v\d+\.\d+\.\d+'),[m
+[36m@@ -166,7 +168,6 @@[m [mFuture<void> _updateVersionFiles(String newVersion, String content, File pubspec[m
+     );[m
+ [m
+     // versionCode = 8.1.18 → 80118[m
+[31m-    final versionCode = _calcVersionCode(newVersion);[m
+     gradleContent = gradleContent.replaceAll([m
+       RegExp(r'versionCode = \d+'),[m
+       'versionCode = $versionCode',[m
