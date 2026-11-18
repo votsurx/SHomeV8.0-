@@ -289,47 +289,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (!mounted) return;
 
-    final controller = TextEditingController(text: current ?? '5.5');
-
     final result = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Тариф ₽/кВт·ч'),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(
-            decimal: true,
-          ),
-          decoration: const InputDecoration(hintText: '5.5'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext, controller.text);
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
+      builder: (_) => _ElectricityTariffDialog(
+        initialValue: current ?? '5.5',
       ),
     );
 
-    controller.dispose();
+    if (!mounted || result == null || result.trim().isEmpty) return;
 
-    if (result == null || result.isEmpty) return;
+    final normalized = result.trim().replaceAll(',', '.');
+    final parsed = double.tryParse(normalized);
 
-    final parsed = double.tryParse(result.replaceAll(',', '.'));
-    if (parsed == null || parsed <= 0) return;
+    if (parsed == null || parsed <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите корректный тариф больше нуля')),
+      );
+      return;
+    }
 
     await AppDatabase.setStatsSetting(
       'electricity_tariff_rub_per_kwh',
-      result,
+      normalized,
     );
 
     if (!mounted) return;
+
     await _refreshElectricityTariff();
   }
 
@@ -480,6 +465,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+class _ElectricityTariffDialog extends StatefulWidget {
+  const _ElectricityTariffDialog({
+    required this.initialValue,
+  });
+
+  final String initialValue;
+
+  @override
+  State<_ElectricityTariffDialog> createState() =>
+      _ElectricityTariffDialogState();
+}
+
+class _ElectricityTariffDialogState
+    extends State<_ElectricityTariffDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Тариф ₽/кВт·ч'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(
+          hintText: '5.5',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).pop(_controller.text);
+          },
+          child: const Text('Сохранить'),
+        ),
+      ],
     );
   }
 }
