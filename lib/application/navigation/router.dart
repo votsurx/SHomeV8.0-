@@ -6,7 +6,7 @@ import '../../presentation/screens/device_list_screen.dart';
 import '../../presentation/screens/onboarding/welcome_screen.dart';
 import '../../presentation/screens/onboarding/rooms_setup_screen.dart';
 import '../../presentation/screens/energy_screen.dart';
-import '../../presentation/screens/scenes_screen.dart';
+import '../../presentation/screens/scenes/scenes_screen.dart';
 import '../../presentation/screens/scan_devices_screen.dart';
 import '../../presentation/screens/rooms_manage_screen.dart';
 import '../../presentation/screens/events_screen.dart';

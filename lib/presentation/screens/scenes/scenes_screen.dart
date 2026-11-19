@@ -6,13 +6,13 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../../domain/models/device.dart';
-import '../../domain/models/scene.dart';
-import '../../domain/models/presence_conditions.dart';
-import '../../application/state/scenes_provider.dart';
-import '../../application/state/devices_provider.dart';
-import '../../application/state/presence_provider.dart';
-import '../../l10n/generated/app_localizations.dart';
+import '../../../domain/models/device.dart';
+import '../../../domain/models/scene.dart';
+import '../../../domain/models/presence_conditions.dart';
+import '../../../application/state/scenes_provider.dart';
+import '../../../application/state/devices_provider.dart';
+import '../../../application/state/presence_provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class ScenesScreen extends ConsumerWidget {
   const ScenesScreen({super.key});
