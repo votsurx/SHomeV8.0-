@@ -13,6 +13,7 @@ import '../../../application/state/scenes_provider.dart';
 import '../../../application/state/devices_provider.dart';
 import '../../../application/state/presence_provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import 'scene_helpers.dart';
 
 class ScenesScreen extends ConsumerWidget {
   const ScenesScreen({super.key});
@@ -96,7 +97,7 @@ class ScenesScreen extends ConsumerWidget {
                       child: _buildActionsList(scene, devices, scale),
                     ),
                     Text(
-                      '${scene.actions.length} ${_pluralize(scene.actions.length)}',
+                      '${scene.actions.length} ${SceneHelpers.pluralize(scene.actions.length)}',
                       style: TextStyle(
                           fontSize: 8 * scale, color: Colors.grey),
                     ),
@@ -174,8 +175,8 @@ class ScenesScreen extends ConsumerWidget {
                     child: Text(
                       scene.trigger!.repeat == RepeatType.weekly &&
                           scene.trigger!.repeatDays?.isNotEmpty == true
-                          ? _daysLabel(scene.trigger!.repeatDays)
-                          : _repeatLabel(scene.trigger!.repeat),
+                          ? SceneHelpers.daysLabel(scene.trigger!.repeatDays)
+                          : SceneHelpers.repeatLabel(scene.trigger!.repeat),
                       style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -194,7 +195,7 @@ class ScenesScreen extends ConsumerWidget {
             SizedBox(width: 2 * scale),
             Expanded(
               child: Text(
-                _sensorConditionLabel(scene.trigger!),
+                SceneHelpers.sensorConditionLabel(scene.trigger!),
                 style: TextStyle(fontSize: 8 * scale),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -213,7 +214,7 @@ class ScenesScreen extends ConsumerWidget {
                 SizedBox(width: 2 * scale),
                 Expanded(
                   child: Text(
-                    _presenceEventLabel(scene.trigger!),
+                    SceneHelpers.presenceEventLabel(scene.trigger!),
                     style: TextStyle(
                         fontSize: 9 * scale, fontWeight: FontWeight.w500),
                     maxLines: 1,
@@ -249,9 +250,9 @@ class ScenesScreen extends ConsumerWidget {
         final device =
             devices.where((d) => d.id == action.deviceId).firstOrNull;
         final deviceName = device?.name ?? 'Устройство';
-        final deviceIcon = _getDeviceIcon(device?.type);
-        final actionLabel = _actionLabel(action.command);
-        final actionColor = _actionColor(action.command);
+        final deviceIcon = SceneHelpers.deviceIcon(device?.type);
+        final actionLabel = SceneHelpers.actionLabel(action.command);
+        final actionColor = SceneHelpers.actionColor(action.command);
 
         return Padding(
           padding: EdgeInsets.symmetric(vertical: 1 * scale),
@@ -288,125 +289,6 @@ class ScenesScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  String _getDeviceIcon(DeviceType? type) {
-    switch (type) {
-      case DeviceType.outlet:
-        return '🔌';
-      case DeviceType.switch1:
-      case DeviceType.switch2:
-      case DeviceType.switch3:
-        return '💡';
-      case DeviceType.light:
-        return '💡';
-      case DeviceType.sensor:
-        return '🌡️';
-      case DeviceType.camera:
-        return '📹';
-      case DeviceType.compound:
-        return '🤖';
-      default:
-        return '📦';
-    }
-  }
-
-  String _actionLabel(String command) {
-    switch (command) {
-      case 'turnOn':
-        return 'ВКЛ';
-      case 'turnOff':
-        return 'ВЫКЛ';
-      case 'setBrightness':
-        return 'ЯРК';
-      default:
-        return command.toUpperCase();
-    }
-  }
-
-  Color _actionColor(String command) {
-    switch (command) {
-      case 'turnOn':
-        return Colors.green;
-      case 'turnOff':
-        return Colors.red;
-      case 'setBrightness':
-        return Colors.orange;
-      default:
-        return Colors.blue;
-    }
-  }
-
-  String _sensorConditionLabel(SceneTrigger trigger) {
-    final condition = trigger.sensorCondition ?? '';
-    final threshold = trigger.sensorThreshold ?? 0;
-
-    switch (condition) {
-      case 'temperature_above':
-        return 'Темп. > $threshold°C';
-      case 'temperature_below':
-        return 'Темп. < $threshold°C';
-      case 'humidity_above':
-        return 'Влаж. > $threshold%';
-      case 'humidity_below':
-        return 'Влаж. < $threshold%';
-    // Zigbee
-      case 'water_leak':
-        return '💧 Протечка';
-      case 'motion':
-        return '🏃 Движение';
-      case 'contact_open':
-        return '🚪 Открыто';
-      case 'contact_closed':
-        return '🚪 Закрыто';
-      case 'smoke':
-        return '🔥 Дым';
-      case 'gas':
-        return '💨 Газ';
-      default:
-        return '$condition $threshold';
-    }
-  }
-
-  String _presenceEventLabel(SceneTrigger trigger) {
-    final event = trigger.presenceEvent;
-    if (event == null) return 'Присутствие';
-
-    switch (event) {
-      case PresenceEvent.someoneHome:
-        return 'Кто-то пришёл';
-      case PresenceEvent.nobodyHome:
-        return 'Никого нет';
-      case PresenceEvent.allHome:
-        return 'Все дома';
-      case PresenceEvent.phoneArrived:
-        return 'Телефон пришёл';
-      case PresenceEvent.phoneLeft:
-        return 'Телефон ушёл';
-      case PresenceEvent.phoneUnknown:
-        return 'Телефон потерян';
-    }
-  }
-
-  String _pluralize(int count) => 'устр.';
-
-  String _repeatLabel(RepeatType repeat) {
-    switch (repeat) {
-      case RepeatType.daily:
-        return 'Каждый день';
-      case RepeatType.weekly:
-        return 'По дням недели';
-      case RepeatType.interval:
-        return 'Интервал';
-      default:
-        return '';
-    }
-  }
-
-  String _daysLabel(List<int>? days) {
-    if (days == null || days.isEmpty) return '';
-    final names = ['', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    return days.map((d) => names[d]).join(', ');
   }
 
   void _showSceneMenu(BuildContext context, WidgetRef ref, Scene scene) {
@@ -462,7 +344,7 @@ class ScenesScreen extends ConsumerWidget {
 
     String triggerType = existingScene?.trigger?.type.name ?? 'manual';
     TimeOfDay selectedTime =
-        _parseTime(existingScene?.trigger?.time) ??
+        SceneHelpers.parseTime(existingScene?.trigger?.time) ??
             const TimeOfDay(hour: 22, minute: 0);
     String repeatType = existingScene?.trigger?.repeat.name ?? 'once';
     final Set<int> selectedDays =
@@ -1096,12 +978,5 @@ class ScenesScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  TimeOfDay? _parseTime(String? timeStr) {
-    if (timeStr == null) return null;
-    final parts = timeStr.split(':');
-    if (parts.length != 2) return null;
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 }
