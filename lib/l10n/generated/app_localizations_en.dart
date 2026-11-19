@@ -1175,115 +1175,1478 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomsDeleteButton => 'Delete';
 
   @override
+  String get sceneEditorTitleNew => 'New scene';
+
+  @override
+  String get sceneEditorTitleEdit => 'Edit scene';
+
+  @override
+  String get sceneEditorName => 'Name';
+
+  @override
+  String get sceneEditorNameHint => 'Turn everything off';
+
+  @override
+  String get sceneEditorTriggerType => 'Trigger type';
+
+  @override
+  String get sceneEditorTriggerManual => '🎬 Manual';
+
+  @override
+  String get sceneEditorTriggerTime => '⏰ By time';
+
+  @override
+  String get sceneEditorTriggerSensor => '🌡️ By sensor';
+
+  @override
+  String get sceneEditorTriggerPresence => '📍 By presence';
+
+  @override
+  String get sceneEditorRepeat => 'Repeat';
+
+  @override
+  String get sceneEditorRepeatOnce => 'Once';
+
+  @override
+  String get sceneEditorRepeatDaily => 'Every day';
+
+  @override
+  String get sceneEditorRepeatWeekly => 'Days of the week';
+
+  @override
+  String get sceneEditorDaysOfWeek => 'Days of the week';
+
+  @override
+  String get sceneEditorMonday => 'Mon';
+
+  @override
+  String get sceneEditorTuesday => 'Tue';
+
+  @override
+  String get sceneEditorWednesday => 'Wed';
+
+  @override
+  String get sceneEditorThursday => 'Thu';
+
+  @override
+  String get sceneEditorFriday => 'Fri';
+
+  @override
+  String get sceneEditorSaturday => 'Sat';
+
+  @override
+  String get sceneEditorSunday => 'Sun';
+
+  @override
+  String get sceneEditorSensor => 'Sensor';
+
+  @override
+  String get sceneEditorSelectSensor => 'Select a sensor';
+
+  @override
+  String get sceneEditorCondition => 'Condition';
+
+  @override
+  String sceneEditorTemperatureAbove(String threshold) {
+    return '🌡️ Temperature above $threshold °C';
+  }
+
+  @override
+  String sceneEditorTemperatureBelow(String threshold) {
+    return '🌡️ Temperature below $threshold °C';
+  }
+
+  @override
+  String sceneEditorHumidityAbove(String threshold) {
+    return '💧 Humidity above $threshold%';
+  }
+
+  @override
+  String sceneEditorHumidityBelow(String threshold) {
+    return '💧 Humidity below $threshold%';
+  }
+
+  @override
+  String get sceneEditorWaterLeak => '💧 Water leak';
+
+  @override
+  String get sceneEditorMotion => '🏃 Motion';
+
+  @override
+  String get sceneEditorContactOpen => '🚪 Open';
+
+  @override
+  String get sceneEditorContactClosed => '🚪 Closed';
+
+  @override
+  String get sceneEditorSmoke => '🔥 Smoke';
+
+  @override
+  String get sceneEditorGas => '💨 Gas';
+
+  @override
+  String get sceneEditorThreshold => 'Threshold';
+
+  @override
+  String get sceneEditorPresenceEvent => 'Event';
+
+  @override
+  String get sceneEditorSomeoneHome => 'Someone arrived';
+
+  @override
+  String get sceneEditorNobodyHome => 'Nobody is home';
+
+  @override
+  String get sceneEditorAllHome => 'Everyone is home';
+
+  @override
+  String get sceneEditorPhoneArrived => 'Phone arrived';
+
+  @override
+  String get sceneEditorPhoneLeft => 'Phone left';
+
+  @override
+  String get sceneEditorPhoneUnknown => 'Phone status unknown';
+
+  @override
+  String get sceneEditorPhone => 'Phone';
+
+  @override
+  String get sceneEditorSelectPhone => 'Select a phone';
+
+  @override
+  String get sceneEditorAdvanced => 'Advanced';
+
+  @override
+  String get sceneEditorDetectionChannel => 'Detection channel';
+
+  @override
+  String get sceneEditorChannelAny => 'Any';
+
+  @override
+  String get sceneEditorChannelWifi => 'Wi-Fi only';
+
+  @override
+  String get sceneEditorChannelGps => 'GPS only';
+
+  @override
+  String get sceneEditorStartDelay => 'Start delay';
+
+  @override
+  String get sceneEditorNoDelay => 'No delay';
+
+  @override
+  String get sceneEditorMinute => '1 minute';
+
+  @override
+  String sceneEditorMinutes(int count) {
+    return '$count minutes';
+  }
+
+  @override
+  String get sceneEditorCooldown => 'Cooldown';
+
+  @override
+  String get sceneEditorConfigureConditions => 'Configure conditions';
+
+  @override
+  String get sceneEditorConditionsConfigured => 'Conditions configured ✓';
+
+  @override
+  String get sceneEditorActions => 'Actions';
+
+  @override
+  String get sceneEditorNoDevices => 'No devices';
+
+  @override
+  String get sceneEditorActionOn => 'ON';
+
+  @override
+  String get sceneEditorActionOff => 'OFF';
+
+  @override
+  String get sceneEditorCancel => 'Cancel';
+
+  @override
+  String get sceneEditorSave => 'Save';
+
+  @override
+  String get sceneEditorCreate => 'Create';
+
+  @override
+  String get sceneEditorValidation =>
+      '⚠️ Enter a name and select at least one action';
+
+  @override
+  String get sceneEditorUpdated => '✅ Scene updated!';
+
+  @override
+  String get sceneEditorCreated => '✅ Scene created!';
+
+  @override
+  String get sceneEditorConditionsTitle => 'Conditions';
+
+  @override
+  String get sceneEditorTimeOfDay => 'Time of day';
+
+  @override
+  String sceneEditorFromTime(String time) {
+    return 'From $time';
+  }
+
+  @override
+  String sceneEditorUntilTime(String time) {
+    return 'Until $time';
+  }
+
+  @override
+  String get sceneEditorDaysCondition => 'Days of the week';
+
+  @override
+  String get sceneEditorReset => 'Reset';
+
+  @override
   String get scenesTitle => 'Scenes';
 
   @override
   String get scenesEmpty => 'No scenes. Create your first one!';
 
   @override
-  String get scenesManual => 'Manual';
-
-  @override
   String scenesAutoTriggerMessage(String name) {
-    return '⏰ “$name” starts automatically when its trigger fires';
+    return '⏰ Scene “$name” starts automatically when its trigger fires';
   }
 
   @override
-  String scenesActionCount(int count) {
-    return '$count devices';
-  }
+  String get sceneEditorActionBrightness => 'BRIGHT';
 
   @override
-  String scenesTimeTemperature(String operator, String threshold) {
-    return 'Temp. $operator $threshold°C';
-  }
-
-  @override
-  String scenesHumidity(String operator, String threshold) {
-    return 'Humidity $operator $threshold%';
-  }
-
-  @override
-  String get scenesWaterLeak => '💧 Water leak';
-
-  @override
-  String get scenesMotion => '🏃 Motion';
-
-  @override
-  String get scenesContactOpen => '🚪 Open';
-
-  @override
-  String get scenesContactClosed => '🚪 Closed';
-
-  @override
-  String get scenesSmoke => '🔥 Smoke';
-
-  @override
-  String get scenesGas => '💨 Gas';
+  String get sceneEditorDeviceUnitShort => 'devices';
 
   @override
   String get scenesPresence => 'Presence';
 
   @override
-  String get scenesSomeoneArrived => 'Someone arrived';
-
-  @override
-  String get scenesNobodyHome => 'Nobody is home';
-
-  @override
-  String get scenesEveryoneHome => 'Everyone is home';
-
-  @override
-  String get scenesPhoneArrived => 'Phone arrived';
-
-  @override
-  String get scenesPhoneLeft => 'Phone left';
-
-  @override
-  String get scenesPhoneUnknown => 'Phone status unknown';
-
-  @override
-  String get scenesEveryDay => 'Every day';
-
-  @override
-  String get scenesWeekdays => 'Days of the week';
-
-  @override
-  String get scenesInterval => 'Interval';
-
-  @override
-  String get scenesMondayShort => 'Mon';
-
-  @override
-  String get scenesTuesdayShort => 'Tue';
-
-  @override
-  String get scenesWednesdayShort => 'Wed';
-
-  @override
-  String get scenesThursdayShort => 'Thu';
-
-  @override
-  String get scenesFridayShort => 'Fri';
-
-  @override
-  String get scenesSaturdayShort => 'Sat';
-
-  @override
-  String get scenesSundayShort => 'Sun';
-
-  @override
-  String get scenesActionOn => 'ON';
-
-  @override
-  String get scenesActionOff => 'OFF';
-
-  @override
-  String get scenesActionBrightness => 'BRIGHT';
+  String get scenesDeviceFallback => 'Device';
 
   @override
   String get scenesEdit => 'Edit';
 
   @override
   String get scenesDelete => 'Delete';
+
+  @override
+  String get screenSaverTitle => 'Screensaver';
+
+  @override
+  String get screenSaverSubtitle =>
+      'Show the animated screensaver after inactivity';
+
+  @override
+  String get screenSaverMotionWakeTitle => 'Dismiss screensaver on motion';
+
+  @override
+  String get screenSaverMotionWakeSubtitle =>
+      'Use the front camera while the screensaver is visible';
+
+  @override
+  String screenSaverSensitivity(int value) {
+    return 'Sensitivity: $value%';
+  }
+
+  @override
+  String get screenSaverSensitivityLow => 'Low';
+
+  @override
+  String get screenSaverSensitivityHigh => 'High';
+
+  @override
+  String get screenSaverSensitivityHint =>
+      'If the screensaver dismisses without movement, lower the sensitivity.';
+
+  @override
+  String get screenSaverTimeoutTitle => 'Inactivity time before screensaver';
+
+  @override
+  String get screenSaverChoose => 'Choose';
+
+  @override
+  String get screenSaverTimeout30 => '30 seconds';
+
+  @override
+  String get screenSaverTimeout60 => '1 minute';
+
+  @override
+  String get screenSaverTimeout120 => '2 minutes';
+
+  @override
+  String get screenSaverTimeout300 => '5 minutes';
+
+  @override
+  String get screenSaverTimeout600 => '10 minutes';
+
+  @override
+  String screenSaverTimeoutSeconds(int value) {
+    return '$value seconds';
+  }
+
+  @override
+  String get settingsPollInterval => 'Polling interval';
+
+  @override
+  String settingsIntervalSeconds(int value) {
+    return '$value sec';
+  }
+
+  @override
+  String settingsIntervalMinutes(int value) {
+    return '$value min';
+  }
+
+  @override
+  String settingsPollIntervalChanged(String interval) {
+    return 'Polling interval changed to $interval. Restart the app.';
+  }
+
+  @override
+  String get settingsEventsRetention => 'Event retention';
+
+  @override
+  String settingsDays(int value) {
+    return '$value days';
+  }
+
+  @override
+  String get settingsElectricityTariff => 'Electricity tariff';
+
+  @override
+  String settingsCurrencyPerKwh(String value) {
+    return '$value ₽/kWh';
+  }
+
+  @override
+  String get settingsBackup => 'Backup';
+
+  @override
+  String get settingsBackupSubtitle => 'Export / Import';
+
+  @override
+  String get settingsMqtt => 'MQTT settings';
+
+  @override
+  String get settingsMqttSubtitle => 'Broker for Zigbee2MQTT';
+
+  @override
+  String get settingsCheckUpdates => 'Check for updates';
+
+  @override
+  String get settingsCheckUpdatesSubtitle =>
+      'Check whether a new version is available';
+
+  @override
+  String get settingsInformation => 'Information';
+
+  @override
+  String get settingsInformationSubtitle => 'Licenses and agreements';
+
+  @override
+  String get settingsExportReady => '✅ Configuration is ready to share';
+
+  @override
+  String settingsError(String error) {
+    return '❌ Error: $error';
+  }
+
+  @override
+  String get settingsImportDone => '✅ Import completed';
+
+  @override
+  String get settingsImportRestartHint =>
+      'Data restored.\n\nRestarting the app is recommended to apply all settings (VK, cloud, and devices).';
+
+  @override
+  String get settingsLater => 'Later';
+
+  @override
+  String get settingsRestart => 'Restart';
+
+  @override
+  String get settingsBackupDialogTitle => 'Backup';
+
+  @override
+  String get settingsExport => 'Export';
+
+  @override
+  String get settingsExportSubtitle => 'Share via cloud, email, or Telegram';
+
+  @override
+  String get settingsImport => 'Import';
+
+  @override
+  String get settingsImportSubtitle =>
+      'Choose a file on this device or in the cloud';
+
+  @override
+  String get settingsRetentionDialogTitle => 'Event retention';
+
+  @override
+  String settingsRetentionDays(int value) {
+    return '$value days';
+  }
+
+  @override
+  String get settingsTariffDialogTitle => 'Tariff ₽/kWh';
+
+  @override
+  String get settingsTariffInvalid => 'Enter a valid tariff greater than zero';
+
+  @override
+  String get settingsTariffHint => '5.5';
+
+  @override
+  String get smsSettingsTitle => 'SMS notifications';
+
+  @override
+  String get smsSettingsEnable => 'Enable SMS';
+
+  @override
+  String get smsSettingsEnableSubtitle => 'Send notifications by SMS';
+
+  @override
+  String get smsSettingsPhoneNumbers => 'Phone numbers';
+
+  @override
+  String get smsSettingsNoPhones => 'No phone numbers added';
+
+  @override
+  String get smsSettingsEventsTitle => 'Events sent by SMS';
+
+  @override
+  String get smsSettingsScenes => 'Scenes';
+
+  @override
+  String get smsSettingsDevices => 'Devices';
+
+  @override
+  String get smsSettingsAlarms => 'Alerts';
+
+  @override
+  String get smsSettingsZigbeeWaterLeak => 'Zigbee: 💧 Water leak';
+
+  @override
+  String get smsSettingsZigbeeSmoke => 'Zigbee: 🔥 Smoke';
+
+  @override
+  String get smsSettingsZigbeeGas => 'Zigbee: 💨 Gas';
+
+  @override
+  String get smsSettingsZigbeeMotion => 'Zigbee: 🏃 Motion';
+
+  @override
+  String get smsSettingsZigbeeContact => 'Zigbee: 🚪 Contact';
+
+  @override
+  String get smsSettingsFrigatePerson => 'Frigate: 🚶 Person';
+
+  @override
+  String get smsSettingsFrigateCar => 'Frigate: 🚗 Car';
+
+  @override
+  String get smsSettingsErrors => 'Errors';
+
+  @override
+  String get smsSettingsZigbeeOffline => 'Zigbee offline';
+
+  @override
+  String get smsSettingsZigbeeOfflineSubtitle => 'Device lost connection';
+
+  @override
+  String get smsSettingsFrigateOffline => 'Frigate offline';
+
+  @override
+  String get smsSettingsFrigateOfflineSubtitle => 'Frigate is unavailable';
+
+  @override
+  String get smsSettingsCooldown => 'SMS cooldown';
+
+  @override
+  String get smsSettingsOneMinute => '1 minute';
+
+  @override
+  String smsSettingsMinutes(int count) {
+    return '$count minutes';
+  }
+
+  @override
+  String get smsSettingsSchedule => 'Schedule';
+
+  @override
+  String get smsSettingsScheduleSubtitle =>
+      'Send only during the specified time';
+
+  @override
+  String get smsSettingsAlarmsOutsideSchedule => 'Alerts outside the schedule';
+
+  @override
+  String get smsSettingsStartTime => 'Start time';
+
+  @override
+  String get smsSettingsEndTime => 'End time';
+
+  @override
+  String get smsSettingsDaysOfWeek => 'Days of the week:';
+
+  @override
+  String get smsSettingsMonday => 'Mon';
+
+  @override
+  String get smsSettingsTuesday => 'Tue';
+
+  @override
+  String get smsSettingsWednesday => 'Wed';
+
+  @override
+  String get smsSettingsThursday => 'Thu';
+
+  @override
+  String get smsSettingsFriday => 'Fri';
+
+  @override
+  String get smsSettingsSaturday => 'Sat';
+
+  @override
+  String get smsSettingsSunday => 'Sun';
+
+  @override
+  String get smsSettingsAddPhoneRequired => 'Add at least one phone number';
+
+  @override
+  String get smsSettingsSendTest => 'Send test SMS';
+
+  @override
+  String get smsSettingsTestMessage => '✅ Test SMS from SHome!';
+
+  @override
+  String get smsSettingsAddPhoneTitle => 'Add phone number';
+
+  @override
+  String get smsSettingsNameOptional => 'Name (optional)';
+
+  @override
+  String get smsSettingsNameHint => 'My phone';
+
+  @override
+  String get smsSettingsPhoneLabel => 'Phone number';
+
+  @override
+  String get smsSettingsPhoneHint => '+19995550123';
+
+  @override
+  String get smsSettingsCancel => 'Cancel';
+
+  @override
+  String get smsSettingsAdd => 'Add';
+
+  @override
+  String get smsSettingsDelete => 'Delete';
+
+  @override
+  String get timersTitle => 'Timers';
+
+  @override
+  String get timersEmpty => 'No active timers';
+
+  @override
+  String get timersAlreadyFired => 'Already fired';
+
+  @override
+  String get timersLessThanMinute => 'less than a minute';
+
+  @override
+  String get timersTurnOn => 'Will turn on';
+
+  @override
+  String get timersTurnOff => 'Will turn off';
+
+  @override
+  String timersCountdownMinutes(int minutes) {
+    return 'in $minutes min';
+  }
+
+  @override
+  String timersCountdownHoursMinutes(int hours, int minutes) {
+    return 'in $hours h $minutes min';
+  }
+
+  @override
+  String timersTodayAt(String time) {
+    return 'Today at $time';
+  }
+
+  @override
+  String get timersNewTitle => 'New timer';
+
+  @override
+  String get timersDeviceLabel => 'Device';
+
+  @override
+  String get timersCommandOff => 'OFF';
+
+  @override
+  String get timersCommandOn => 'ON';
+
+  @override
+  String get timersCancel => 'Cancel';
+
+  @override
+  String get timersCreate => 'Create';
+
+  @override
+  String get timersDeleteTooltip => 'Delete timer';
+
+  @override
+  String get vkSettingsTitle => 'VK Bot';
+
+  @override
+  String get vkSettingsEnable => 'Enable VK';
+
+  @override
+  String get vkSettingsEnableSubtitle => 'Send notifications to VK';
+
+  @override
+  String get vkSettingsTokenLabel => 'VK Token';
+
+  @override
+  String get vkSettingsTokenHint => 'Paste the bot token';
+
+  @override
+  String get vkSettingsUserIdLabel => 'VK User ID';
+
+  @override
+  String get vkSettingsUserIdHint => 'For example, 123456789';
+
+  @override
+  String get vkSettingsEvents => 'Events';
+
+  @override
+  String get vkSettingsScenes => 'Scenes';
+
+  @override
+  String get vkSettingsScenesSubtitle => 'Notifications when scenes run';
+
+  @override
+  String get vkSettingsDevices => 'Devices';
+
+  @override
+  String get vkSettingsDevicesSubtitle => 'Device state changes';
+
+  @override
+  String get vkSettingsAlarms => 'Alerts';
+
+  @override
+  String get vkSettingsZigbeeWaterLeak => 'Zigbee: 💧 Water leak';
+
+  @override
+  String get vkSettingsZigbeeSmoke => 'Zigbee: 🔥 Smoke';
+
+  @override
+  String get vkSettingsZigbeeGas => 'Zigbee: 💨 Gas';
+
+  @override
+  String get vkSettingsZigbeeMotion => 'Zigbee: 🏃 Motion';
+
+  @override
+  String get vkSettingsZigbeeContact => 'Zigbee: 🚪 Contact';
+
+  @override
+  String get vkSettingsFrigatePerson => 'Frigate: 🚶 Person';
+
+  @override
+  String get vkSettingsFrigateCar => 'Frigate: 🚗 Car';
+
+  @override
+  String get vkSettingsErrors => 'Errors';
+
+  @override
+  String get vkSettingsZigbeeOffline => 'Zigbee offline';
+
+  @override
+  String get vkSettingsZigbeeOfflineSubtitle => 'Device lost connection';
+
+  @override
+  String get vkSettingsFrigateOffline => 'Frigate offline';
+
+  @override
+  String get vkSettingsFrigateOfflineSubtitle => 'Frigate is unavailable';
+
+  @override
+  String get vkSettingsCooldown => 'VK cooldown';
+
+  @override
+  String get vkSettingsCooldown1 => '1 minute';
+
+  @override
+  String get vkSettingsCooldown5 => '5 minutes';
+
+  @override
+  String get vkSettingsCooldown15 => '15 minutes';
+
+  @override
+  String get vkSettingsCooldown30 => '30 minutes';
+
+  @override
+  String get vkSettingsSchedule => 'Schedule';
+
+  @override
+  String get vkSettingsScheduleSubtitle =>
+      'Send only during the specified time';
+
+  @override
+  String get vkSettingsAlarmsOutsideSchedule => 'Alerts outside the schedule';
+
+  @override
+  String get vkSettingsAlarmsAlways => 'Always send alerts';
+
+  @override
+  String get vkSettingsStartTime => 'Start time';
+
+  @override
+  String get vkSettingsEndTime => 'End time';
+
+  @override
+  String get vkSettingsDaysOfWeek => 'Days of the week:';
+
+  @override
+  String get vkSettingsMonday => 'Mon';
+
+  @override
+  String get vkSettingsTuesday => 'Tue';
+
+  @override
+  String get vkSettingsWednesday => 'Wed';
+
+  @override
+  String get vkSettingsThursday => 'Thu';
+
+  @override
+  String get vkSettingsFriday => 'Fri';
+
+  @override
+  String get vkSettingsSaturday => 'Sat';
+
+  @override
+  String get vkSettingsSunday => 'Sun';
+
+  @override
+  String get vkSettingsSendTest => 'Send test VK message';
+
+  @override
+  String get vkSettingsTestMessage => '✅ Test notification from SHome!';
+
+  @override
+  String get zigbeeScanTitle => 'Zigbee';
+
+  @override
+  String get zigbeeRefresh => 'Refresh';
+
+  @override
+  String zigbeeStopPairing(int seconds) {
+    return 'Stop pairing ($seconds sec)';
+  }
+
+  @override
+  String get zigbeeOpenPairing => 'Open network for pairing';
+
+  @override
+  String get zigbeePairingInstruction =>
+      'Press and hold the button on the device for 5 seconds';
+
+  @override
+  String get zigbeeNoDevices =>
+      'No devices found.\nTap “Open network” and add a device.';
+
+  @override
+  String zigbeeDeviceAdded(String name) {
+    return '✅ $name added';
+  }
+
+  @override
+  String get changelogTitle => 'Changelog';
+
+  @override
+  String get changelogLoadError => 'Could not load the changelog';
+
+  @override
+  String get eulaTitle => 'License Agreement';
+
+  @override
+  String get legalInfoTitle => 'Information';
+
+  @override
+  String legalDeveloperLabel(String name) {
+    return 'Developer: $name';
+  }
+
+  @override
+  String legalOwnerLabel(String name) {
+    return 'Owner: $name';
+  }
+
+  @override
+  String legalVersionLabel(String version) {
+    return 'Version: $version';
+  }
+
+  @override
+  String get legalEulaTitle => 'End User License Agreement (EULA)';
+
+  @override
+  String get legalEulaSubtitle => 'Terms for using the application';
+
+  @override
+  String get legalPrivacyTitle => 'Privacy Policy';
+
+  @override
+  String get legalPrivacySubtitle => 'How we process your data';
+
+  @override
+  String get legalTermsTitle => 'Terms of Service';
+
+  @override
+  String get legalTermsSubtitle => 'Rules and restrictions';
+
+  @override
+  String get legalOpenSourceTitle => 'Open-source licenses';
+
+  @override
+  String get legalOpenSourceSubtitle => 'Third-party libraries';
+
+  @override
+  String get legalChangelogTitle => 'Changelog';
+
+  @override
+  String get legalChangelogSubtitle => 'What\'s new in each version';
+
+  @override
+  String legalVersionFooter(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get statsPeriod24h => '24h';
+
+  @override
+  String get statsPeriod7d => '7d';
+
+  @override
+  String get statsPeriod30d => '30d';
+
+  @override
+  String get statsNoClimateData => 'No sensor data for this period';
+
+  @override
+  String get statsClimateByDevice => 'Climate by device';
+
+  @override
+  String statsSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count samples',
+      one: '$count sample',
+      zero: 'No samples',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsTemperatureSummary(String min, String max, String average) {
+    return '🌡️ $min° … $max° (avg: $average°)';
+  }
+
+  @override
+  String statsHumiditySummary(String min, String max, String average) {
+    return '💧 $min% … $max% (avg: $average%)';
+  }
+
+  @override
+  String get statsNoDeviceDataPeriod => 'No data for this period';
+
+  @override
+  String statsDeviceEventCounts(int offline, int alerts, int actions) {
+    return 'Offline: $offline · alerts: $alerts · actions: $actions';
+  }
+
+  @override
+  String statsAlertsForDays(int days) {
+    return 'Alerts in the last $days days';
+  }
+
+  @override
+  String statsOfflineForDays(int days) {
+    return 'Offline in the last $days days';
+  }
+
+  @override
+  String get statsEnergyConsumption => 'Consumption';
+
+  @override
+  String get statsEnergyCost => 'Cost';
+
+  @override
+  String statsEnergyPeriod(int days) {
+    return 'for $days days';
+  }
+
+  @override
+  String statsEnergyTariff(String tariff) {
+    return 'rate $tariff RUB/kWh';
+  }
+
+  @override
+  String statsEnergyRubles(String value) {
+    return '$value RUB';
+  }
+
+  @override
+  String statsEnergyKwh(String value) {
+    return '$value kWh';
+  }
+
+  @override
+  String get statsEnergyNoData => 'No energy consumption data for this period';
+
+  @override
+  String get statsEnergyByDevice => 'By device';
+
+  @override
+  String get statsNotificationsEmpty => 'No notifications for this period';
+
+  @override
+  String get statsNotificationsSent => 'Sent';
+
+  @override
+  String get statsNotificationsSuppressed => 'Suppressed';
+
+  @override
+  String statsNotificationsPeriod(int days) {
+    return 'for $days days';
+  }
+
+  @override
+  String statsNotificationsCooldownPercent(int percent) {
+    return 'cooldown ($percent%)';
+  }
+
+  @override
+  String get statsNotificationsByChannel => 'By channel';
+
+  @override
+  String statsNotificationsChannelSuppressed(int count) {
+    return 'Suppressed: $count';
+  }
+
+  @override
+  String get statsNotificationsByCategory => 'By category';
+
+  @override
+  String get statsNotificationsCategoryWaterLeak => '💧 Water leak';
+
+  @override
+  String get statsNotificationsCategorySmoke => '🔥 Smoke';
+
+  @override
+  String get statsNotificationsCategoryGas => '💨 Gas';
+
+  @override
+  String get statsNotificationsCategoryMotion => '🏃 Motion';
+
+  @override
+  String get statsNotificationsCategoryContact => '🚪 Contact';
+
+  @override
+  String get statsNotificationsCategoryPerson => '🎥 Person';
+
+  @override
+  String get statsNotificationsCategoryCar => '🎥 Car';
+
+  @override
+  String get statsNotificationsCategoryOffline => '📡 Offline';
+
+  @override
+  String get statsNotificationsCategoryLowBattery => '🔋 Battery';
+
+  @override
+  String get statsNotificationsCategoryStateChanged => '🎛 State';
+
+  @override
+  String get statsNotificationsCategoryUnknown => 'Other';
+
+  @override
+  String get statsOverviewAlerts => 'Alerts';
+
+  @override
+  String get statsOverviewActions => 'Actions';
+
+  @override
+  String get statsOverviewOffline => 'Offline';
+
+  @override
+  String get statsOverviewOnline => 'Online';
+
+  @override
+  String statsOverviewPeriod(int days) {
+    return 'for $days days';
+  }
+
+  @override
+  String get statsOverviewWorstDevices => 'Devices with issues';
+
+  @override
+  String get statsOverviewNoProblems =>
+      'No devices with issues during this period 👍';
+
+  @override
+  String get statsPresenceEmpty => 'No presence data for this period';
+
+  @override
+  String get statsPresenceHome => 'At home';
+
+  @override
+  String get statsPresenceNear => 'Nearby';
+
+  @override
+  String get statsPresenceAway => 'Away';
+
+  @override
+  String get statsPresenceUnknown => 'Unknown';
+
+  @override
+  String statsPresencePeriod(int days) {
+    return 'for $days days';
+  }
+
+  @override
+  String get statsPresenceCloudFallback => 'Cloud fallback';
+
+  @override
+  String get statsPresenceCloudFallbackSubtitle =>
+      'Number of heartbeat failures';
+
+  @override
+  String get statsPresenceDurationZero => '0';
+
+  @override
+  String statsPresenceDurationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String statsPresenceDurationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get statsPresenceDurationLessMinute => 'less than a minute';
+
+  @override
+  String get statsScenesTop => 'Top scenes';
+
+  @override
+  String statsScenesRuns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# runs',
+      one: '# run',
+      zero: 'No runs',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsScenesNoRunsPeriod => 'No scene runs during this period';
+
+  @override
+  String get statsScenesForgottenTitle => 'Unused scenes (0 runs)';
+
+  @override
+  String get statsScenesDeleteCandidate => 'Candidate for removal';
+
+  @override
+  String get statsTitle => 'Statistics';
+
+  @override
+  String get statsTabOverview => 'Overview';
+
+  @override
+  String get statsTabDevices => 'Devices';
+
+  @override
+  String get statsTabEnergy => 'Energy';
+
+  @override
+  String get statsTabVideo => 'Video';
+
+  @override
+  String get statsTabScenes => 'Scenes';
+
+  @override
+  String get statsTabPresence => 'Presence';
+
+  @override
+  String get statsTabClimate => 'Climate';
+
+  @override
+  String get statsTabNotifications => 'Notifications';
+
+  @override
+  String get statsVideoEmpty => 'No detections for this period';
+
+  @override
+  String get statsVideoByTypes => 'By type';
+
+  @override
+  String get statsVideoByCameras => 'By camera';
+
+  @override
+  String get statsVideoActivityByHour => 'Activity by hour';
+
+  @override
+  String get statsVideoHeatmapHint =>
+      'More intense color means more detections';
+
+  @override
+  String get statsVideoLabelPerson => 'Person';
+
+  @override
+  String get statsVideoLabelCar => 'Car';
+
+  @override
+  String get statsVideoLabelDog => 'Dog';
+
+  @override
+  String get statsVideoLabelCat => 'Cat';
+
+  @override
+  String get statsVideoLabelBird => 'Bird';
+
+  @override
+  String get statsVideoLabelMotorcycle => 'Motorcycle';
+
+  @override
+  String get statsVideoLabelBicycle => 'Bicycle';
+
+  @override
+  String get statsVideoLabelTruck => 'Truck';
+
+  @override
+  String get statsVideoLabelBus => 'Bus';
+
+  @override
+  String get statsVideoLabelBoat => 'Boat';
+
+  @override
+  String get deviceCardWaterLeak => 'Water leak';
+
+  @override
+  String get deviceCardMotion => 'Motion';
+
+  @override
+  String get deviceCardContactOpen => 'Open';
+
+  @override
+  String get deviceSettingsName => 'Name';
+
+  @override
+  String get deviceSettingsRoom => 'Room';
+
+  @override
+  String get deviceSettingsRtspUrl => 'RTSP URL';
+
+  @override
+  String get deviceSettingsZigbeeDevice => 'Zigbee device';
+
+  @override
+  String get deviceSettingsIeeeAddress => 'IEEE address';
+
+  @override
+  String get deviceSettingsModel => 'Model';
+
+  @override
+  String get deviceSettingsVendor => 'Manufacturer';
+
+  @override
+  String get deviceSettingsBattery => 'Battery';
+
+  @override
+  String get deviceSettingsLinkQuality => 'Link quality';
+
+  @override
+  String get deviceSettingsNotifications => 'Notifications';
+
+  @override
+  String get deviceSettingsDeviceId => 'Device ID';
+
+  @override
+  String get deviceSettingsIpAddress => 'IP address';
+
+  @override
+  String get deviceSettingsLocalKey => 'Local Key';
+
+  @override
+  String get deviceSettingsProtocolVersion => 'Protocol version';
+
+  @override
+  String get deviceSettingsChannels => 'Channels';
+
+  @override
+  String get deviceSettingsDpsIndex => 'DPS index';
+
+  @override
+  String get deviceSettingsDpsMap => 'DPS map';
+
+  @override
+  String get deviceSettingsAddDps => 'Add DPS';
+
+  @override
+  String get deviceSettingsDisplayOnCard => 'Card display';
+
+  @override
+  String get deviceSettingsDisplayHint =>
+      'Choose which data to show on the main screen';
+
+  @override
+  String get deviceSettingsNoInfoParameters => 'No informational parameters';
+
+  @override
+  String get deviceSettingsDeleteTitle => 'Delete device?';
+
+  @override
+  String deviceSettingsDeleteMessage(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get deviceSettingsDelete => 'Delete';
+
+  @override
+  String get deviceSettingsSave => 'Save';
+
+  @override
+  String get deviceSettingsCancel => 'Cancel';
+
+  @override
+  String get deviceSettingsCreateSensor => 'Create sensor';
+
+  @override
+  String deviceSettingsSensorFromDevice(String name) {
+    return 'From device: $name';
+  }
+
+  @override
+  String get deviceSettingsSensorType => 'Sensor type';
+
+  @override
+  String get deviceSettingsTemperature => 'Temperature';
+
+  @override
+  String get deviceSettingsHumidity => 'Humidity';
+
+  @override
+  String get deviceSettingsPower => 'Power';
+
+  @override
+  String get deviceSettingsCurrent => 'Current';
+
+  @override
+  String get deviceSettingsVoltage => 'Voltage';
+
+  @override
+  String get deviceSettingsDivider => 'Divisor';
+
+  @override
+  String deviceSettingsSensorCreated(String name) {
+    return '✅ Sensor “$name” created!';
+  }
+
+  @override
+  String get deviceSettingsChannel => 'Channel';
+
+  @override
+  String get deviceSettingsChannelNumber => 'Channel number';
+
+  @override
+  String get deviceSettingsDpsAddTitle => 'Add DPS';
+
+  @override
+  String deviceSettingsDpsEditTitle(String key) {
+    return 'Edit DPS $key';
+  }
+
+  @override
+  String get deviceSettingsDpsNumber => 'DPS number';
+
+  @override
+  String get deviceSettingsDpsType => 'Type';
+
+  @override
+  String get deviceSettingsDpsRole => 'Role';
+
+  @override
+  String get deviceSettingsDpsIcon => 'Icon';
+
+  @override
+  String get deviceSettingsNoIcon => 'No icon';
+
+  @override
+  String get deviceSettingsRoleChannel => 'Channel';
+
+  @override
+  String get deviceSettingsRoleMain => 'Main button';
+
+  @override
+  String get deviceSettingsRoleAction => 'Action';
+
+  @override
+  String get deviceSettingsRoleToggle => 'Toggle';
+
+  @override
+  String get deviceSettingsRoleInfo => 'Information';
+
+  @override
+  String get deviceSettingsRoleStatus => 'Status';
+
+  @override
+  String get deviceSettingsRoleEnum => 'Dropdown';
+
+  @override
+  String get deviceSettingsRoleSlider => 'Slider';
+
+  @override
+  String get deviceSettingsDpsChannelTitle => 'Channel';
+
+  @override
+  String get deviceSettingsNotifyAlways => 'Always';
+
+  @override
+  String get deviceSettingsNotifyAway => 'When nobody is home';
+
+  @override
+  String get deviceSettingsNotifyNight => 'At night';
+
+  @override
+  String get deviceSettingsNotifyAwayOrNight =>
+      'When nobody is home OR at night';
+
+  @override
+  String deviceSettingsNotifySummary(int count, String condition) {
+    return '$count types · $condition';
+  }
+
+  @override
+  String get deviceSettingsTypeBool => 'on/off';
+
+  @override
+  String get deviceSettingsTypeValue => 'number';
+
+  @override
+  String get deviceSettingsTypeEnum => 'text list';
+
+  @override
+  String get deviceSettingsTypeSlider => 'slider';
+
+  @override
+  String get deviceSettingsIconNone => 'No icon';
+
+  @override
+  String get deviceSettingsIconPlayStop => 'Play/Stop';
+
+  @override
+  String get deviceSettingsIconHomeBase => 'Home/Base';
+
+  @override
+  String get deviceSettingsIconPower => 'Power';
+
+  @override
+  String get deviceSettingsIconWater => 'Water';
+
+  @override
+  String get deviceSettingsIconMop => 'Mopping';
+
+  @override
+  String get deviceSettingsIconDoNotDisturb => 'Do not disturb';
+
+  @override
+  String get deviceSettingsIconBattery => 'Battery';
+
+  @override
+  String get deviceSettingsIconTimer => 'Timer';
+
+  @override
+  String get deviceSettingsIconArea => 'Area';
+
+  @override
+  String get deviceSettingsIconFan => 'Fan';
+
+  @override
+  String get deviceSettingsIconCooling => 'Cooling';
+
+  @override
+  String get deviceSettingsIconHeating => 'Heating';
+
+  @override
+  String get deviceSettingsIconDrying => 'Drying';
+
+  @override
+  String get deviceSettingsIconAuto => 'Auto';
+
+  @override
+  String get deviceSettingsIconSleep => 'Sleep';
+
+  @override
+  String get deviceSettingsIconVerticalBlinds => 'Vertical blinds';
+
+  @override
+  String get deviceSettingsIconHorizontalBlinds => 'Horizontal blinds';
+
+  @override
+  String get deviceSettingsIconAirQuality => 'Air quality';
+
+  @override
+  String get deviceSettingsIconFilter => 'Filter';
+
+  @override
+  String get deviceSettingsIconTemperature => 'Temperature';
+
+  @override
+  String get deviceSettingsIconAirConditioner => 'Air conditioner';
+
+  @override
+  String get deviceSettingsIconHeater => 'Heater';
+
+  @override
+  String get deviceSettingsIconAir => 'Air';
+
+  @override
+  String get deviceSettingsIconSuction => 'Suction';
+
+  @override
+  String get deviceSettingsIconWaiting => 'Waiting';
+
+  @override
+  String get deviceSettingsIconSynchronization => 'Synchronization';
+
+  @override
+  String deviceSettingsDefaultChannelLabel(String key) {
+    return 'Channel $key';
+  }
+
+  @override
+  String get deviceSettingsAdd => 'Add';
+
+  @override
+  String get deviceSettingsCreate => 'Create';
+
+  @override
+  String get todayDrawerToday => 'Today';
 }

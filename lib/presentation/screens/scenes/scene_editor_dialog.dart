@@ -1,18 +1,17 @@
 /// Диалог создания/редактирования сцены.
-/// Вынесен из scenes_screen.dart — здесь всё состояние в State,
-/// а не в 400-строчном StatefulBuilder.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../domain/models/device.dart';
-import '../../../domain/models/scene.dart';
-import '../../../domain/models/presence_conditions.dart';
-import '../../../application/state/scenes_provider.dart';
 import '../../../application/state/devices_provider.dart';
 import '../../../application/state/presence_provider.dart';
+import '../../../application/state/scenes_provider.dart';
+import '../../../domain/models/device.dart';
+import '../../../domain/models/presence_conditions.dart';
+import '../../../domain/models/scene.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import 'scene_helpers.dart';
 
 class SceneEditorDialog extends ConsumerStatefulWidget {
@@ -21,7 +20,8 @@ class SceneEditorDialog extends ConsumerStatefulWidget {
   final Scene? existingScene;
 
   @override
-  ConsumerState<SceneEditorDialog> createState() => _SceneEditorDialogState();
+  ConsumerState<SceneEditorDialog> createState() =>
+      _SceneEditorDialogState();
 }
 
 class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
@@ -51,6 +51,7 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
   @override
   void initState() {
     super.initState();
+
     final scene = widget.existingScene;
     final trigger = scene?.trigger;
 
@@ -94,7 +95,7 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
       case RepeatType.interval:
       case RepeatType.once:
       case null:
-        return 'once';  // interval → once, т.к. в UI нет interval
+        return 'once';
     }
   }
 
@@ -119,21 +120,47 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
     super.dispose();
   }
 
+  String _formatTime(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:'
+        '${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  List<String> _weekDays(AppLocalizations l10n) => [
+    l10n.sceneEditorMonday,
+    l10n.sceneEditorTuesday,
+    l10n.sceneEditorWednesday,
+    l10n.sceneEditorThursday,
+    l10n.sceneEditorFriday,
+    l10n.sceneEditorSaturday,
+    l10n.sceneEditorSunday,
+  ];
+
+  String _minuteLabel(int value, AppLocalizations l10n) {
+    if (value == 0) return l10n.sceneEditorNoDelay;
+    if (value == 1) return l10n.sceneEditorMinute;
+    return l10n.sceneEditorMinutes(value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final allDevices = ref.watch(devicesProvider);
-    final devices = allDevices.where((d) {
-      return d.type == DeviceType.outlet ||
-          d.type == DeviceType.switch1 ||
-          d.type == DeviceType.switch2 ||
-          d.type == DeviceType.switch3 ||
-          d.type == DeviceType.light;
+    final devices = allDevices.where((device) {
+      return device.type == DeviceType.outlet ||
+          device.type == DeviceType.switch1 ||
+          device.type == DeviceType.switch2 ||
+          device.type == DeviceType.switch3 ||
+          device.type == DeviceType.light;
     }).toList();
 
     final presencePhones = ref.watch(presenceSettingsProvider).phones;
 
     return AlertDialog(
-      title: Text(_isEditing ? 'Редактировать сцену' : 'Новая сцена'),
+      title: Text(
+        _isEditing
+            ? l10n.sceneEditorTitleEdit
+            : l10n.sceneEditorTitleNew,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -141,78 +168,107 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Название',
-                hintText: 'Выключить всё',
+              decoration: InputDecoration(
+                labelText: l10n.sceneEditorName,
+                hintText: l10n.sceneEditorNameHint,
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Тип запуска:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              '${l10n.sceneEditorTriggerType}:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _triggerType,
-              decoration: const InputDecoration(labelText: 'Тип запуска'),
-              items: const [
-                DropdownMenuItem(value: 'manual', child: Text('🎬 Вручную')),
-                DropdownMenuItem(value: 'time', child: Text('⏰ По времени')),
-                DropdownMenuItem(value: 'sensor', child: Text('🌡️ По датчику')),
+              decoration: InputDecoration(
+                labelText: l10n.sceneEditorTriggerType,
+              ),
+              items: [
                 DropdownMenuItem(
-                    value: 'presence', child: Text('📍 По присутствию')),
+                  value: 'manual',
+                  child: Text(l10n.sceneEditorTriggerManual),
+                ),
+                DropdownMenuItem(
+                  value: 'time',
+                  child: Text(l10n.sceneEditorTriggerTime),
+                ),
+                DropdownMenuItem(
+                  value: 'sensor',
+                  child: Text(l10n.sceneEditorTriggerSensor),
+                ),
+                DropdownMenuItem(
+                  value: 'presence',
+                  child: Text(l10n.sceneEditorTriggerPresence),
+                ),
               ],
               onChanged: (value) {
-                if (value != null) setState(() => _triggerType = value);
+                if (value != null) {
+                  setState(() => _triggerType = value);
+                }
               },
             ),
             const SizedBox(height: 16),
 
-            // ─── ТРИГГЕР ПО ВРЕМЕНИ ───
             if (_triggerType == 'time') ...[
               ListTile(
-                title: Text(
-                  '${_selectedTime.hour.toString().padLeft(2, '0')}:'
-                      '${_selectedTime.minute.toString().padLeft(2, '0')}',
-                ),
+                title: Text(_formatTime(_selectedTime)),
                 trailing: const Icon(Icons.access_time),
                 onTap: () async {
                   final time = await showTimePicker(
                     context: context,
                     initialTime: _selectedTime,
                   );
-                  if (time != null) setState(() => _selectedTime = time);
+                  if (time != null) {
+                    setState(() => _selectedTime = time);
+                  }
                 },
               ),
               DropdownButtonFormField<String>(
                 initialValue: _repeatType,
-                decoration: const InputDecoration(labelText: 'Повтор'),
-                items: const [
-                  DropdownMenuItem(value: 'once', child: Text('Один раз')),
-                  DropdownMenuItem(value: 'daily', child: Text('Каждый день')),
+                decoration: InputDecoration(
+                  labelText: l10n.sceneEditorRepeat,
+                ),
+                items: [
                   DropdownMenuItem(
-                      value: 'weekly', child: Text('По дням недели')),
+                    value: 'once',
+                    child: Text(l10n.sceneEditorRepeatOnce),
+                  ),
+                  DropdownMenuItem(
+                    value: 'daily',
+                    child: Text(l10n.sceneEditorRepeatDaily),
+                  ),
+                  DropdownMenuItem(
+                    value: 'weekly',
+                    child: Text(l10n.sceneEditorRepeatWeekly),
+                  ),
                 ],
                 onChanged: (value) {
-                  if (value != null) setState(() => _repeatType = value);
+                  if (value != null) {
+                    setState(() => _repeatType = value);
+                  }
                 },
               ),
               if (_repeatType == 'weekly') ...[
                 const SizedBox(height: 8),
-                const Text('Дни недели:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  l10n.sceneEditorDaysOfWeek,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Wrap(
                   spacing: 4,
-                  children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-                      .asMap()
-                      .entries
-                      .map((e) {
-                    final dayIndex = e.key + 1;
+                  children: _weekDays(l10n).asMap().entries.map((entry) {
+                    final dayIndex = entry.key + 1;
+
                     return FilterChip(
-                      label: Text(e.value,
-                          style: const TextStyle(fontSize: 11)),
+                      label: Text(
+                        entry.value,
+                        style: const TextStyle(fontSize: 11),
+                      ),
                       selected: _selectedDays.contains(dayIndex),
-                      onSelected: (sel) {
+                      onSelected: (selected) {
                         setState(() {
-                          if (sel) {
+                          if (selected) {
                             _selectedDays.add(dayIndex);
                           } else {
                             _selectedDays.remove(dayIndex);
@@ -226,93 +282,134 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
               const SizedBox(height: 16),
             ],
 
-            // ─── ТРИГГЕР ПО ДАТЧИКУ ───
             if (_triggerType == 'sensor') ...[
               DropdownButtonFormField<String>(
                 initialValue: _selectedSensorId,
-                decoration: const InputDecoration(labelText: 'Датчик'),
-                hint: const Text('Выберите датчик'),
+                decoration: InputDecoration(
+                  labelText: l10n.sceneEditorSensor,
+                ),
+                hint: Text(l10n.sceneEditorSelectSensor),
                 items: allDevices
-                    .where((d) =>
-                d.type == DeviceType.sensor ||
-                    (d.properties['source'] == 'zigbee' &&
-                        d.properties['exposes'] != null))
-                    .map((d) => DropdownMenuItem(
-                  value: d.id,
-                  child: Text(d.name),
-                ))
+                    .where(
+                      (device) =>
+                  device.type == DeviceType.sensor ||
+                      (device.properties['source'] == 'zigbee' &&
+                          device.properties['exposes'] != null),
+                )
+                    .map(
+                      (device) => DropdownMenuItem(
+                    value: device.id,
+                    child: Text(device.name),
+                  ),
+                )
                     .toList(),
-                onChanged: (value) =>
-                    setState(() => _selectedSensorId = value),
+                onChanged: (value) {
+                  setState(() => _selectedSensorId = value);
+                },
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedSensorCondition,
-                decoration: const InputDecoration(labelText: 'Условие'),
-                items: const [
+                decoration: InputDecoration(
+                  labelText: l10n.sceneEditorCondition,
+                ),
+                items: [
                   DropdownMenuItem(
-                      value: 'temperature_above',
-                      child: Text('🌡️ Температура >')),
+                    value: 'temperature_above',
+                    child: Text(
+                      l10n.sceneEditorTemperatureAbove('…'),
+                    ),
+                  ),
                   DropdownMenuItem(
-                      value: 'temperature_below',
-                      child: Text('🌡️ Температура <')),
+                    value: 'temperature_below',
+                    child: Text(
+                      l10n.sceneEditorTemperatureBelow('…'),
+                    ),
+                  ),
                   DropdownMenuItem(
-                      value: 'humidity_above',
-                      child: Text('💧 Влажность >')),
+                    value: 'humidity_above',
+                    child: Text(l10n.sceneEditorHumidityAbove('…')),
+                  ),
                   DropdownMenuItem(
-                      value: 'humidity_below',
-                      child: Text('💧 Влажность <')),
+                    value: 'humidity_below',
+                    child: Text(l10n.sceneEditorHumidityBelow('…')),
+                  ),
                   DropdownMenuItem(
-                      value: 'water_leak', child: Text('💧 Протечка')),
+                    value: 'water_leak',
+                    child: Text(l10n.sceneEditorWaterLeak),
+                  ),
                   DropdownMenuItem(
-                      value: 'motion', child: Text('🏃 Движение')),
+                    value: 'motion',
+                    child: Text(l10n.sceneEditorMotion),
+                  ),
                   DropdownMenuItem(
-                      value: 'contact_open', child: Text('🚪 Открыто')),
+                    value: 'contact_open',
+                    child: Text(l10n.sceneEditorContactOpen),
+                  ),
                   DropdownMenuItem(
-                      value: 'contact_closed', child: Text('🚪 Закрыто')),
-                  DropdownMenuItem(value: 'smoke', child: Text('🔥 Дым')),
-                  DropdownMenuItem(value: 'gas', child: Text('💨 Газ')),
+                    value: 'contact_closed',
+                    child: Text(l10n.sceneEditorContactClosed),
+                  ),
+                  DropdownMenuItem(
+                    value: 'smoke',
+                    child: Text(l10n.sceneEditorSmoke),
+                  ),
+                  DropdownMenuItem(
+                    value: 'gas',
+                    child: Text(l10n.sceneEditorGas),
+                  ),
                 ],
-                onChanged: (value) => setState(() =>
-                _selectedSensorCondition =
-                    value ?? 'temperature_above'),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedSensorCondition =
+                        value ?? 'temperature_above';
+                  });
+                },
               ),
               const SizedBox(height: 8),
               if (_selectedSensorCondition.startsWith('temperature') ||
-                  _selectedSensorCondition.startsWith('humidity')) ...[
+                  _selectedSensorCondition.startsWith('humidity'))
                 TextField(
                   controller: _sensorThresholdController,
-                  decoration: const InputDecoration(labelText: 'Порог'),
+                  decoration: InputDecoration(
+                    labelText: l10n.sceneEditorThreshold,
+                  ),
                   keyboardType: TextInputType.number,
                 ),
-              ],
               const SizedBox(height: 16),
             ],
 
-            // ─── ТРИГГЕР ПО ПРИСУТСТВИЮ ───
             if (_triggerType == 'presence') ...[
               DropdownButtonFormField<PresenceEvent>(
                 initialValue: _selectedPresenceEvent,
-                decoration: const InputDecoration(labelText: 'Событие'),
-                items: const [
+                decoration: InputDecoration(
+                  labelText: l10n.sceneEditorPresenceEvent,
+                ),
+                items: [
                   DropdownMenuItem(
-                      value: PresenceEvent.someoneHome,
-                      child: Text('Кто-то пришёл')),
+                    value: PresenceEvent.someoneHome,
+                    child: Text(l10n.sceneEditorSomeoneHome),
+                  ),
                   DropdownMenuItem(
-                      value: PresenceEvent.nobodyHome,
-                      child: Text('Никого нет')),
+                    value: PresenceEvent.nobodyHome,
+                    child: Text(l10n.sceneEditorNobodyHome),
+                  ),
                   DropdownMenuItem(
-                      value: PresenceEvent.allHome,
-                      child: Text('Все дома')),
+                    value: PresenceEvent.allHome,
+                    child: Text(l10n.sceneEditorAllHome),
+                  ),
                   DropdownMenuItem(
-                      value: PresenceEvent.phoneArrived,
-                      child: Text('Телефон пришёл')),
+                    value: PresenceEvent.phoneArrived,
+                    child: Text(l10n.sceneEditorPhoneArrived),
+                  ),
                   DropdownMenuItem(
-                      value: PresenceEvent.phoneLeft,
-                      child: Text('Телефон ушёл')),
+                    value: PresenceEvent.phoneLeft,
+                    child: Text(l10n.sceneEditorPhoneLeft),
+                  ),
                   DropdownMenuItem(
-                      value: PresenceEvent.phoneUnknown,
-                      child: Text('Телефон потерян')),
+                    value: PresenceEvent.phoneUnknown,
+                    child: Text(l10n.sceneEditorPhoneUnknown),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -327,23 +424,31 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                   _selectedPresenceEvent == PresenceEvent.phoneUnknown) ...[
                 DropdownButtonFormField<String>(
                   initialValue: _selectedPresencePhoneId,
-                  decoration: const InputDecoration(labelText: 'Телефон'),
-                  hint: const Text('Выберите телефон'),
+                  decoration: InputDecoration(
+                    labelText: l10n.sceneEditorPhone,
+                  ),
+                  hint: Text(l10n.sceneEditorSelectPhone),
                   items: presencePhones
-                      .map((p) => DropdownMenuItem(
-                    value: p.phoneId,
-                    child: Text(p.phoneName),
-                  ))
+                      .map(
+                        (phone) => DropdownMenuItem(
+                      value: phone.phoneId,
+                      child: Text(phone.phoneName),
+                    ),
+                  )
                       .toList(),
-                  onChanged: (value) =>
-                      setState(() => _selectedPresencePhoneId = value),
+                  onChanged: (value) {
+                    setState(() => _selectedPresencePhoneId = value);
+                  },
                 ),
                 const SizedBox(height: 8),
               ],
 
               InkWell(
-                onTap: () => setState(
-                        () => _showPresenceAdvanced = !_showPresenceAdvanced),
+                onTap: () {
+                  setState(() {
+                    _showPresenceAdvanced = !_showPresenceAdvanced;
+                  });
+                },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
@@ -357,7 +462,7 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Дополнительно',
+                        l10n.sceneEditorAdvanced,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -372,17 +477,22 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
               if (_showPresenceAdvanced) ...[
                 DropdownButtonFormField<PresenceChannel>(
                   initialValue: _selectedPresenceChannel,
-                  decoration: const InputDecoration(
-                      labelText: 'Канал определения'),
-                  items: const [
+                  decoration: InputDecoration(
+                    labelText: l10n.sceneEditorDetectionChannel,
+                  ),
+                  items: [
                     DropdownMenuItem(
-                        value: PresenceChannel.any, child: Text('Любой')),
+                      value: PresenceChannel.any,
+                      child: Text(l10n.sceneEditorChannelAny),
+                    ),
                     DropdownMenuItem(
-                        value: PresenceChannel.wifi,
-                        child: Text('Только Wi-Fi')),
+                      value: PresenceChannel.wifi,
+                      child: Text(l10n.sceneEditorChannelWifi),
+                    ),
                     DropdownMenuItem(
-                        value: PresenceChannel.gps,
-                        child: Text('Только GPS')),
+                      value: PresenceChannel.gps,
+                      child: Text(l10n.sceneEditorChannelGps),
+                    ),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -393,14 +503,26 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
                   initialValue: _presenceDelayMin,
-                  decoration: const InputDecoration(
-                      labelText: 'Задержка перед запуском'),
-                  items: const [
+                  decoration: InputDecoration(
+                    labelText: l10n.sceneEditorStartDelay,
+                  ),
+                  items: [
                     DropdownMenuItem(
-                        value: 0, child: Text('Без задержки')),
-                    DropdownMenuItem(value: 1, child: Text('1 минута')),
-                    DropdownMenuItem(value: 5, child: Text('5 минут')),
-                    DropdownMenuItem(value: 30, child: Text('30 минут')),
+                      value: 0,
+                      child: Text(l10n.sceneEditorNoDelay),
+                    ),
+                    DropdownMenuItem(
+                      value: 1,
+                      child: Text(l10n.sceneEditorMinute),
+                    ),
+                    DropdownMenuItem(
+                      value: 5,
+                      child: Text(l10n.sceneEditorMinutes(5)),
+                    ),
+                    DropdownMenuItem(
+                      value: 30,
+                      child: Text(l10n.sceneEditorMinutes(30)),
+                    ),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -411,13 +533,26 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int>(
                   initialValue: _presenceCooldownMin,
-                  decoration:
-                  const InputDecoration(labelText: 'Антидребезг'),
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text('1 минута')),
-                    DropdownMenuItem(value: 5, child: Text('5 минут')),
-                    DropdownMenuItem(value: 15, child: Text('15 минут')),
-                    DropdownMenuItem(value: 30, child: Text('30 минут')),
+                  decoration: InputDecoration(
+                    labelText: l10n.sceneEditorCooldown,
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 1,
+                      child: Text(l10n.sceneEditorMinute),
+                    ),
+                    DropdownMenuItem(
+                      value: 5,
+                      child: Text(l10n.sceneEditorMinutes(5)),
+                    ),
+                    DropdownMenuItem(
+                      value: 15,
+                      child: Text(l10n.sceneEditorMinutes(15)),
+                    ),
+                    DropdownMenuItem(
+                      value: 30,
+                      child: Text(l10n.sceneEditorMinutes(30)),
+                    ),
                   ],
                   onChanged: (value) {
                     if (value != null) {
@@ -437,8 +572,8 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                 icon: const Icon(Icons.tune, size: 16),
                 label: Text(
                   _presenceConditions == null
-                      ? 'Настроить условия'
-                      : 'Условия настроены ✓',
+                      ? l10n.sceneEditorConfigureConditions
+                      : l10n.sceneEditorConditionsConfigured,
                 ),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 36),
@@ -447,42 +582,64 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
               const SizedBox(height: 16),
             ],
 
-            const Text('Действия:',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              l10n.sceneEditorActions,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             if (devices.isEmpty)
-              const Text('Нет устройств', style: TextStyle(color: Colors.grey))
+              Text(
+                l10n.sceneEditorNoDevices,
+                style: const TextStyle(color: Colors.grey),
+              )
             else
               ...devices.map((device) {
                 final action = _selectedActions[device.id];
+
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(device.name,
-                              style: const TextStyle(fontSize: 14)),
+                          child: Text(
+                            device.name,
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
                         ChoiceChip(
-                          label: const Text('ВКЛ',
-                              style: TextStyle(fontSize: 11)),
+                          label: Text(
+                            l10n.sceneEditorActionOn,
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           selected: action == 'turnOn',
-                          selectedColor: Colors.green.withValues(alpha: 0.3),
-                          onSelected: (s) => setState(() =>
-                          _selectedActions[device.id] =
-                          s ? 'turnOn' : null),
+                          selectedColor:
+                          Colors.green.withValues(alpha: 0.3),
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedActions[device.id] =
+                              selected ? 'turnOn' : null;
+                            });
+                          },
                         ),
                         const SizedBox(width: 4),
                         ChoiceChip(
-                          label: const Text('ВЫКЛ',
-                              style: TextStyle(fontSize: 11)),
+                          label: Text(
+                            l10n.sceneEditorActionOff,
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           selected: action == 'turnOff',
-                          selectedColor: Colors.red.withValues(alpha: 0.3),
-                          onSelected: (s) => setState(() =>
-                          _selectedActions[device.id] =
-                          s ? 'turnOff' : null),
+                          selectedColor:
+                          Colors.red.withValues(alpha: 0.3),
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedActions[device.id] =
+                              selected ? 'turnOff' : null;
+                            });
+                          },
                         ),
                       ],
                     ),
@@ -495,44 +652,54 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
+          child: Text(l10n.sceneEditorCancel),
         ),
         ElevatedButton(
           onPressed: _save,
-          child: Text(_isEditing ? 'Сохранить' : 'Создать'),
+          child: Text(
+            _isEditing
+                ? l10n.sceneEditorSave
+                : l10n.sceneEditorCreate,
+          ),
         ),
       ],
     );
   }
 
   void _save() {
-    final hasActions = _selectedActions.values.any((a) => a != null);
-    if (_nameController.text.isEmpty || !hasActions) {
+    final l10n = AppLocalizations.of(context);
+    final hasActions = _selectedActions.values.any((action) => action != null);
+
+    if (_nameController.text.trim().isEmpty || !hasActions) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('⚠️ Введите название и выберите действия'),
-        ),
+        SnackBar(content: Text(l10n.sceneEditorValidation)),
       );
       return;
     }
 
     final actions = _selectedActions.entries
-        .where((e) => e.value != null)
-        .map((e) => SceneAction(deviceId: e.key, command: e.value!))
+        .where((entry) => entry.value != null)
+        .map(
+          (entry) => SceneAction(
+        deviceId: entry.key,
+        command: entry.value!,
+      ),
+    )
         .toList();
 
-    final timeStr =
-        '${_selectedTime.hour.toString().padLeft(2, '0')}:'
-        '${_selectedTime.minute.toString().padLeft(2, '0')}';
+    final timeString = _formatTime(_selectedTime);
 
     SceneTrigger? trigger;
 
     if (_triggerType == 'time') {
       trigger = SceneTrigger(
         type: TriggerType.time,
-        time: timeStr,
-        repeat: RepeatType.values.firstWhere((r) => r.name == _repeatType),
-        repeatDays: _repeatType == 'weekly' ? _selectedDays.toList() : null,
+        time: timeString,
+        repeat: RepeatType.values.firstWhere(
+              (repeat) => repeat.name == _repeatType,
+        ),
+        repeatDays:
+        _repeatType == 'weekly' ? _selectedDays.toList() : null,
       );
     } else if (_triggerType == 'sensor') {
       trigger = SceneTrigger(
@@ -556,7 +723,7 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
 
     final scene = Scene(
       id: widget.existingScene?.id ?? const Uuid().v4(),
-      name: _nameController.text,
+      name: _nameController.text.trim(),
       icon: _triggerType == 'time'
           ? '⏰'
           : _triggerType == 'sensor'
@@ -568,32 +735,46 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
       trigger: trigger,
     );
 
+    // Сохраняем так же, как было в исходном диалоге.
+    // При наличии отдельного updateScene в scenesProvider нужно проверить,
+    // следует ли вызывать его для редактирования вместо addScene.
     ref.read(scenesProvider.notifier).addScene(scene);
+
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isEditing ? '✅ Сцена обновлена!' : '✅ Сцена создана!'),
+        content: Text(
+          _isEditing
+              ? l10n.sceneEditorUpdated
+              : l10n.sceneEditorCreated,
+        ),
       ),
     );
   }
 
   Future<PresenceConditions?> _showConditionsDialog(
-      BuildContext context) async {
+      BuildContext context,
+      ) async {
+    final l10n = AppLocalizations.of(context);
     final conditions = _presenceConditions ?? const PresenceConditions();
 
-    bool useTime = conditions.useTime;
-    TimeOfDay startTime = TimeOfDay(
-        hour: conditions.startHour, minute: conditions.startMinute);
-    TimeOfDay endTime =
-    TimeOfDay(hour: conditions.endHour, minute: conditions.endMinute);
-    bool useDays = conditions.useDays;
-    final Set<int> days = Set.from(conditions.daysOfWeek);
+    var useTime = conditions.useTime;
+    var startTime = TimeOfDay(
+      hour: conditions.startHour,
+      minute: conditions.startMinute,
+    );
+    var endTime = TimeOfDay(
+      hour: conditions.endHour,
+      minute: conditions.endMinute,
+    );
+    var useDays = conditions.useDays;
+    final days = Set<int>.from(conditions.daysOfWeek);
 
     return showDialog<PresenceConditions>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('Условия'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(l10n.sceneEditorConditionsTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -601,56 +782,70 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
               children: [
                 SwitchListTile(
                   dense: true,
-                  title: const Text('Время суток'),
+                  title: Text(l10n.sceneEditorTimeOfDay),
                   value: useTime,
-                  onChanged: (val) => setState(() => useTime = val),
+                  onChanged: (value) {
+                    setDialogState(() => useTime = value);
+                  },
                 ),
                 if (useTime) ...[
                   ListTile(
                     dense: true,
                     title: Text(
-                        'С ${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}'),
+                      l10n.sceneEditorFromTime(_formatTime(startTime)),
+                    ),
                     trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       final time = await showTimePicker(
-                          context: context, initialTime: startTime);
-                      if (time != null) setState(() => startTime = time);
+                        context: dialogContext,
+                        initialTime: startTime,
+                      );
+                      if (time != null) {
+                        setDialogState(() => startTime = time);
+                      }
                     },
                   ),
                   ListTile(
                     dense: true,
                     title: Text(
-                        'По ${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}'),
+                      l10n.sceneEditorUntilTime(_formatTime(endTime)),
+                    ),
                     trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       final time = await showTimePicker(
-                          context: context, initialTime: endTime);
-                      if (time != null) setState(() => endTime = time);
+                        context: dialogContext,
+                        initialTime: endTime,
+                      );
+                      if (time != null) {
+                        setDialogState(() => endTime = time);
+                      }
                     },
                   ),
                 ],
                 const Divider(),
                 SwitchListTile(
                   dense: true,
-                  title: const Text('Дни недели'),
+                  title: Text(l10n.sceneEditorDaysCondition),
                   value: useDays,
-                  onChanged: (val) => setState(() => useDays = val),
+                  onChanged: (value) {
+                    setDialogState(() => useDays = value);
+                  },
                 ),
-                if (useDays) ...[
+                if (useDays)
                   Wrap(
                     spacing: 4,
-                    children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-                        .asMap()
-                        .entries
-                        .map((e) {
-                      final dayIndex = e.key + 1;
+                    children: _weekDays(l10n).asMap().entries.map((entry) {
+                      final dayIndex = entry.key + 1;
+
                       return FilterChip(
-                        label: Text(e.value,
-                            style: const TextStyle(fontSize: 11)),
+                        label: Text(
+                          entry.value,
+                          style: const TextStyle(fontSize: 11),
+                        ),
                         selected: days.contains(dayIndex),
-                        onSelected: (sel) {
-                          setState(() {
-                            if (sel) {
+                        onSelected: (selected) {
+                          setDialogState(() {
+                            if (selected) {
                               days.add(dayIndex);
                             } else {
                               days.remove(dayIndex);
@@ -660,24 +855,27 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                       );
                     }).toList(),
                   ),
-                ],
               ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.pop(ctx, const PresenceConditions()),
-              child: const Text('Сбросить'),
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                  const PresenceConditions(),
+                );
+              },
+              child: Text(l10n.sceneEditorReset),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Отмена'),
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.sceneEditorCancel),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(
-                  ctx,
+                  dialogContext,
                   PresenceConditions(
                     useTime: useTime,
                     startHour: startTime.hour,
@@ -689,7 +887,7 @@ class _SceneEditorDialogState extends ConsumerState<SceneEditorDialog> {
                   ),
                 );
               },
-              child: const Text('Сохранить'),
+              child: Text(l10n.sceneEditorSave),
             ),
           ],
         ),

@@ -1,17 +1,17 @@
 /// Экран сцен — создание, редактирование и выполнение сценариев автоматизации.
-/// Сцены могут запускаться вручную (тап), по времени (через AutomationEngine)
-/// или по датчику (через AdaptivePoller + ZigbeeBridge.onState).
-/// Поддерживаются повторы: один раз, каждый день, по дням недели.
+/// Сцены могут запускаться вручную, по времени или по датчику.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../application/state/devices_provider.dart';
+import '../../../application/state/scenes_provider.dart';
 import '../../../domain/models/device.dart';
 import '../../../domain/models/scene.dart';
-import '../../../application/state/scenes_provider.dart';
-import '../../../application/state/devices_provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import 'scene_helpers.dart';
 import 'scene_editor_dialog.dart';
+import 'scene_helpers.dart';
 
 class ScenesScreen extends ConsumerWidget {
   const ScenesScreen({super.key});
@@ -26,14 +26,19 @@ class ScenesScreen extends ConsumerWidget {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    final crossAxisCount = _calculateCrossAxisCount(screenWidth, isLandscape);
+    final crossAxisCount =
+    _calculateCrossAxisCount(screenWidth, isLandscape);
     final tileWidth = _calculateTileWidth(screenWidth, crossAxisCount);
     final scale = (tileWidth / 160).clamp(0.9, 1.8);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.scenesTitle)),
+      appBar: AppBar(
+        title: Text(l10n.scenesTitle),
+      ),
       body: scenes.isEmpty
-          ? Center(child: Text(l10n.scenesEmpty))
+          ? Center(
+        child: Text(l10n.scenesEmpty),
+      )
           : GridView.builder(
         padding: EdgeInsets.all(8 * scale),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -44,23 +49,30 @@ class ScenesScreen extends ConsumerWidget {
         itemCount: scenes.length,
         itemBuilder: (context, index) {
           final scene = scenes[index];
+
           return Card(
             child: InkWell(
               onTap: () {
                 if (scene.trigger == null ||
                     scene.trigger!.type == TriggerType.manual) {
-                  ref.read(scenesProvider.notifier).executeScene(scene.id);
+                  ref
+                      .read(scenesProvider.notifier)
+                      .executeScene(scene.id);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(l10n.scenesAutoTriggerMessage(scene.name), style: TextStyle(fontSize: 12 * scale)),
+                      content: Text(
+                        l10n.scenesAutoTriggerMessage(scene.name),
+                        style: TextStyle(fontSize: 12 * scale),
+                      ),
                       duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
                 }
               },
-              onLongPress: () => _showSceneMenu(context, ref, scene),
+              onLongPress: () =>
+                  _showSceneMenu(context, ref, scene),
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: EdgeInsets.all(6 * scale),
@@ -70,8 +82,10 @@ class ScenesScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Text(scene.icon,
-                            style: TextStyle(fontSize: 16 * scale)),
+                        Text(
+                          scene.icon,
+                          style: TextStyle(fontSize: 16 * scale),
+                        ),
                         SizedBox(width: 4 * scale),
                         Expanded(
                           child: Text(
@@ -87,17 +101,27 @@ class ScenesScreen extends ConsumerWidget {
                       ],
                     ),
                     SizedBox(height: 5 * scale),
-                    _buildTriggerInfo(scene, scale),
+                    _buildTriggerInfo(scene, scale, l10n),
                     SizedBox(height: 4 * scale),
-                    Divider(height: 1, thickness: 0.5),
+                    const Divider(height: 1, thickness: 0.5),
                     SizedBox(height: 4 * scale),
                     Expanded(
-                      child: _buildActionsList(scene, devices, scale),
+                      child: _buildActionsList(
+                        scene,
+                        devices,
+                        scale,
+                        l10n,
+                      ),
                     ),
                     Text(
-                      '${scene.actions.length} ${SceneHelpers.pluralize(scene.actions.length)}',
+                      SceneHelpers.pluralize(
+                        scene.actions.length,
+                        l10n,
+                      ),
                       style: TextStyle(
-                          fontSize: 8 * scale, color: Colors.grey),
+                        fontSize: 8 * scale,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -120,6 +144,7 @@ class ScenesScreen extends ConsumerWidget {
       if (width >= 700) return 3;
       return 2;
     }
+
     if (width >= 900) return 3;
     if (width >= 300) return 2;
     return 1;
@@ -129,25 +154,39 @@ class ScenesScreen extends ConsumerWidget {
     const horizontalPadding = 16.0;
     const spacing = 8.0;
     final available =
-        screenWidth - horizontalPadding - (spacing * (crossAxisCount - 1));
+        screenWidth - horizontalPadding - spacing * (crossAxisCount - 1);
+
     return available / crossAxisCount;
   }
 
-  Widget _buildTriggerInfo(Scene scene, double scale) {
-    if (scene.trigger == null || scene.trigger!.type == TriggerType.manual) {
+  Widget _buildTriggerInfo(
+      Scene scene,
+      double scale,
+      AppLocalizations l10n,
+      ) {
+    final trigger = scene.trigger;
+
+    if (trigger == null || trigger.type == TriggerType.manual) {
       return Row(
         children: [
-          Icon(Icons.touch_app, size: 11 * scale, color: Colors.grey[600]),
+          Icon(
+            Icons.touch_app,
+            size: 11 * scale,
+            color: Colors.grey[600],
+          ),
           SizedBox(width: 2 * scale),
           Text(
-            'Вручную',
-            style: TextStyle(fontSize: 9 * scale, color: Colors.grey[600]),
+            l10n.sceneEditorTriggerManual,
+            style: TextStyle(
+              fontSize: 9 * scale,
+              color: Colors.grey[600],
+            ),
           ),
         ],
       );
     }
 
-    switch (scene.trigger!.type) {
+    switch (trigger.type) {
       case TriggerType.time:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,13 +196,15 @@ class ScenesScreen extends ConsumerWidget {
                 Text('⏰', style: TextStyle(fontSize: 11 * scale)),
                 SizedBox(width: 2 * scale),
                 Text(
-                  scene.trigger!.time ?? '--:--',
+                  trigger.time ?? '--:--',
                   style: TextStyle(
-                      fontSize: 10 * scale, fontWeight: FontWeight.w500),
+                    fontSize: 10 * scale,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
-            if (scene.trigger!.repeat != RepeatType.once) ...[
+            if (trigger.repeat != RepeatType.once) ...[
               SizedBox(height: 2 * scale),
               Row(
                 children: [
@@ -171,11 +212,20 @@ class ScenesScreen extends ConsumerWidget {
                   SizedBox(width: 2 * scale),
                   Expanded(
                     child: Text(
-                      scene.trigger!.repeat == RepeatType.weekly &&
-                          scene.trigger!.repeatDays?.isNotEmpty == true
-                          ? SceneHelpers.daysLabel(scene.trigger!.repeatDays)
-                          : SceneHelpers.repeatLabel(scene.trigger!.repeat),
-                      style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
+                      trigger.repeat == RepeatType.weekly &&
+                          trigger.repeatDays?.isNotEmpty == true
+                          ? SceneHelpers.daysLabel(
+                        trigger.repeatDays,
+                        l10n,
+                      )
+                          : SceneHelpers.repeatLabel(
+                        trigger.repeat,
+                        l10n,
+                      ),
+                      style: TextStyle(
+                        fontSize: 8 * scale,
+                        color: Colors.grey,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -193,7 +243,7 @@ class ScenesScreen extends ConsumerWidget {
             SizedBox(width: 2 * scale),
             Expanded(
               child: Text(
-                SceneHelpers.sensorConditionLabel(scene.trigger!),
+                SceneHelpers.sensorConditionLabel(trigger, l10n),
                 style: TextStyle(fontSize: 8 * scale),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -212,20 +262,25 @@ class ScenesScreen extends ConsumerWidget {
                 SizedBox(width: 2 * scale),
                 Expanded(
                   child: Text(
-                    SceneHelpers.presenceEventLabel(scene.trigger!),
+                    SceneHelpers.presenceEventLabel(trigger, l10n),
                     style: TextStyle(
-                        fontSize: 9 * scale, fontWeight: FontWeight.w500),
+                      fontSize: 9 * scale,
+                      fontWeight: FontWeight.w500,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            if (scene.trigger!.presencePhoneId != null) ...[
+            if (trigger.presencePhoneId != null) ...[
               SizedBox(height: 2 * scale),
               Text(
-                scene.trigger!.presencePhoneId!,
-                style: TextStyle(fontSize: 8 * scale, color: Colors.grey),
+                trigger.presencePhoneId!,
+                style: TextStyle(
+                  fontSize: 8 * scale,
+                  color: Colors.grey,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -233,12 +288,17 @@ class ScenesScreen extends ConsumerWidget {
           ],
         );
 
-      default:
+      case TriggerType.manual:
         return const SizedBox.shrink();
     }
   }
 
-  Widget _buildActionsList(Scene scene, List<Device> devices, double scale) {
+  Widget _buildActionsList(
+      Scene scene,
+      List<Device> devices,
+      double scale,
+      AppLocalizations l10n,
+      ) {
     return ListView.builder(
       padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
@@ -246,17 +306,21 @@ class ScenesScreen extends ConsumerWidget {
       itemBuilder: (context, index) {
         final action = scene.actions[index];
         final device =
-            devices.where((d) => d.id == action.deviceId).firstOrNull;
-        final deviceName = device?.name ?? 'Устройство';
+            devices.where((item) => item.id == action.deviceId).firstOrNull;
+
+        final deviceName = device?.name ?? l10n.scenesDeviceFallback;
         final deviceIcon = SceneHelpers.deviceIcon(device?.type);
-        final actionLabel = SceneHelpers.actionLabel(action.command);
+        final actionLabel = SceneHelpers.actionLabel(action.command, l10n);
         final actionColor = SceneHelpers.actionColor(action.command);
 
         return Padding(
           padding: EdgeInsets.symmetric(vertical: 1 * scale),
           child: Row(
             children: [
-              Text(deviceIcon, style: TextStyle(fontSize: 9 * scale)),
+              Text(
+                deviceIcon,
+                style: TextStyle(fontSize: 9 * scale),
+              ),
               SizedBox(width: 2 * scale),
               Expanded(
                 child: Text(
@@ -267,8 +331,10 @@ class ScenesScreen extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding:
-                EdgeInsets.symmetric(horizontal: 3 * scale, vertical: 1),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 3 * scale,
+                  vertical: 1,
+                ),
                 decoration: BoxDecoration(
                   color: actionColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -289,26 +355,36 @@ class ScenesScreen extends ConsumerWidget {
     );
   }
 
-  void _showSceneMenu(BuildContext context, WidgetRef ref, Scene scene) {
-    showModalBottomSheet(
+  void _showSceneMenu(
+      BuildContext context,
+      WidgetRef ref,
+      Scene scene,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.edit, color: Colors.blue),
-              title: const Text('Редактировать'),
+              title: Text(l10n.scenesEdit),
               onTap: () {
-                Navigator.pop(ctx);
-                _showCreateSceneDialog(context, ref, existingScene: scene);
+                Navigator.pop(sheetContext);
+                _showCreateSceneDialog(
+                  context,
+                  ref,
+                  existingScene: scene,
+                );
               },
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Удалить'),
+              title: Text(l10n.scenesDelete),
               onTap: () {
-                Navigator.pop(ctx);
+                Navigator.pop(sheetContext);
                 ref.read(scenesProvider.notifier).deleteScene(scene.id);
               },
             ),
@@ -318,9 +394,12 @@ class ScenesScreen extends ConsumerWidget {
     );
   }
 
-  void _showCreateSceneDialog(BuildContext context, WidgetRef ref,
-      {Scene? existingScene}) {
-    showDialog(
+  void _showCreateSceneDialog(
+      BuildContext context,
+      WidgetRef ref, {
+        Scene? existingScene,
+      }) {
+    showDialog<void>(
       context: context,
       builder: (_) => SceneEditorDialog(existingScene: existingScene),
     );

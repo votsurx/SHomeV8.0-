@@ -1,205 +1,269 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../application/state/notification_settings_provider.dart';
 import '../../data/services/vk_notification_service.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class VkSettingsScreen extends ConsumerWidget {
   const VkSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final settings = ref.watch(notificationSettingsProvider);
     final notifier = ref.read(notificationSettingsProvider.notifier);
 
-    final tokenController = TextEditingController(text: settings.vkToken);
-    final userIdController = TextEditingController(text: settings.vkUserId);
+    final weekdays = [
+      l10n.vkSettingsMonday,
+      l10n.vkSettingsTuesday,
+      l10n.vkSettingsWednesday,
+      l10n.vkSettingsThursday,
+      l10n.vkSettingsFriday,
+      l10n.vkSettingsSaturday,
+      l10n.vkSettingsSunday,
+    ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('VK Bot')),
+      appBar: AppBar(
+        title: Text(l10n.vkSettingsTitle),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwitchListTile(
-            title: const Text('Включить VK'),
-            subtitle: const Text('Отправлять уведомления в VK'),
+            title: Text(l10n.vkSettingsEnable),
+            subtitle: Text(l10n.vkSettingsEnableSubtitle),
             value: settings.enabled,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(enabled: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(enabled: value));
             },
           ),
           const SizedBox(height: 16),
+
           if (settings.enabled) ...[
-            TextField(
-              controller: tokenController,
-              decoration: const InputDecoration(
-                labelText: 'VK Token',
-                hintText: 'Вставьте токен бота',
+            TextFormField(
+              initialValue: settings.vkToken,
+              decoration: InputDecoration(
+                labelText: l10n.vkSettingsTokenLabel,
+                hintText: l10n.vkSettingsTokenHint,
               ),
-              onChanged: (val) {
-                notifier.update(settings.copyWith(vkToken: val));
+              onChanged: (value) {
+                notifier.update(settings.copyWith(vkToken: value));
               },
             ),
             const SizedBox(height: 8),
-            TextField(
-              controller: userIdController,
-              decoration: const InputDecoration(
-                labelText: 'VK User ID',
-                hintText: 'Например, 123456789',
+            TextFormField(
+              initialValue: settings.vkUserId,
+              decoration: InputDecoration(
+                labelText: l10n.vkSettingsUserIdLabel,
+                hintText: l10n.vkSettingsUserIdHint,
               ),
               keyboardType: TextInputType.number,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(vkUserId: val));
+              onChanged: (value) {
+                notifier.update(settings.copyWith(vkUserId: value));
               },
             ),
             const Divider(height: 32),
-            const Text(
-              'События',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+
+            Text(
+              l10n.vkSettingsEvents,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
-              title: const Text('Сцены'),
-              subtitle: const Text('Уведомления о выполнении сцен'),
+              title: Text(l10n.vkSettingsScenes),
+              subtitle: Text(l10n.vkSettingsScenesSubtitle),
               value: settings.notifyScenes,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(notifyScenes: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(notifyScenes: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Устройства'),
-              subtitle: const Text('Изменение состояния устройств'),
+              title: Text(l10n.vkSettingsDevices),
+              subtitle: Text(l10n.vkSettingsDevicesSubtitle),
               value: settings.notifyDevices,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(notifyDevices: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(notifyDevices: value),
+                );
               },
             ),
+
             const Divider(height: 32),
-            // ═══ ТРЕВОГИ ═══
-            const Text(
-              'Тревоги',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+
+            Text(
+              l10n.vkSettingsAlarms,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
-              title: const Text('Zigbee: 💧 Протечка'),
+              title: Text(l10n.vkSettingsZigbeeWaterLeak),
               value: settings.notifyZigbeeWaterLeak,
-              onChanged: (val) {
+              onChanged: (value) {
                 notifier.update(
-                    settings.copyWith(notifyZigbeeWaterLeak: val));
+                  settings.copyWith(notifyZigbeeWaterLeak: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Zigbee: 🔥 Дым'),
+              title: Text(l10n.vkSettingsZigbeeSmoke),
               value: settings.notifyZigbeeSmoke,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(notifyZigbeeSmoke: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(notifyZigbeeSmoke: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Zigbee: 💨 Газ'),
+              title: Text(l10n.vkSettingsZigbeeGas),
               value: settings.notifyZigbeeGas,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(notifyZigbeeGas: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(notifyZigbeeGas: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Zigbee: 🏃 Движение'),
+              title: Text(l10n.vkSettingsZigbeeMotion),
               value: settings.notifyZigbeeMotion,
-              onChanged: (val) {
+              onChanged: (value) {
                 notifier.update(
-                    settings.copyWith(notifyZigbeeMotion: val));
+                  settings.copyWith(notifyZigbeeMotion: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Zigbee: 🚪 Контакт'),
+              title: Text(l10n.vkSettingsZigbeeContact),
               value: settings.notifyZigbeeContact,
-              onChanged: (val) {
+              onChanged: (value) {
                 notifier.update(
-                    settings.copyWith(notifyZigbeeContact: val));
+                  settings.copyWith(notifyZigbeeContact: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Frigate: 🚶 Person'),
+              title: Text(l10n.vkSettingsFrigatePerson),
               value: settings.notifyFrigatePerson,
-              onChanged: (val) {
+              onChanged: (value) {
                 notifier.update(
-                    settings.copyWith(notifyFrigatePerson: val));
+                  settings.copyWith(notifyFrigatePerson: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Frigate: 🚗 Car'),
+              title: Text(l10n.vkSettingsFrigateCar),
               value: settings.notifyFrigateCar,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(notifyFrigateCar: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(notifyFrigateCar: value),
+                );
               },
             ),
+
             const Divider(height: 32),
-            // ═══ ОШИБКИ ═══
-            const Text(
-              'Ошибки',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+
+            Text(
+              l10n.vkSettingsErrors,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
-              title: const Text('Zigbee offline'),
-              subtitle: const Text('Устройство потеряло связь'),
+              title: Text(l10n.vkSettingsZigbeeOffline),
+              subtitle: Text(l10n.vkSettingsZigbeeOfflineSubtitle),
               value: settings.notifyZigbeeOffline,
-              onChanged: (val) {
+              onChanged: (value) {
                 notifier.update(
-                    settings.copyWith(notifyZigbeeOffline: val));
+                  settings.copyWith(notifyZigbeeOffline: value),
+                );
               },
             ),
             SwitchListTile(
-              title: const Text('Frigate offline'),
-              subtitle: const Text('Frigate недоступен'),
+              title: Text(l10n.vkSettingsFrigateOffline),
+              subtitle: Text(l10n.vkSettingsFrigateOfflineSubtitle),
               value: settings.notifyFrigateOffline,
-              onChanged: (val) {
+              onChanged: (value) {
                 notifier.update(
-                    settings.copyWith(notifyFrigateOffline: val));
+                  settings.copyWith(notifyFrigateOffline: value),
+                );
               },
             ),
+
             const Divider(height: 32),
-            // ═══ АНТИДРЕБЕЗГ ═══
+
             DropdownButtonFormField<int>(
               initialValue: settings.vkCooldownMin,
-              decoration: const InputDecoration(
-                labelText: 'Антидребезг VK',
-                prefixIcon: Icon(Icons.timer),
+              decoration: InputDecoration(
+                labelText: l10n.vkSettingsCooldown,
+                prefixIcon: const Icon(Icons.timer),
               ),
-              items: const [
-                DropdownMenuItem(value: 1, child: Text('1 минута')),
-                DropdownMenuItem(value: 5, child: Text('5 минут')),
-                DropdownMenuItem(value: 15, child: Text('15 минут')),
-                DropdownMenuItem(value: 30, child: Text('30 минут')),
+              items: [
+                DropdownMenuItem(
+                  value: 1,
+                  child: Text(l10n.vkSettingsCooldown1),
+                ),
+                DropdownMenuItem(
+                  value: 5,
+                  child: Text(l10n.vkSettingsCooldown5),
+                ),
+                DropdownMenuItem(
+                  value: 15,
+                  child: Text(l10n.vkSettingsCooldown15),
+                ),
+                DropdownMenuItem(
+                  value: 30,
+                  child: Text(l10n.vkSettingsCooldown30),
+                ),
               ],
-              onChanged: (val) {
-                if (val != null) {
-                  notifier.update(settings.copyWith(vkCooldownMin: val));
+              onChanged: (value) {
+                if (value != null) {
+                  notifier.update(
+                    settings.copyWith(vkCooldownMin: value),
+                  );
                 }
               },
             ),
+
             const Divider(height: 32),
+
             SwitchListTile(
-              title: const Text('Расписание'),
-              subtitle: const Text('Отправлять только в указанное время'),
+              title: Text(l10n.vkSettingsSchedule),
+              subtitle: Text(l10n.vkSettingsScheduleSubtitle),
               value: settings.useSchedule,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(useSchedule: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(useSchedule: value),
+                );
               },
             ),
+
             if (settings.useSchedule) ...[
               SwitchListTile(
-                title: const Text('Тревоги вне расписания'),
-                subtitle: const Text('Тревоги отправлять всегда'),
+                title: Text(l10n.vkSettingsAlarmsOutsideSchedule),
+                subtitle: Text(l10n.vkSettingsAlarmsAlways),
                 value: settings.scheduleOnlyAlarms,
-                onChanged: (val) {
-                  notifier.update(settings.copyWith(scheduleOnlyAlarms: val));
+                onChanged: (value) {
+                  notifier.update(
+                    settings.copyWith(scheduleOnlyAlarms: value),
+                  );
                 },
               ),
               ListTile(
-                title: const Text('Время начала'),
+                title: Text(l10n.vkSettingsStartTime),
                 subtitle: Text(
-                  '${settings.startHour.toString().padLeft(2, '0')}:${settings.startMinute.toString().padLeft(2, '0')}',
+                  '${settings.startHour.toString().padLeft(2, '0')}:'
+                      '${settings.startMinute.toString().padLeft(2, '0')}',
                 ),
                 trailing: const Icon(Icons.access_time),
                 onTap: () async {
@@ -210,18 +274,22 @@ class VkSettingsScreen extends ConsumerWidget {
                       minute: settings.startMinute,
                     ),
                   );
+
                   if (time != null) {
-                    notifier.update(settings.copyWith(
-                      startHour: time.hour,
-                      startMinute: time.minute,
-                    ));
+                    notifier.update(
+                      settings.copyWith(
+                        startHour: time.hour,
+                        startMinute: time.minute,
+                      ),
+                    );
                   }
                 },
               ),
               ListTile(
-                title: const Text('Время окончания'),
+                title: Text(l10n.vkSettingsEndTime),
                 subtitle: Text(
-                  '${settings.endHour.toString().padLeft(2, '0')}:${settings.endMinute.toString().padLeft(2, '0')}',
+                  '${settings.endHour.toString().padLeft(2, '0')}:'
+                      '${settings.endMinute.toString().padLeft(2, '0')}',
                 ),
                 trailing: const Icon(Icons.access_time),
                 onTap: () async {
@@ -232,50 +300,57 @@ class VkSettingsScreen extends ConsumerWidget {
                       minute: settings.endMinute,
                     ),
                   );
+
                   if (time != null) {
-                    notifier.update(settings.copyWith(
-                      endHour: time.hour,
-                      endMinute: time.minute,
-                    ));
+                    notifier.update(
+                      settings.copyWith(
+                        endHour: time.hour,
+                        endMinute: time.minute,
+                      ),
+                    );
                   }
                 },
               ),
               const SizedBox(height: 8),
-              const Text('Дни недели:'),
+              Text(l10n.vkSettingsDaysOfWeek),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 4,
-                children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-                    .asMap()
-                    .entries
-                    .map((e) {
-                  final dayIndex = e.key + 1;
-                  final selected = settings.daysOfWeek.contains(dayIndex);
+                children: weekdays.asMap().entries.map((entry) {
+                  final dayIndex = entry.key + 1;
+                  final selected =
+                  settings.daysOfWeek.contains(dayIndex);
+
                   return FilterChip(
-                    label: Text(e.value),
+                    label: Text(entry.value),
                     selected: selected,
-                    onSelected: (sel) {
+                    onSelected: (isSelected) {
                       final days = List<int>.from(settings.daysOfWeek);
-                      if (sel) {
+
+                      if (isSelected) {
                         days.add(dayIndex);
                       } else {
                         days.remove(dayIndex);
                       }
-                      notifier.update(settings.copyWith(daysOfWeek: days));
+
+                      notifier.update(
+                        settings.copyWith(daysOfWeek: days),
+                      );
                     },
                   );
                 }).toList(),
               ),
             ],
+
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () async {
-                final vk = VkNotificationService();
-                await vk.loadSettings();
-                await vk.sendMessage('✅ Тестовое уведомление из SHome!');
+                final service = VkNotificationService();
+                await service.loadSettings();
+                await service.sendMessage(l10n.vkSettingsTestMessage);
               },
               icon: const Icon(Icons.send),
-              label: const Text('Отправить тест VK'),
+              label: Text(l10n.vkSettingsSendTest),
             ),
           ],
         ],

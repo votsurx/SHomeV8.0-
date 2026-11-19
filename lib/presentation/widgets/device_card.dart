@@ -4,29 +4,36 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/models/device.dart';
 import '../../application/state/devices_provider.dart';
+import '../../domain/models/device.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'compound_device_card.dart';
+import 'device_controls/camera_preview.dart';
+import 'device_controls/curtain_info.dart';
+import 'device_controls/multi_switch.dart';
+import 'device_controls/power_button.dart';
+import 'device_controls/sensor_info.dart';
 import 'device_icons.dart';
 import 'device_settings.dart';
-import 'device_controls/power_button.dart';
-import 'device_controls/multi_switch.dart';
-import 'device_controls/sensor_info.dart';
-import 'device_controls/curtain_info.dart';
-import 'device_controls/camera_preview.dart';
 
 class DeviceCard extends ConsumerWidget {
+  const DeviceCard({
+    super.key,
+    required this.device,
+  });
+
   final Device device;
-  const DeviceCard({super.key, required this.device});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Подписываемся на актуальное состояние устройства из провайдера,
-    // чтобы карточка перерисовывалась при обновлении properties (battery, linkquality...).
+    final l10n = AppLocalizations.of(context);
+
+    // Следим за актуальным состоянием и свойствами устройства,
+    // например battery и linkquality.
     final latestDevice = ref.watch(
       devicesProvider.select(
             (list) => list.firstWhere(
-              (d) => d.id == device.id,
+              (item) => item.id == device.id,
           orElse: () => device,
         ),
       ),
@@ -37,7 +44,9 @@ class DeviceCard extends ConsumerWidget {
     return Card(
       elevation: 3,
       color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Stack(
         children: [
           Padding(
@@ -46,7 +55,11 @@ class DeviceCard extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildHeader(context, ref, latestDevice),
-                Expanded(child: Center(child: _buildControls(ref, latestDevice))),
+                Expanded(
+                  child: Center(
+                    child: _buildControls(ref, latestDevice, l10n),
+                  ),
+                ),
               ],
             ),
           ),
@@ -66,30 +79,51 @@ class DeviceCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, WidgetRef ref, Device latestDevice) {
-    return Row(children: [
-      Icon(getDeviceIcon(latestDevice), size: 20, color: Colors.blue),
-      const SizedBox(width: 6),
-      Expanded(
-        child: Text(
-          latestDevice.name,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 2,
+  Widget _buildHeader(
+      BuildContext context,
+      WidgetRef ref,
+      Device latestDevice,
+      ) {
+    return Row(
+      children: [
+        Icon(
+          getDeviceIcon(latestDevice),
+          size: 20,
+          color: Colors.blue,
         ),
-      ),
-      GestureDetector(
-        onTap: () => DeviceSettings.show(context, ref, latestDevice),
-        child: const Icon(Icons.settings, size: 18, color: Colors.grey),
-      ),
-    ]);
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            latestDevice.name,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+        ),
+        GestureDetector(
+          onTap: () => DeviceSettings.show(context, ref, latestDevice),
+          child: const Icon(
+            Icons.settings,
+            size: 18,
+            color: Colors.grey,
+          ),
+        ),
+      ],
+    );
   }
 
-  Widget _buildControls(WidgetRef ref, Device latestDevice) {
-    // Zigbee-устройства (compound + source == zigbee) — своя карточка
+  Widget _buildControls(
+      WidgetRef ref,
+      Device latestDevice,
+      AppLocalizations l10n,
+      ) {
+    // Zigbee compound-устройства имеют отдельную карточку.
     if (latestDevice.type == DeviceType.compound &&
         latestDevice.properties['source'] == 'zigbee') {
-      return _buildZigbeeCard(latestDevice);
+      return _buildZigbeeCard(latestDevice, l10n);
     }
 
     switch (latestDevice.type) {
@@ -114,19 +148,20 @@ class DeviceCard extends ConsumerWidget {
     }
   }
 
-  /// Карточка для Zigbee-устройства: battery, linkquality, water_leak,
-  /// а также «основное» действие, если оно есть (например, toggle).
-  Widget _buildZigbeeCard(Device latestDevice) {
-    final props = latestDevice.properties;
+  /// Карточка Zigbee-устройства: батарея, качество связи и состояния датчиков.
+  Widget _buildZigbeeCard(
+      Device latestDevice,
+      AppLocalizations l10n,
+      ) {
+    final properties = latestDevice.properties;
 
-    final battery = props['battery'] as num?;
-    final linkquality = props['linkquality'] as num?;
-    final waterLeak = props['water_leak'] as bool?;
-    final batteryLow = props['battery_low'] as bool?;
-    final occupancy = props['occupancy'] as bool?;
-    final contact = props['contact'] as bool?;
+    final battery = properties['battery'] as num?;
+    final linkquality = properties['linkquality'] as num?;
+    final waterLeak = properties['water_leak'] as bool?;
+    final batteryLow = properties['battery_low'] as bool?;
+    final occupancy = properties['occupancy'] as bool?;
+    final contact = properties['contact'] as bool?;
 
-    // Определяем, есть ли что показывать из «информационных» полей
     final hasInfo = battery != null ||
         linkquality != null ||
         waterLeak != null ||
@@ -137,7 +172,6 @@ class DeviceCard extends ConsumerWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Основная иконка-состояние (движение / открытие / протечка)
         if (occupancy != null)
           Icon(
             occupancy ? Icons.directions_walk : Icons.accessibility_new,
@@ -146,7 +180,9 @@ class DeviceCard extends ConsumerWidget {
           )
         else if (contact != null)
           Icon(
-            contact ? Icons.door_front_door : Icons.door_front_door_outlined,
+            contact
+                ? Icons.door_front_door
+                : Icons.door_front_door_outlined,
             size: 28,
             color: contact ? Colors.blue : Colors.grey,
           )
@@ -157,11 +193,12 @@ class DeviceCard extends ConsumerWidget {
               color: waterLeak ? Colors.red : Colors.grey,
             )
           else
-            const Icon(Icons.sensors, size: 28, color: Colors.purple),
-
+            const Icon(
+              Icons.sensors,
+              size: 28,
+              color: Colors.purple,
+            ),
         const SizedBox(height: 6),
-
-        // Информационная строка: батарея + linkquality
         if (hasInfo)
           Wrap(
             alignment: WrapAlignment.center,
@@ -170,7 +207,9 @@ class DeviceCard extends ConsumerWidget {
             children: [
               if (battery != null)
                 _infoChip(
-                  icon: batteryLow == true ? Icons.battery_alert : Icons.battery_full,
+                  icon: batteryLow == true
+                      ? Icons.battery_alert
+                      : Icons.battery_full,
                   label: '${battery.toInt()}%',
                   color: battery > 20 ? Colors.green : Colors.red,
                 ),
@@ -180,22 +219,22 @@ class DeviceCard extends ConsumerWidget {
                   label: '${linkquality.toInt()} lqi',
                   color: Colors.blue,
                 ),
-              if (waterLeak != null && waterLeak)
+              if (waterLeak == true)
                 _infoChip(
                   icon: Icons.warning_amber,
-                  label: 'Протечка',
+                  label: l10n.deviceCardWaterLeak,
                   color: Colors.red,
                 ),
-              if (occupancy != null && occupancy)
+              if (occupancy == true)
                 _infoChip(
                   icon: Icons.directions_walk,
-                  label: 'Движение',
+                  label: l10n.deviceCardMotion,
                   color: Colors.orange,
                 ),
-              if (contact != null && contact)
+              if (contact == true)
                 _infoChip(
                   icon: Icons.door_front_door,
-                  label: 'Открыто',
+                  label: l10n.deviceCardContactOpen,
                   color: Colors.blue,
                 ),
             ],
@@ -216,7 +255,11 @@ class DeviceCard extends ConsumerWidget {
         const SizedBox(width: 2),
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

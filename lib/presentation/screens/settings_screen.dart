@@ -6,9 +6,10 @@ import '../../application/services/update_service.dart';
 import '../../data/local/database.dart';
 import '../../data/services/adaptive_poller.dart';
 import '../../data/services/config_service.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../presentation/widgets/language_selector_tile.dart';
 import 'documents/legal_documents_screen.dart';
 import 'screen_settings_screen.dart';
-import 'package:shome/presentation/widgets/language_selector_tile.dart';
 
 typedef StatsSettingReader = Future<String?> Function(String key);
 
@@ -19,7 +20,7 @@ class SettingsScreen extends StatefulWidget {
   });
 
   /// Позволяет подменить чтение настроек в widget-тестах.
-  /// В обычном приложении используется AppDatabase.
+  /// В приложении по умолчанию читается AppDatabase.
   final StatsSettingReader? statsSettingReader;
 
   @override
@@ -37,7 +38,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (reader != null) {
       return reader(key);
     }
-
     return AppDatabase.getStatsSetting(key);
   }
 
@@ -45,7 +45,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
 
-    // Кешируем Future, чтобы build() не запускал новые запросы к SQLite.
     _eventsRetentionFuture =
         _readStatsSetting('events_retention_days');
     _electricityTariffFuture =
@@ -55,12 +54,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final ms = await AdaptivePoller.readIntervalMs();
+    final interval = await AdaptivePoller.readIntervalMs();
     if (!mounted) return;
 
-    setState(() {
-      _pollIntervalMs = ms;
-    });
+    setState(() => _pollIntervalMs = interval);
   }
 
   Future<void> _refreshEventsRetention() async {
@@ -77,57 +74,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  String _formatInterval(int milliseconds, AppLocalizations l10n) {
+    if (milliseconds >= 60000 && milliseconds % 60000 == 0) {
+      return l10n.settingsIntervalMinutes(milliseconds ~/ 60000);
+    }
+
+    return l10n.settingsIntervalSeconds(
+      (milliseconds / 1000).round(),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════
-  // ЭКСПОРТ
+  // ЭКСПОРТ / ИМПОРТ
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> _exportConfig() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       await ConfigService.exportConfig();
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Конфиг готов к отправке'),
-        ),
+        SnackBar(content: Text(l10n.settingsExportReady)),
       );
     } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Ошибка: $error')),
+        SnackBar(content: Text(l10n.settingsError(error.toString()))),
       );
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // ИМПОРТ
-  // ═══════════════════════════════════════════════════════════════
-
   Future<void> _importConfig() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       await ConfigService.importConfig();
-
       if (!mounted) return;
 
       final restart = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('✅ Импорт выполнен'),
-          content: const Text(
-            'Данные восстановлены.\n\n'
-                'Рекомендуется перезапустить приложение, '
-                'чтобы все настройки (VK, облако, устройства) применились.',
-          ),
+          title: Text(l10n.settingsImportDone),
+          content: Text(l10n.settingsImportRestartHint),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Позже'),
+              child: Text(l10n.settingsLater),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Перезапустить'),
+              child: Text(l10n.settingsRestart),
             ),
           ],
         ),
@@ -140,32 +139,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Ошибка: $error')),
+        SnackBar(content: Text(l10n.settingsError(error.toString()))),
       );
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // ДИАЛОГ РЕЗЕРВНОГО КОПИРОВАНИЯ
-  // ═══════════════════════════════════════════════════════════════
-
   void _showBackupDialog() {
+    final l10n = AppLocalizations.of(context);
+
     showDialog<void>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
-        title: const Text('Резервное копирование'),
+        title: Text(l10n.settingsBackupDialogTitle),
         children: [
           SimpleDialogOption(
             onPressed: () {
               Navigator.pop(dialogContext);
               _exportConfig();
             },
-            child: const ListTile(
-              leading: Icon(Icons.upload, color: Colors.blue),
-              title: Text('Экспортировать'),
-              subtitle: Text(
-                'Поделиться через облако, почту, Telegram',
-              ),
+            child: ListTile(
+              leading: const Icon(Icons.upload, color: Colors.blue),
+              title: Text(l10n.settingsExport),
+              subtitle: Text(l10n.settingsExportSubtitle),
               contentPadding: EdgeInsets.zero,
             ),
           ),
@@ -174,12 +169,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(dialogContext);
               _importConfig();
             },
-            child: const ListTile(
-              leading: Icon(Icons.download, color: Colors.green),
-              title: Text('Импортировать'),
-              subtitle: Text(
-                'Выбрать файл на устройстве или в облаке',
-              ),
+            child: ListTile(
+              leading: const Icon(Icons.download, color: Colors.green),
+              title: Text(l10n.settingsImport),
+              subtitle: Text(l10n.settingsImportSubtitle),
               contentPadding: EdgeInsets.zero,
             ),
           ),
@@ -193,20 +186,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> _selectPollInterval() async {
+    final l10n = AppLocalizations.of(context);
+
     final selected = await showDialog<int>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
-        title: const Text('Интервал опроса'),
-        children: AdaptivePoller.intervalOptions.entries
-            .map(
-              (entry) => SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(dialogContext, entry.key);
-            },
-            child: Text(entry.value),
-          ),
-        )
-            .toList(),
+        title: Text(l10n.settingsPollInterval),
+        children: AdaptivePoller.intervalOptions.keys.map((milliseconds) {
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, milliseconds),
+            child: Text(_formatInterval(milliseconds, l10n)),
+          );
+        }).toList(),
       ),
     );
 
@@ -215,16 +206,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AdaptivePoller.writeIntervalMs(selected);
     if (!mounted) return;
 
-    setState(() {
-      _pollIntervalMs = selected;
-    });
+    setState(() => _pollIntervalMs = selected);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Интервал изменён на '
-              '${AdaptivePoller.formatIntervalMs(selected)}. '
-              'Перезапустите приложение.',
+          l10n.settingsPollIntervalChanged(
+            _formatInterval(selected, l10n),
+          ),
         ),
       ),
     );
@@ -235,6 +224,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> _selectEventsRetention() async {
+    final l10n = AppLocalizations.of(context);
+
     final current =
         await AppDatabase.getStatsSetting('events_retention_days') ?? '30';
 
@@ -243,13 +234,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final selected = await showDialog<int>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
-        title: const Text('Хранить события'),
-        children: [30, 60, 90, 365]
-            .map(
-              (days) => SimpleDialogOption(
-            onPressed: () {
-              Navigator.pop(dialogContext, days);
-            },
+        title: Text(l10n.settingsRetentionDialogTitle),
+        children: [30, 60, 90, 365].map((days) {
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, days),
             child: Row(
               children: [
                 if (days.toString() == current)
@@ -259,12 +247,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     size: 18,
                   ),
                 const SizedBox(width: 8),
-                Text('$days дней'),
+                Text(l10n.settingsRetentionDays(days)),
               ],
             ),
-          ),
-        )
-            .toList(),
+          );
+        }).toList(),
       ),
     );
 
@@ -284,6 +271,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> _editElectricityTariff() async {
+    final l10n = AppLocalizations.of(context);
+
     final current = await AppDatabase.getStatsSetting(
       'electricity_tariff_rub_per_kwh',
     );
@@ -304,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (parsed == null || parsed <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите корректный тариф больше нуля')),
+        SnackBar(content: Text(l10n.settingsTariffInvalid)),
       );
       return;
     }
@@ -315,7 +304,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (!mounted) return;
-
     await _refreshElectricityTariff();
   }
 
@@ -325,38 +313,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Настройки'),
+        title: Text(l10n.settingsTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Интервал опроса
           Card(
             child: ListTile(
               leading: const Icon(
                 Icons.timer,
                 color: Colors.orange,
               ),
-              title: const Text('Интервал опроса'),
-              subtitle: Text(
-                AdaptivePoller.formatIntervalMs(_pollIntervalMs),
-              ),
+              title: Text(l10n.settingsPollInterval),
+              subtitle: Text(_formatInterval(_pollIntervalMs, l10n)),
               onTap: _selectPollInterval,
             ),
           ),
           const SizedBox(height: 12),
 
-          // Настройки экрана
+          const LanguageSelectorTile(),
+          const SizedBox(height: 12),
+
           Card(
             child: ListTile(
               leading: const Icon(
                 Icons.display_settings,
                 color: Colors.blue,
               ),
-              title: const Text('Настройки экрана'),
-              subtitle: const Text('Заставка и отображение'),
+              title: Text(l10n.screenSettings),
+              subtitle: Text(l10n.screenSettingsSubtitle),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.of(context).push(
@@ -369,18 +358,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Хранение событий
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.auto_delete,
-                color: Colors.grey,
-              ),
-              title: const Text('Хранить события'),
+              leading: const Icon(Icons.auto_delete, color: Colors.grey),
+              title: Text(l10n.settingsEventsRetention),
               subtitle: FutureBuilder<String?>(
                 future: _eventsRetentionFuture,
                 builder: (context, snapshot) {
-                  return Text('${snapshot.data ?? '30'} дней');
+                  final days = int.tryParse(snapshot.data ?? '') ?? 30;
+                  return Text(l10n.settingsDays(days));
                 },
               ),
               onTap: _selectEventsRetention,
@@ -388,18 +374,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Тариф электроэнергии
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.payments,
-                color: Colors.amber,
-              ),
-              title: const Text('Тариф электроэнергии'),
+              leading: const Icon(Icons.payments, color: Colors.amber),
+              title: Text(l10n.settingsElectricityTariff),
               subtitle: FutureBuilder<String?>(
                 future: _electricityTariffFuture,
                 builder: (context, snapshot) {
-                  return Text('${snapshot.data ?? '5.5'} ₽/кВт·ч');
+                  final tariff = snapshot.data ?? '5.5';
+                  return Text(l10n.settingsCurrencyPerKwh(tariff));
                 },
               ),
               onTap: _editElectricityTariff,
@@ -407,58 +390,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Резервное копирование
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.backup,
-                color: Colors.blue,
-              ),
-              title: const Text('Резервное копирование'),
-              subtitle: const Text('Экспорт / Импорт'),
+              leading: const Icon(Icons.backup, color: Colors.blue),
+              title: Text(l10n.settingsBackup),
+              subtitle: Text(l10n.settingsBackupSubtitle),
               onTap: _showBackupDialog,
             ),
           ),
           const SizedBox(height: 12),
 
-          // Настройки MQTT
           Card(
             child: ListTile(
               leading: const Icon(
                 Icons.settings_ethernet,
                 color: Colors.teal,
               ),
-              title: const Text('Настройки MQTT'),
-              subtitle: const Text('Брокер для Zigbee2MQTT'),
+              title: Text(l10n.settingsMqtt),
+              subtitle: Text(l10n.settingsMqttSubtitle),
               onTap: () => context.push('/mqtt_broker_settings'),
             ),
           ),
           const SizedBox(height: 12),
 
-          // Проверка обновлений
           Card(
             child: ListTile(
-              leading: const Icon(
-                Icons.update,
-                color: Colors.green,
-              ),
-              title: const Text('Проверить обновления'),
-              subtitle: const Text('Проверить наличие новой версии'),
+              leading: const Icon(Icons.update, color: Colors.green),
+              title: Text(l10n.settingsCheckUpdates),
+              subtitle: Text(l10n.settingsCheckUpdatesSubtitle),
               onTap: () => UpdateService.checkForUpdates(context),
             ),
           ),
           const SizedBox(height: 12),
 
-          // Язык приложения — пока сохраняет выбор как заглушку.
-          const LanguageSelectorTile(),
-          const SizedBox(height: 12),
-
-          // Информация
           Card(
             child: ListTile(
               leading: const Icon(Icons.gavel),
-              title: const Text('Информация'),
-              subtitle: const Text('Лицензии и соглашения'),
+              title: Text(l10n.settingsInformation),
+              subtitle: Text(l10n.settingsInformationSubtitle),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -473,6 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
+
 class _ElectricityTariffDialog extends StatefulWidget {
   const _ElectricityTariffDialog({
     required this.initialValue,
@@ -503,26 +473,28 @@ class _ElectricityTariffDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
-      title: const Text('Тариф ₽/кВт·ч'),
+      title: Text(l10n.settingsTariffDialogTitle),
       content: TextField(
         controller: _controller,
         autofocus: true,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: const InputDecoration(
-          hintText: '5.5',
+        decoration: InputDecoration(
+          hintText: l10n.settingsTariffHint,
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: () {
             Navigator.of(context).pop(_controller.text);
           },
-          child: const Text('Сохранить'),
+          child: Text(l10n.save),
         ),
       ],
     );

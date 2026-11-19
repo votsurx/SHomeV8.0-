@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../data/local/database.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../widgets/stats/stat_card.dart';
 
 class StatsEnergyTab extends ConsumerStatefulWidget {
   const StatsEnergyTab({super.key});
+
   @override
   ConsumerState<StatsEnergyTab> createState() => _StatsEnergyTabState();
 }
@@ -24,48 +27,64 @@ class _StatsEnergyTabState extends ConsumerState<StatsEnergyTab> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final tariffStr = await AppDatabase.getStatsSetting('electricity_tariff_rub_per_kwh');
+
+    final tariffString = await AppDatabase.getStatsSetting(
+      'electricity_tariff_rub_per_kwh',
+    );
     final data = await AppDatabase.getEnergyStats(days: _days);
 
     final totals = <String, double>{};
-    double sum = 0;
+    var totalKwh = 0.0;
+
     for (final row in data) {
       final name = row['deviceName'] as String? ?? '—';
       final kwh = (row['totalEnergy'] as num?)?.toDouble() ?? 0;
+
       totals[name] = (totals[name] ?? 0) + kwh;
-      sum += kwh;
+      totalKwh += kwh;
     }
 
     if (!mounted) return;
+
     setState(() {
-      _tariff = double.tryParse(tariffStr ?? '5.5') ?? 5.5;
+      _tariff = double.tryParse(tariffString ?? '5.5') ?? 5.5;
       _deviceTotals = totals;
-      _totalKwh = sum;
+      _totalKwh = totalKwh;
       _loading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 1, label: Text('24ч')),
-              ButtonSegment(value: 7, label: Text('7д')),
-              ButtonSegment(value: 30, label: Text('30д')),
+            segments: [
+              ButtonSegment(
+                value: 1,
+                label: Text(l10n.statsPeriod24h),
+              ),
+              ButtonSegment(
+                value: 7,
+                label: Text(l10n.statsPeriod7d),
+              ),
+              ButtonSegment(
+                value: 30,
+                label: Text(l10n.statsPeriod30d),
+              ),
             ],
             selected: {_days},
-            onSelectionChanged: (s) {
-              setState(() => _days = s.first);
+            onSelectionChanged: (selection) {
+              setState(() => _days = selection.first);
               _load();
             },
           ),
           const SizedBox(height: 12),
-
           if (_loading)
             const Padding(
               padding: EdgeInsets.all(32),
@@ -81,45 +100,63 @@ class _StatsEnergyTabState extends ConsumerState<StatsEnergyTab> {
               childAspectRatio: 1.2,
               children: [
                 StatCard(
-                  label: 'Потребление',
-                  value: '${_totalKwh.toStringAsFixed(2)} кВт·ч',
+                  label: l10n.statsEnergyConsumption,
+                  value: l10n.statsEnergyKwh(
+                    _totalKwh.toStringAsFixed(2),
+                  ),
                   icon: Icons.bolt,
                   color: Colors.amber,
-                  subtitle: 'за $_days дн.',
+                  subtitle: l10n.statsEnergyPeriod(_days),
                 ),
                 StatCard(
-                  label: 'Стоимость',
-                  value: '${(_totalKwh * _tariff).toStringAsFixed(0)} ₽',
+                  label: l10n.statsEnergyCost,
+                  value: l10n.statsEnergyRubles(
+                    (_totalKwh * _tariff).toStringAsFixed(0),
+                  ),
                   icon: Icons.payments,
                   color: Colors.green,
-                  subtitle: 'тариф $_tariff ₽/кВт·ч',
+                  subtitle: l10n.statsEnergyTariff(
+                    _tariff.toString(),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-
             if (_deviceTotals.isEmpty)
-              const Card(
+              Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('Нет данных энергопотребления за период'),
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l10n.statsEnergyNoData),
                 ),
               )
             else ...[
-              Text('По устройствам', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                l10n.statsEnergyByDevice,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               ...(_deviceTotals.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value))
-              ).map((e) => Card(
-                child: ListTile(
-                  title: Text(e.key),
-                  subtitle: Text('${(e.value * _tariff).toStringAsFixed(0)} ₽'),
-                  trailing: Text(
-                    '${e.value.toStringAsFixed(2)} кВт·ч',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                ..sort((a, b) => b.value.compareTo(a.value)))
+                  .map(
+                    (entry) => Card(
+                  child: ListTile(
+                    title: Text(entry.key),
+                    subtitle: Text(
+                      l10n.statsEnergyRubles(
+                        (entry.value * _tariff).toStringAsFixed(0),
+                      ),
+                    ),
+                    trailing: Text(
+                      l10n.statsEnergyKwh(
+                        entry.value.toStringAsFixed(2),
+                      ),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              )),
+              ),
             ],
           ],
         ],

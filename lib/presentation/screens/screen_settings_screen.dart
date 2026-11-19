@@ -1,24 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../data/services/screen_saver_settings.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ScreenSettingsScreen extends StatefulWidget {
   const ScreenSettingsScreen({super.key});
 
   @override
-  State<ScreenSettingsScreen> createState() =>
-      _ScreenSettingsScreenState();
+  State<ScreenSettingsScreen> createState() => _ScreenSettingsScreenState();
 }
 
 class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
-  static const _timeoutOptions = <int, String>{
-    30: '30 секунд',
-    60: '1 минута',
-    120: '2 минуты',
-    300: '5 минут',
-    600: '10 минут',
-  };
-
   bool _isLoading = true;
   bool _enabled = true;
   bool _motionWakeEnabled = false;
@@ -46,6 +38,7 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
       _isLoading = false;
     });
   }
+
   Future<void> _setMotionSensitivity(int sensitivity) async {
     setState(() => _motionSensitivity = sensitivity);
     await ScreenSaverSettings.setMotionSensitivity(sensitivity);
@@ -66,12 +59,31 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
     await ScreenSaverSettings.setIdleTimeout(seconds);
   }
 
+  String _timeoutLabel(AppLocalizations l10n, int seconds) {
+    switch (seconds) {
+      case 30:
+        return l10n.screenSaverTimeout30;
+      case 60:
+        return l10n.screenSaverTimeout60;
+      case 120:
+        return l10n.screenSaverTimeout120;
+      case 300:
+        return l10n.screenSaverTimeout300;
+      case 600:
+        return l10n.screenSaverTimeout600;
+      default:
+        return l10n.screenSaverTimeoutSeconds(seconds);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Настройки экрана'),
+          title: Text(l10n.screenSettings),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -79,8 +91,18 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
       );
     }
 
+    final timeoutOptions = <int>[
+      30,
+      60,
+      120,
+      300,
+      600,
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройки экрана')),
+      appBar: AppBar(
+        title: Text(l10n.screenSettings),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -90,10 +112,8 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
                 Icons.animation,
                 color: Colors.deepPurple,
               ),
-              title: const Text('Заставка'),
-              subtitle: const Text(
-                'Показывать анимированную заставку после бездействия',
-              ),
+              title: Text(l10n.screenSaverTitle),
+              subtitle: Text(l10n.screenSaverSubtitle),
               value: _enabled,
               onChanged: _setEnabled,
             ),
@@ -105,10 +125,8 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
                 Icons.directions_run,
                 color: Colors.teal,
               ),
-              title: const Text('Сбрасывать заставку по движению'),
-              subtitle: const Text(
-                'Использовать фронтальную камеру, пока показана заставка',
-              ),
+              title: Text(l10n.screenSaverMotionWakeTitle),
+              subtitle: Text(l10n.screenSaverMotionWakeSubtitle),
               value: _motionWakeEnabled,
               onChanged: _enabled ? _setMotionWakeEnabled : null,
             ),
@@ -126,7 +144,7 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Чувствительность: $_motionSensitivity%',
+                          l10n.screenSaverSensitivity(_motionSensitivity),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
@@ -151,17 +169,16 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
                       _setMotionSensitivity(value.round());
                     },
                   ),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Низкая'),
-                      Text('Высокая'),
+                      Text(l10n.screenSaverSensitivityLow),
+                      Text(l10n.screenSaverSensitivityHigh),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Если заставка срабатывает без движения, '
-                        'уменьшите чувствительность.',
+                    l10n.screenSaverSensitivityHint,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -172,22 +189,19 @@ class _ScreenSettingsScreenState extends State<ScreenSettingsScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.timer_outlined),
-              title: const Text('Время до заставки'),
-              subtitle: Text(
-                _timeoutOptions[_idleTimeoutSeconds] ??
-                    '$_idleTimeoutSeconds секунд',
-              ),
+              title: Text(l10n.screenSaverTimeoutTitle),
+              subtitle: Text(_timeoutLabel(l10n, _idleTimeoutSeconds)),
               enabled: _enabled,
               trailing: DropdownButton<int>(
-                value: _timeoutOptions.containsKey(_idleTimeoutSeconds)
+                value: timeoutOptions.contains(_idleTimeoutSeconds)
                     ? _idleTimeoutSeconds
                     : null,
-                hint: const Text('Выбрать'),
-                items: _timeoutOptions.entries
+                hint: Text(l10n.screenSaverChoose),
+                items: timeoutOptions
                     .map(
-                      (entry) => DropdownMenuItem<int>(
-                    value: entry.key,
-                    child: Text(entry.value),
+                      (seconds) => DropdownMenuItem<int>(
+                    value: seconds,
+                    child: Text(_timeoutLabel(l10n, seconds)),
                   ),
                 )
                     .toList(),

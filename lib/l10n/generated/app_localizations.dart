@@ -2282,6 +2282,438 @@ abstract class AppLocalizations {
   /// **'Удалить'**
   String get roomsDeleteButton;
 
+  /// No description provided for @sceneEditorTitleNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая сцена'**
+  String get sceneEditorTitleNew;
+
+  /// No description provided for @sceneEditorTitleEdit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактировать сцену'**
+  String get sceneEditorTitleEdit;
+
+  /// No description provided for @sceneEditorName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название'**
+  String get sceneEditorName;
+
+  /// No description provided for @sceneEditorNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выключить всё'**
+  String get sceneEditorNameHint;
+
+  /// No description provided for @sceneEditorTriggerType.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тип запуска'**
+  String get sceneEditorTriggerType;
+
+  /// No description provided for @sceneEditorTriggerManual.
+  ///
+  /// In ru, this message translates to:
+  /// **'🎬 Вручную'**
+  String get sceneEditorTriggerManual;
+
+  /// No description provided for @sceneEditorTriggerTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'⏰ По времени'**
+  String get sceneEditorTriggerTime;
+
+  /// No description provided for @sceneEditorTriggerSensor.
+  ///
+  /// In ru, this message translates to:
+  /// **'🌡️ По датчику'**
+  String get sceneEditorTriggerSensor;
+
+  /// No description provided for @sceneEditorTriggerPresence.
+  ///
+  /// In ru, this message translates to:
+  /// **'📍 По присутствию'**
+  String get sceneEditorTriggerPresence;
+
+  /// No description provided for @sceneEditorRepeat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повтор'**
+  String get sceneEditorRepeat;
+
+  /// No description provided for @sceneEditorRepeatOnce.
+  ///
+  /// In ru, this message translates to:
+  /// **'Один раз'**
+  String get sceneEditorRepeatOnce;
+
+  /// No description provided for @sceneEditorRepeatDaily.
+  ///
+  /// In ru, this message translates to:
+  /// **'Каждый день'**
+  String get sceneEditorRepeatDaily;
+
+  /// No description provided for @sceneEditorRepeatWeekly.
+  ///
+  /// In ru, this message translates to:
+  /// **'По дням недели'**
+  String get sceneEditorRepeatWeekly;
+
+  /// No description provided for @sceneEditorDaysOfWeek.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дни недели'**
+  String get sceneEditorDaysOfWeek;
+
+  /// No description provided for @sceneEditorMonday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пн'**
+  String get sceneEditorMonday;
+
+  /// No description provided for @sceneEditorTuesday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вт'**
+  String get sceneEditorTuesday;
+
+  /// No description provided for @sceneEditorWednesday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ср'**
+  String get sceneEditorWednesday;
+
+  /// No description provided for @sceneEditorThursday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чт'**
+  String get sceneEditorThursday;
+
+  /// No description provided for @sceneEditorFriday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пт'**
+  String get sceneEditorFriday;
+
+  /// No description provided for @sceneEditorSaturday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сб'**
+  String get sceneEditorSaturday;
+
+  /// No description provided for @sceneEditorSunday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вс'**
+  String get sceneEditorSunday;
+
+  /// No description provided for @sceneEditorSensor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Датчик'**
+  String get sceneEditorSensor;
+
+  /// No description provided for @sceneEditorSelectSensor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите датчик'**
+  String get sceneEditorSelectSensor;
+
+  /// No description provided for @sceneEditorCondition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Условие'**
+  String get sceneEditorCondition;
+
+  /// No description provided for @sceneEditorTemperatureAbove.
+  ///
+  /// In ru, this message translates to:
+  /// **'🌡️ Температура выше {threshold} °C'**
+  String sceneEditorTemperatureAbove(String threshold);
+
+  /// No description provided for @sceneEditorTemperatureBelow.
+  ///
+  /// In ru, this message translates to:
+  /// **'🌡️ Температура ниже {threshold} °C'**
+  String sceneEditorTemperatureBelow(String threshold);
+
+  /// No description provided for @sceneEditorHumidityAbove.
+  ///
+  /// In ru, this message translates to:
+  /// **'💧 Влажность выше {threshold}%'**
+  String sceneEditorHumidityAbove(String threshold);
+
+  /// No description provided for @sceneEditorHumidityBelow.
+  ///
+  /// In ru, this message translates to:
+  /// **'💧 Влажность ниже {threshold}%'**
+  String sceneEditorHumidityBelow(String threshold);
+
+  /// No description provided for @sceneEditorWaterLeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'💧 Протечка'**
+  String get sceneEditorWaterLeak;
+
+  /// No description provided for @sceneEditorMotion.
+  ///
+  /// In ru, this message translates to:
+  /// **'🏃 Движение'**
+  String get sceneEditorMotion;
+
+  /// No description provided for @sceneEditorContactOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'🚪 Открыто'**
+  String get sceneEditorContactOpen;
+
+  /// No description provided for @sceneEditorContactClosed.
+  ///
+  /// In ru, this message translates to:
+  /// **'🚪 Закрыто'**
+  String get sceneEditorContactClosed;
+
+  /// No description provided for @sceneEditorSmoke.
+  ///
+  /// In ru, this message translates to:
+  /// **'🔥 Дым'**
+  String get sceneEditorSmoke;
+
+  /// No description provided for @sceneEditorGas.
+  ///
+  /// In ru, this message translates to:
+  /// **'💨 Газ'**
+  String get sceneEditorGas;
+
+  /// No description provided for @sceneEditorThreshold.
+  ///
+  /// In ru, this message translates to:
+  /// **'Порог'**
+  String get sceneEditorThreshold;
+
+  /// No description provided for @sceneEditorPresenceEvent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Событие'**
+  String get sceneEditorPresenceEvent;
+
+  /// No description provided for @sceneEditorSomeoneHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кто-то пришёл'**
+  String get sceneEditorSomeoneHome;
+
+  /// No description provided for @sceneEditorNobodyHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Никого нет'**
+  String get sceneEditorNobodyHome;
+
+  /// No description provided for @sceneEditorAllHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все дома'**
+  String get sceneEditorAllHome;
+
+  /// No description provided for @sceneEditorPhoneArrived.
+  ///
+  /// In ru, this message translates to:
+  /// **'Телефон пришёл'**
+  String get sceneEditorPhoneArrived;
+
+  /// No description provided for @sceneEditorPhoneLeft.
+  ///
+  /// In ru, this message translates to:
+  /// **'Телефон ушёл'**
+  String get sceneEditorPhoneLeft;
+
+  /// No description provided for @sceneEditorPhoneUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Телефон потерян'**
+  String get sceneEditorPhoneUnknown;
+
+  /// No description provided for @sceneEditorPhone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Телефон'**
+  String get sceneEditorPhone;
+
+  /// No description provided for @sceneEditorSelectPhone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите телефон'**
+  String get sceneEditorSelectPhone;
+
+  /// No description provided for @sceneEditorAdvanced.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дополнительно'**
+  String get sceneEditorAdvanced;
+
+  /// No description provided for @sceneEditorDetectionChannel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Канал определения'**
+  String get sceneEditorDetectionChannel;
+
+  /// No description provided for @sceneEditorChannelAny.
+  ///
+  /// In ru, this message translates to:
+  /// **'Любой'**
+  String get sceneEditorChannelAny;
+
+  /// No description provided for @sceneEditorChannelWifi.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только Wi-Fi'**
+  String get sceneEditorChannelWifi;
+
+  /// No description provided for @sceneEditorChannelGps.
+  ///
+  /// In ru, this message translates to:
+  /// **'Только GPS'**
+  String get sceneEditorChannelGps;
+
+  /// No description provided for @sceneEditorStartDelay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Задержка перед запуском'**
+  String get sceneEditorStartDelay;
+
+  /// No description provided for @sceneEditorNoDelay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без задержки'**
+  String get sceneEditorNoDelay;
+
+  /// No description provided for @sceneEditorMinute.
+  ///
+  /// In ru, this message translates to:
+  /// **'1 минута'**
+  String get sceneEditorMinute;
+
+  /// No description provided for @sceneEditorMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} минут'**
+  String sceneEditorMinutes(int count);
+
+  /// No description provided for @sceneEditorCooldown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Антидребезг'**
+  String get sceneEditorCooldown;
+
+  /// No description provided for @sceneEditorConfigureConditions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настроить условия'**
+  String get sceneEditorConfigureConditions;
+
+  /// No description provided for @sceneEditorConditionsConfigured.
+  ///
+  /// In ru, this message translates to:
+  /// **'Условия настроены ✓'**
+  String get sceneEditorConditionsConfigured;
+
+  /// No description provided for @sceneEditorActions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Действия'**
+  String get sceneEditorActions;
+
+  /// No description provided for @sceneEditorNoDevices.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет устройств'**
+  String get sceneEditorNoDevices;
+
+  /// No description provided for @sceneEditorActionOn.
+  ///
+  /// In ru, this message translates to:
+  /// **'ВКЛ'**
+  String get sceneEditorActionOn;
+
+  /// No description provided for @sceneEditorActionOff.
+  ///
+  /// In ru, this message translates to:
+  /// **'ВЫКЛ'**
+  String get sceneEditorActionOff;
+
+  /// No description provided for @sceneEditorCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get sceneEditorCancel;
+
+  /// No description provided for @sceneEditorSave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить'**
+  String get sceneEditorSave;
+
+  /// No description provided for @sceneEditorCreate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать'**
+  String get sceneEditorCreate;
+
+  /// No description provided for @sceneEditorValidation.
+  ///
+  /// In ru, this message translates to:
+  /// **'⚠️ Введите название и выберите действия'**
+  String get sceneEditorValidation;
+
+  /// No description provided for @sceneEditorUpdated.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Сцена обновлена!'**
+  String get sceneEditorUpdated;
+
+  /// No description provided for @sceneEditorCreated.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Сцена создана!'**
+  String get sceneEditorCreated;
+
+  /// No description provided for @sceneEditorConditionsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Условия'**
+  String get sceneEditorConditionsTitle;
+
+  /// No description provided for @sceneEditorTimeOfDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время суток'**
+  String get sceneEditorTimeOfDay;
+
+  /// No description provided for @sceneEditorFromTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'С {time}'**
+  String sceneEditorFromTime(String time);
+
+  /// No description provided for @sceneEditorUntilTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'До {time}'**
+  String sceneEditorUntilTime(String time);
+
+  /// No description provided for @sceneEditorDaysCondition.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дни недели'**
+  String get sceneEditorDaysCondition;
+
+  /// No description provided for @sceneEditorReset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить'**
+  String get sceneEditorReset;
+
   /// No description provided for @scenesTitle.
   ///
   /// In ru, this message translates to:
@@ -2294,71 +2726,23 @@ abstract class AppLocalizations {
   /// **'Нет сцен. Создайте первую!'**
   String get scenesEmpty;
 
-  /// No description provided for @scenesManual.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вручную'**
-  String get scenesManual;
-
   /// No description provided for @scenesAutoTriggerMessage.
   ///
   /// In ru, this message translates to:
   /// **'⏰ Сцена «{name}» запускается автоматически по триггеру'**
   String scenesAutoTriggerMessage(String name);
 
-  /// No description provided for @scenesActionCount.
+  /// No description provided for @sceneEditorActionBrightness.
   ///
   /// In ru, this message translates to:
-  /// **'{count} устр.'**
-  String scenesActionCount(int count);
+  /// **'ЯРК'**
+  String get sceneEditorActionBrightness;
 
-  /// No description provided for @scenesTimeTemperature.
+  /// No description provided for @sceneEditorDeviceUnitShort.
   ///
   /// In ru, this message translates to:
-  /// **'Темп. {operator} {threshold}°C'**
-  String scenesTimeTemperature(String operator, String threshold);
-
-  /// No description provided for @scenesHumidity.
-  ///
-  /// In ru, this message translates to:
-  /// **'Влаж. {operator} {threshold}%'**
-  String scenesHumidity(String operator, String threshold);
-
-  /// No description provided for @scenesWaterLeak.
-  ///
-  /// In ru, this message translates to:
-  /// **'💧 Протечка'**
-  String get scenesWaterLeak;
-
-  /// No description provided for @scenesMotion.
-  ///
-  /// In ru, this message translates to:
-  /// **'🏃 Движение'**
-  String get scenesMotion;
-
-  /// No description provided for @scenesContactOpen.
-  ///
-  /// In ru, this message translates to:
-  /// **'🚪 Открыто'**
-  String get scenesContactOpen;
-
-  /// No description provided for @scenesContactClosed.
-  ///
-  /// In ru, this message translates to:
-  /// **'🚪 Закрыто'**
-  String get scenesContactClosed;
-
-  /// No description provided for @scenesSmoke.
-  ///
-  /// In ru, this message translates to:
-  /// **'🔥 Дым'**
-  String get scenesSmoke;
-
-  /// No description provided for @scenesGas.
-  ///
-  /// In ru, this message translates to:
-  /// **'💨 Газ'**
-  String get scenesGas;
+  /// **'устр.'**
+  String get sceneEditorDeviceUnitShort;
 
   /// No description provided for @scenesPresence.
   ///
@@ -2366,119 +2750,11 @@ abstract class AppLocalizations {
   /// **'Присутствие'**
   String get scenesPresence;
 
-  /// No description provided for @scenesSomeoneArrived.
+  /// No description provided for @scenesDeviceFallback.
   ///
   /// In ru, this message translates to:
-  /// **'Кто-то пришёл'**
-  String get scenesSomeoneArrived;
-
-  /// No description provided for @scenesNobodyHome.
-  ///
-  /// In ru, this message translates to:
-  /// **'Никого нет'**
-  String get scenesNobodyHome;
-
-  /// No description provided for @scenesEveryoneHome.
-  ///
-  /// In ru, this message translates to:
-  /// **'Все дома'**
-  String get scenesEveryoneHome;
-
-  /// No description provided for @scenesPhoneArrived.
-  ///
-  /// In ru, this message translates to:
-  /// **'Телефон пришёл'**
-  String get scenesPhoneArrived;
-
-  /// No description provided for @scenesPhoneLeft.
-  ///
-  /// In ru, this message translates to:
-  /// **'Телефон ушёл'**
-  String get scenesPhoneLeft;
-
-  /// No description provided for @scenesPhoneUnknown.
-  ///
-  /// In ru, this message translates to:
-  /// **'Телефон потерян'**
-  String get scenesPhoneUnknown;
-
-  /// No description provided for @scenesEveryDay.
-  ///
-  /// In ru, this message translates to:
-  /// **'Каждый день'**
-  String get scenesEveryDay;
-
-  /// No description provided for @scenesWeekdays.
-  ///
-  /// In ru, this message translates to:
-  /// **'По дням недели'**
-  String get scenesWeekdays;
-
-  /// No description provided for @scenesInterval.
-  ///
-  /// In ru, this message translates to:
-  /// **'Интервал'**
-  String get scenesInterval;
-
-  /// No description provided for @scenesMondayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Пн'**
-  String get scenesMondayShort;
-
-  /// No description provided for @scenesTuesdayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вт'**
-  String get scenesTuesdayShort;
-
-  /// No description provided for @scenesWednesdayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Ср'**
-  String get scenesWednesdayShort;
-
-  /// No description provided for @scenesThursdayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Чт'**
-  String get scenesThursdayShort;
-
-  /// No description provided for @scenesFridayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Пт'**
-  String get scenesFridayShort;
-
-  /// No description provided for @scenesSaturdayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Сб'**
-  String get scenesSaturdayShort;
-
-  /// No description provided for @scenesSundayShort.
-  ///
-  /// In ru, this message translates to:
-  /// **'Вс'**
-  String get scenesSundayShort;
-
-  /// No description provided for @scenesActionOn.
-  ///
-  /// In ru, this message translates to:
-  /// **'ВКЛ'**
-  String get scenesActionOn;
-
-  /// No description provided for @scenesActionOff.
-  ///
-  /// In ru, this message translates to:
-  /// **'ВЫКЛ'**
-  String get scenesActionOff;
-
-  /// No description provided for @scenesActionBrightness.
-  ///
-  /// In ru, this message translates to:
-  /// **'ЯРК'**
-  String get scenesActionBrightness;
+  /// **'Устройство'**
+  String get scenesDeviceFallback;
 
   /// No description provided for @scenesEdit.
   ///
@@ -2491,6 +2767,2208 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Удалить'**
   String get scenesDelete;
+
+  /// No description provided for @screenSaverTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заставка'**
+  String get screenSaverTitle;
+
+  /// No description provided for @screenSaverSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показывать анимированную заставку после бездействия'**
+  String get screenSaverSubtitle;
+
+  /// No description provided for @screenSaverMotionWakeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбрасывать заставку по движению'**
+  String get screenSaverMotionWakeTitle;
+
+  /// No description provided for @screenSaverMotionWakeSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Использовать фронтальную камеру, пока показана заставка'**
+  String get screenSaverMotionWakeSubtitle;
+
+  /// No description provided for @screenSaverSensitivity.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чувствительность: {value}%'**
+  String screenSaverSensitivity(int value);
+
+  /// No description provided for @screenSaverSensitivityLow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Низкая'**
+  String get screenSaverSensitivityLow;
+
+  /// No description provided for @screenSaverSensitivityHigh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Высокая'**
+  String get screenSaverSensitivityHigh;
+
+  /// No description provided for @screenSaverSensitivityHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если заставка срабатывает без движения, уменьшите чувствительность.'**
+  String get screenSaverSensitivityHint;
+
+  /// No description provided for @screenSaverTimeoutTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время до заставки'**
+  String get screenSaverTimeoutTitle;
+
+  /// No description provided for @screenSaverChoose.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать'**
+  String get screenSaverChoose;
+
+  /// No description provided for @screenSaverTimeout30.
+  ///
+  /// In ru, this message translates to:
+  /// **'30 секунд'**
+  String get screenSaverTimeout30;
+
+  /// No description provided for @screenSaverTimeout60.
+  ///
+  /// In ru, this message translates to:
+  /// **'1 минута'**
+  String get screenSaverTimeout60;
+
+  /// No description provided for @screenSaverTimeout120.
+  ///
+  /// In ru, this message translates to:
+  /// **'2 минуты'**
+  String get screenSaverTimeout120;
+
+  /// No description provided for @screenSaverTimeout300.
+  ///
+  /// In ru, this message translates to:
+  /// **'5 минут'**
+  String get screenSaverTimeout300;
+
+  /// No description provided for @screenSaverTimeout600.
+  ///
+  /// In ru, this message translates to:
+  /// **'10 минут'**
+  String get screenSaverTimeout600;
+
+  /// No description provided for @screenSaverTimeoutSeconds.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} секунд'**
+  String screenSaverTimeoutSeconds(int value);
+
+  /// No description provided for @settingsPollInterval.
+  ///
+  /// In ru, this message translates to:
+  /// **'Интервал опроса'**
+  String get settingsPollInterval;
+
+  /// No description provided for @settingsIntervalSeconds.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} сек.'**
+  String settingsIntervalSeconds(int value);
+
+  /// No description provided for @settingsIntervalMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} мин.'**
+  String settingsIntervalMinutes(int value);
+
+  /// No description provided for @settingsPollIntervalChanged.
+  ///
+  /// In ru, this message translates to:
+  /// **'Интервал изменён на {interval}. Перезапустите приложение.'**
+  String settingsPollIntervalChanged(String interval);
+
+  /// No description provided for @settingsEventsRetention.
+  ///
+  /// In ru, this message translates to:
+  /// **'Хранить события'**
+  String get settingsEventsRetention;
+
+  /// No description provided for @settingsDays.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} дней'**
+  String settingsDays(int value);
+
+  /// No description provided for @settingsElectricityTariff.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тариф электроэнергии'**
+  String get settingsElectricityTariff;
+
+  /// No description provided for @settingsCurrencyPerKwh.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} ₽/кВт·ч'**
+  String settingsCurrencyPerKwh(String value);
+
+  /// No description provided for @settingsBackup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Резервное копирование'**
+  String get settingsBackup;
+
+  /// No description provided for @settingsBackupSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт / Импорт'**
+  String get settingsBackupSubtitle;
+
+  /// No description provided for @settingsMqtt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настройки MQTT'**
+  String get settingsMqtt;
+
+  /// No description provided for @settingsMqttSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Брокер для Zigbee2MQTT'**
+  String get settingsMqttSubtitle;
+
+  /// No description provided for @settingsCheckUpdates.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить обновления'**
+  String get settingsCheckUpdates;
+
+  /// No description provided for @settingsCheckUpdatesSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить наличие новой версии'**
+  String get settingsCheckUpdatesSubtitle;
+
+  /// No description provided for @settingsInformation.
+  ///
+  /// In ru, this message translates to:
+  /// **'Информация'**
+  String get settingsInformation;
+
+  /// No description provided for @settingsInformationSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лицензии и соглашения'**
+  String get settingsInformationSubtitle;
+
+  /// No description provided for @settingsExportReady.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Конфиг готов к отправке'**
+  String get settingsExportReady;
+
+  /// No description provided for @settingsError.
+  ///
+  /// In ru, this message translates to:
+  /// **'❌ Ошибка: {error}'**
+  String settingsError(String error);
+
+  /// No description provided for @settingsImportDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Импорт выполнен'**
+  String get settingsImportDone;
+
+  /// No description provided for @settingsImportRestartHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные восстановлены.\n\nРекомендуется перезапустить приложение, чтобы все настройки (VK, облако, устройства) применились.'**
+  String get settingsImportRestartHint;
+
+  /// No description provided for @settingsLater.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позже'**
+  String get settingsLater;
+
+  /// No description provided for @settingsRestart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перезапустить'**
+  String get settingsRestart;
+
+  /// No description provided for @settingsBackupDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Резервное копирование'**
+  String get settingsBackupDialogTitle;
+
+  /// No description provided for @settingsExport.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспортировать'**
+  String get settingsExport;
+
+  /// No description provided for @settingsExportSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поделиться через облако, почту или Telegram'**
+  String get settingsExportSubtitle;
+
+  /// No description provided for @settingsImport.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импортировать'**
+  String get settingsImport;
+
+  /// No description provided for @settingsImportSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать файл на устройстве или в облаке'**
+  String get settingsImportSubtitle;
+
+  /// No description provided for @settingsRetentionDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Хранить события'**
+  String get settingsRetentionDialogTitle;
+
+  /// No description provided for @settingsRetentionDays.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} дней'**
+  String settingsRetentionDays(int value);
+
+  /// No description provided for @settingsTariffDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тариф ₽/кВт·ч'**
+  String get settingsTariffDialogTitle;
+
+  /// No description provided for @settingsTariffInvalid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите корректный тариф больше нуля'**
+  String get settingsTariffInvalid;
+
+  /// No description provided for @settingsTariffHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'5.5'**
+  String get settingsTariffHint;
+
+  /// No description provided for @smsSettingsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'SMS-уведомления'**
+  String get smsSettingsTitle;
+
+  /// No description provided for @smsSettingsEnable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включить SMS'**
+  String get smsSettingsEnable;
+
+  /// No description provided for @smsSettingsEnableSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлять уведомления по SMS'**
+  String get smsSettingsEnableSubtitle;
+
+  /// No description provided for @smsSettingsPhoneNumbers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номера телефонов'**
+  String get smsSettingsPhoneNumbers;
+
+  /// No description provided for @smsSettingsNoPhones.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет добавленных номеров'**
+  String get smsSettingsNoPhones;
+
+  /// No description provided for @smsSettingsEventsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'События для SMS'**
+  String get smsSettingsEventsTitle;
+
+  /// No description provided for @smsSettingsScenes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцены'**
+  String get smsSettingsScenes;
+
+  /// No description provided for @smsSettingsDevices.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройства'**
+  String get smsSettingsDevices;
+
+  /// No description provided for @smsSettingsAlarms.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тревоги'**
+  String get smsSettingsAlarms;
+
+  /// No description provided for @smsSettingsZigbeeWaterLeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 💧 Протечка'**
+  String get smsSettingsZigbeeWaterLeak;
+
+  /// No description provided for @smsSettingsZigbeeSmoke.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 🔥 Дым'**
+  String get smsSettingsZigbeeSmoke;
+
+  /// No description provided for @smsSettingsZigbeeGas.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 💨 Газ'**
+  String get smsSettingsZigbeeGas;
+
+  /// No description provided for @smsSettingsZigbeeMotion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 🏃 Движение'**
+  String get smsSettingsZigbeeMotion;
+
+  /// No description provided for @smsSettingsZigbeeContact.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 🚪 Контакт'**
+  String get smsSettingsZigbeeContact;
+
+  /// No description provided for @smsSettingsFrigatePerson.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate: 🚶 Человек'**
+  String get smsSettingsFrigatePerson;
+
+  /// No description provided for @smsSettingsFrigateCar.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate: 🚗 Автомобиль'**
+  String get smsSettingsFrigateCar;
+
+  /// No description provided for @smsSettingsErrors.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибки'**
+  String get smsSettingsErrors;
+
+  /// No description provided for @smsSettingsZigbeeOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee offline'**
+  String get smsSettingsZigbeeOffline;
+
+  /// No description provided for @smsSettingsZigbeeOfflineSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройство потеряло связь'**
+  String get smsSettingsZigbeeOfflineSubtitle;
+
+  /// No description provided for @smsSettingsFrigateOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate offline'**
+  String get smsSettingsFrigateOffline;
+
+  /// No description provided for @smsSettingsFrigateOfflineSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate недоступен'**
+  String get smsSettingsFrigateOfflineSubtitle;
+
+  /// No description provided for @smsSettingsCooldown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Антидребезг SMS'**
+  String get smsSettingsCooldown;
+
+  /// No description provided for @smsSettingsOneMinute.
+  ///
+  /// In ru, this message translates to:
+  /// **'1 минута'**
+  String get smsSettingsOneMinute;
+
+  /// No description provided for @smsSettingsMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} минут'**
+  String smsSettingsMinutes(int count);
+
+  /// No description provided for @smsSettingsSchedule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расписание'**
+  String get smsSettingsSchedule;
+
+  /// No description provided for @smsSettingsScheduleSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлять только в указанное время'**
+  String get smsSettingsScheduleSubtitle;
+
+  /// No description provided for @smsSettingsAlarmsOutsideSchedule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тревоги вне расписания'**
+  String get smsSettingsAlarmsOutsideSchedule;
+
+  /// No description provided for @smsSettingsStartTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время начала'**
+  String get smsSettingsStartTime;
+
+  /// No description provided for @smsSettingsEndTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время окончания'**
+  String get smsSettingsEndTime;
+
+  /// No description provided for @smsSettingsDaysOfWeek.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дни недели:'**
+  String get smsSettingsDaysOfWeek;
+
+  /// No description provided for @smsSettingsMonday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пн'**
+  String get smsSettingsMonday;
+
+  /// No description provided for @smsSettingsTuesday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вт'**
+  String get smsSettingsTuesday;
+
+  /// No description provided for @smsSettingsWednesday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ср'**
+  String get smsSettingsWednesday;
+
+  /// No description provided for @smsSettingsThursday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чт'**
+  String get smsSettingsThursday;
+
+  /// No description provided for @smsSettingsFriday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пт'**
+  String get smsSettingsFriday;
+
+  /// No description provided for @smsSettingsSaturday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сб'**
+  String get smsSettingsSaturday;
+
+  /// No description provided for @smsSettingsSunday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вс'**
+  String get smsSettingsSunday;
+
+  /// No description provided for @smsSettingsAddPhoneRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавьте хотя бы один номер'**
+  String get smsSettingsAddPhoneRequired;
+
+  /// No description provided for @smsSettingsSendTest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить тестовое SMS'**
+  String get smsSettingsSendTest;
+
+  /// No description provided for @smsSettingsTestMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Тестовое SMS из SHome!'**
+  String get smsSettingsTestMessage;
+
+  /// No description provided for @smsSettingsAddPhoneTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить номер'**
+  String get smsSettingsAddPhoneTitle;
+
+  /// No description provided for @smsSettingsNameOptional.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя (необязательно)'**
+  String get smsSettingsNameOptional;
+
+  /// No description provided for @smsSettingsNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мой телефон'**
+  String get smsSettingsNameHint;
+
+  /// No description provided for @smsSettingsPhoneLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер'**
+  String get smsSettingsPhoneLabel;
+
+  /// No description provided for @smsSettingsPhoneHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'+79991234567'**
+  String get smsSettingsPhoneHint;
+
+  /// No description provided for @smsSettingsCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get smsSettingsCancel;
+
+  /// No description provided for @smsSettingsAdd.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить'**
+  String get smsSettingsAdd;
+
+  /// No description provided for @smsSettingsDelete.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить'**
+  String get smsSettingsDelete;
+
+  /// No description provided for @timersTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Таймеры'**
+  String get timersTitle;
+
+  /// No description provided for @timersEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет активных таймеров'**
+  String get timersEmpty;
+
+  /// No description provided for @timersAlreadyFired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уже сработал'**
+  String get timersAlreadyFired;
+
+  /// No description provided for @timersLessThanMinute.
+  ///
+  /// In ru, this message translates to:
+  /// **'менее минуты'**
+  String get timersLessThanMinute;
+
+  /// No description provided for @timersTurnOn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включится'**
+  String get timersTurnOn;
+
+  /// No description provided for @timersTurnOff.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выключится'**
+  String get timersTurnOff;
+
+  /// No description provided for @timersCountdownMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'через {minutes} мин'**
+  String timersCountdownMinutes(int minutes);
+
+  /// No description provided for @timersCountdownHoursMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'через {hours} ч {minutes} мин'**
+  String timersCountdownHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @timersTodayAt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня в {time}'**
+  String timersTodayAt(String time);
+
+  /// No description provided for @timersNewTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый таймер'**
+  String get timersNewTitle;
+
+  /// No description provided for @timersDeviceLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройство'**
+  String get timersDeviceLabel;
+
+  /// No description provided for @timersCommandOff.
+  ///
+  /// In ru, this message translates to:
+  /// **'ВЫКЛ'**
+  String get timersCommandOff;
+
+  /// No description provided for @timersCommandOn.
+  ///
+  /// In ru, this message translates to:
+  /// **'ВКЛ'**
+  String get timersCommandOn;
+
+  /// No description provided for @timersCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get timersCancel;
+
+  /// No description provided for @timersCreate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать'**
+  String get timersCreate;
+
+  /// No description provided for @timersDeleteTooltip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить таймер'**
+  String get timersDeleteTooltip;
+
+  /// No description provided for @vkSettingsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'VK Bot'**
+  String get vkSettingsTitle;
+
+  /// No description provided for @vkSettingsEnable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включить VK'**
+  String get vkSettingsEnable;
+
+  /// No description provided for @vkSettingsEnableSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлять уведомления в VK'**
+  String get vkSettingsEnableSubtitle;
+
+  /// No description provided for @vkSettingsTokenLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'VK Token'**
+  String get vkSettingsTokenLabel;
+
+  /// No description provided for @vkSettingsTokenHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вставьте токен бота'**
+  String get vkSettingsTokenHint;
+
+  /// No description provided for @vkSettingsUserIdLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'VK User ID'**
+  String get vkSettingsUserIdLabel;
+
+  /// No description provided for @vkSettingsUserIdHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например, 123456789'**
+  String get vkSettingsUserIdHint;
+
+  /// No description provided for @vkSettingsEvents.
+  ///
+  /// In ru, this message translates to:
+  /// **'События'**
+  String get vkSettingsEvents;
+
+  /// No description provided for @vkSettingsScenes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцены'**
+  String get vkSettingsScenes;
+
+  /// No description provided for @vkSettingsScenesSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления о выполнении сцен'**
+  String get vkSettingsScenesSubtitle;
+
+  /// No description provided for @vkSettingsDevices.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройства'**
+  String get vkSettingsDevices;
+
+  /// No description provided for @vkSettingsDevicesSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменение состояния устройств'**
+  String get vkSettingsDevicesSubtitle;
+
+  /// No description provided for @vkSettingsAlarms.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тревоги'**
+  String get vkSettingsAlarms;
+
+  /// No description provided for @vkSettingsZigbeeWaterLeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 💧 Протечка'**
+  String get vkSettingsZigbeeWaterLeak;
+
+  /// No description provided for @vkSettingsZigbeeSmoke.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 🔥 Дым'**
+  String get vkSettingsZigbeeSmoke;
+
+  /// No description provided for @vkSettingsZigbeeGas.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 💨 Газ'**
+  String get vkSettingsZigbeeGas;
+
+  /// No description provided for @vkSettingsZigbeeMotion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 🏃 Движение'**
+  String get vkSettingsZigbeeMotion;
+
+  /// No description provided for @vkSettingsZigbeeContact.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee: 🚪 Контакт'**
+  String get vkSettingsZigbeeContact;
+
+  /// No description provided for @vkSettingsFrigatePerson.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate: 🚶 Человек'**
+  String get vkSettingsFrigatePerson;
+
+  /// No description provided for @vkSettingsFrigateCar.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate: 🚗 Автомобиль'**
+  String get vkSettingsFrigateCar;
+
+  /// No description provided for @vkSettingsErrors.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибки'**
+  String get vkSettingsErrors;
+
+  /// No description provided for @vkSettingsZigbeeOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee offline'**
+  String get vkSettingsZigbeeOffline;
+
+  /// No description provided for @vkSettingsZigbeeOfflineSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройство потеряло связь'**
+  String get vkSettingsZigbeeOfflineSubtitle;
+
+  /// No description provided for @vkSettingsFrigateOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate offline'**
+  String get vkSettingsFrigateOffline;
+
+  /// No description provided for @vkSettingsFrigateOfflineSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Frigate недоступен'**
+  String get vkSettingsFrigateOfflineSubtitle;
+
+  /// No description provided for @vkSettingsCooldown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Антидребезг VK'**
+  String get vkSettingsCooldown;
+
+  /// No description provided for @vkSettingsCooldown1.
+  ///
+  /// In ru, this message translates to:
+  /// **'1 минута'**
+  String get vkSettingsCooldown1;
+
+  /// No description provided for @vkSettingsCooldown5.
+  ///
+  /// In ru, this message translates to:
+  /// **'5 минут'**
+  String get vkSettingsCooldown5;
+
+  /// No description provided for @vkSettingsCooldown15.
+  ///
+  /// In ru, this message translates to:
+  /// **'15 минут'**
+  String get vkSettingsCooldown15;
+
+  /// No description provided for @vkSettingsCooldown30.
+  ///
+  /// In ru, this message translates to:
+  /// **'30 минут'**
+  String get vkSettingsCooldown30;
+
+  /// No description provided for @vkSettingsSchedule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расписание'**
+  String get vkSettingsSchedule;
+
+  /// No description provided for @vkSettingsScheduleSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлять только в указанное время'**
+  String get vkSettingsScheduleSubtitle;
+
+  /// No description provided for @vkSettingsAlarmsOutsideSchedule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тревоги вне расписания'**
+  String get vkSettingsAlarmsOutsideSchedule;
+
+  /// No description provided for @vkSettingsAlarmsAlways.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тревоги отправлять всегда'**
+  String get vkSettingsAlarmsAlways;
+
+  /// No description provided for @vkSettingsStartTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время начала'**
+  String get vkSettingsStartTime;
+
+  /// No description provided for @vkSettingsEndTime.
+  ///
+  /// In ru, this message translates to:
+  /// **'Время окончания'**
+  String get vkSettingsEndTime;
+
+  /// No description provided for @vkSettingsDaysOfWeek.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дни недели:'**
+  String get vkSettingsDaysOfWeek;
+
+  /// No description provided for @vkSettingsMonday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пн'**
+  String get vkSettingsMonday;
+
+  /// No description provided for @vkSettingsTuesday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вт'**
+  String get vkSettingsTuesday;
+
+  /// No description provided for @vkSettingsWednesday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ср'**
+  String get vkSettingsWednesday;
+
+  /// No description provided for @vkSettingsThursday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чт'**
+  String get vkSettingsThursday;
+
+  /// No description provided for @vkSettingsFriday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пт'**
+  String get vkSettingsFriday;
+
+  /// No description provided for @vkSettingsSaturday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сб'**
+  String get vkSettingsSaturday;
+
+  /// No description provided for @vkSettingsSunday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вс'**
+  String get vkSettingsSunday;
+
+  /// No description provided for @vkSettingsSendTest.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить тест VK'**
+  String get vkSettingsSendTest;
+
+  /// No description provided for @vkSettingsTestMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Тестовое уведомление из SHome!'**
+  String get vkSettingsTestMessage;
+
+  /// No description provided for @zigbeeScanTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee'**
+  String get zigbeeScanTitle;
+
+  /// No description provided for @zigbeeRefresh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить'**
+  String get zigbeeRefresh;
+
+  /// No description provided for @zigbeeStopPairing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Остановить сопряжение ({seconds} с)'**
+  String zigbeeStopPairing(int seconds);
+
+  /// No description provided for @zigbeeOpenPairing.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть сеть для сопряжения'**
+  String get zigbeeOpenPairing;
+
+  /// No description provided for @zigbeePairingInstruction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Зажмите кнопку на устройстве на 5 секунд'**
+  String get zigbeePairingInstruction;
+
+  /// No description provided for @zigbeeNoDevices.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройства не найдены.\nНажмите «Открыть сеть» и добавьте устройство.'**
+  String get zigbeeNoDevices;
+
+  /// No description provided for @zigbeeDeviceAdded.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ {name} добавлено'**
+  String zigbeeDeviceAdded(String name);
+
+  /// No description provided for @changelogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'История изменений'**
+  String get changelogTitle;
+
+  /// No description provided for @changelogLoadError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить историю изменений'**
+  String get changelogLoadError;
+
+  /// No description provided for @eulaTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лицензионное соглашение'**
+  String get eulaTitle;
+
+  /// No description provided for @legalInfoTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Информация'**
+  String get legalInfoTitle;
+
+  /// No description provided for @legalDeveloperLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разработчик: {name}'**
+  String legalDeveloperLabel(String name);
+
+  /// No description provided for @legalOwnerLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собственник: {name}'**
+  String legalOwnerLabel(String name);
+
+  /// No description provided for @legalVersionLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия: {version}'**
+  String legalVersionLabel(String version);
+
+  /// No description provided for @legalEulaTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лицензионное соглашение (EULA)'**
+  String get legalEulaTitle;
+
+  /// No description provided for @legalEulaSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила использования приложения'**
+  String get legalEulaSubtitle;
+
+  /// No description provided for @legalPrivacyTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Политика конфиденциальности'**
+  String get legalPrivacyTitle;
+
+  /// No description provided for @legalPrivacySubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как мы обрабатываем ваши данные'**
+  String get legalPrivacySubtitle;
+
+  /// No description provided for @legalTermsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Условия использования'**
+  String get legalTermsTitle;
+
+  /// No description provided for @legalTermsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила и ограничения'**
+  String get legalTermsSubtitle;
+
+  /// No description provided for @legalOpenSourceTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лицензии открытого ПО'**
+  String get legalOpenSourceTitle;
+
+  /// No description provided for @legalOpenSourceSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сторонние библиотеки'**
+  String get legalOpenSourceSubtitle;
+
+  /// No description provided for @legalChangelogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'История изменений'**
+  String get legalChangelogTitle;
+
+  /// No description provided for @legalChangelogSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что нового в каждой версии'**
+  String get legalChangelogSubtitle;
+
+  /// No description provided for @legalVersionFooter.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия {version}'**
+  String legalVersionFooter(String version);
+
+  /// No description provided for @statsPeriod24h.
+  ///
+  /// In ru, this message translates to:
+  /// **'24ч'**
+  String get statsPeriod24h;
+
+  /// No description provided for @statsPeriod7d.
+  ///
+  /// In ru, this message translates to:
+  /// **'7д'**
+  String get statsPeriod7d;
+
+  /// No description provided for @statsPeriod30d.
+  ///
+  /// In ru, this message translates to:
+  /// **'30д'**
+  String get statsPeriod30d;
+
+  /// No description provided for @statsNoClimateData.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет данных датчиков за период'**
+  String get statsNoClimateData;
+
+  /// No description provided for @statsClimateByDevice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Климат по устройствам'**
+  String get statsClimateByDevice;
+
+  /// No description provided for @statsSampleCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, =0{Нет измерений} one{{count} измерение} few{{count} измерения} many{{count} измерений} other{{count} измерения}}'**
+  String statsSampleCount(int count);
+
+  /// No description provided for @statsTemperatureSummary.
+  ///
+  /// In ru, this message translates to:
+  /// **'🌡️ {min}° … {max}° (среднее: {average}°)'**
+  String statsTemperatureSummary(String min, String max, String average);
+
+  /// No description provided for @statsHumiditySummary.
+  ///
+  /// In ru, this message translates to:
+  /// **'💧 {min}% … {max}% (среднее: {average}%)'**
+  String statsHumiditySummary(String min, String max, String average);
+
+  /// No description provided for @statsNoDeviceDataPeriod.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет данных за период'**
+  String get statsNoDeviceDataPeriod;
+
+  /// No description provided for @statsDeviceEventCounts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не в сети: {offline} · алерты: {alerts} · действия: {actions}'**
+  String statsDeviceEventCounts(int offline, int alerts, int actions);
+
+  /// No description provided for @statsAlertsForDays.
+  ///
+  /// In ru, this message translates to:
+  /// **'Алерты за {days} дн.'**
+  String statsAlertsForDays(int days);
+
+  /// No description provided for @statsOfflineForDays.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не в сети за {days} дн.'**
+  String statsOfflineForDays(int days);
+
+  /// No description provided for @statsEnergyConsumption.
+  ///
+  /// In ru, this message translates to:
+  /// **'Потребление'**
+  String get statsEnergyConsumption;
+
+  /// No description provided for @statsEnergyCost.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стоимость'**
+  String get statsEnergyCost;
+
+  /// No description provided for @statsEnergyPeriod.
+  ///
+  /// In ru, this message translates to:
+  /// **'за {days} дн.'**
+  String statsEnergyPeriod(int days);
+
+  /// No description provided for @statsEnergyTariff.
+  ///
+  /// In ru, this message translates to:
+  /// **'тариф {tariff} ₽/кВт·ч'**
+  String statsEnergyTariff(String tariff);
+
+  /// No description provided for @statsEnergyRubles.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} ₽'**
+  String statsEnergyRubles(String value);
+
+  /// No description provided for @statsEnergyKwh.
+  ///
+  /// In ru, this message translates to:
+  /// **'{value} кВт·ч'**
+  String statsEnergyKwh(String value);
+
+  /// No description provided for @statsEnergyNoData.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет данных энергопотребления за период'**
+  String get statsEnergyNoData;
+
+  /// No description provided for @statsEnergyByDevice.
+  ///
+  /// In ru, this message translates to:
+  /// **'По устройствам'**
+  String get statsEnergyByDevice;
+
+  /// No description provided for @statsNotificationsEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет уведомлений за период'**
+  String get statsNotificationsEmpty;
+
+  /// No description provided for @statsNotificationsSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправлено'**
+  String get statsNotificationsSent;
+
+  /// No description provided for @statsNotificationsSuppressed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подавлено'**
+  String get statsNotificationsSuppressed;
+
+  /// No description provided for @statsNotificationsPeriod.
+  ///
+  /// In ru, this message translates to:
+  /// **'за {days} дн.'**
+  String statsNotificationsPeriod(int days);
+
+  /// No description provided for @statsNotificationsCooldownPercent.
+  ///
+  /// In ru, this message translates to:
+  /// **'cooldown ({percent}%)'**
+  String statsNotificationsCooldownPercent(int percent);
+
+  /// No description provided for @statsNotificationsByChannel.
+  ///
+  /// In ru, this message translates to:
+  /// **'По каналам'**
+  String get statsNotificationsByChannel;
+
+  /// No description provided for @statsNotificationsChannelSuppressed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подавлено: {count}'**
+  String statsNotificationsChannelSuppressed(int count);
+
+  /// No description provided for @statsNotificationsByCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'По категориям'**
+  String get statsNotificationsByCategory;
+
+  /// No description provided for @statsNotificationsCategoryWaterLeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'💧 Протечка'**
+  String get statsNotificationsCategoryWaterLeak;
+
+  /// No description provided for @statsNotificationsCategorySmoke.
+  ///
+  /// In ru, this message translates to:
+  /// **'🔥 Дым'**
+  String get statsNotificationsCategorySmoke;
+
+  /// No description provided for @statsNotificationsCategoryGas.
+  ///
+  /// In ru, this message translates to:
+  /// **'💨 Газ'**
+  String get statsNotificationsCategoryGas;
+
+  /// No description provided for @statsNotificationsCategoryMotion.
+  ///
+  /// In ru, this message translates to:
+  /// **'🏃 Движение'**
+  String get statsNotificationsCategoryMotion;
+
+  /// No description provided for @statsNotificationsCategoryContact.
+  ///
+  /// In ru, this message translates to:
+  /// **'🚪 Контакт'**
+  String get statsNotificationsCategoryContact;
+
+  /// No description provided for @statsNotificationsCategoryPerson.
+  ///
+  /// In ru, this message translates to:
+  /// **'🎥 Человек'**
+  String get statsNotificationsCategoryPerson;
+
+  /// No description provided for @statsNotificationsCategoryCar.
+  ///
+  /// In ru, this message translates to:
+  /// **'🎥 Автомобиль'**
+  String get statsNotificationsCategoryCar;
+
+  /// No description provided for @statsNotificationsCategoryOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'📡 Не в сети'**
+  String get statsNotificationsCategoryOffline;
+
+  /// No description provided for @statsNotificationsCategoryLowBattery.
+  ///
+  /// In ru, this message translates to:
+  /// **'🔋 Батарея'**
+  String get statsNotificationsCategoryLowBattery;
+
+  /// No description provided for @statsNotificationsCategoryStateChanged.
+  ///
+  /// In ru, this message translates to:
+  /// **'🎛 Состояние'**
+  String get statsNotificationsCategoryStateChanged;
+
+  /// No description provided for @statsNotificationsCategoryUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Другое'**
+  String get statsNotificationsCategoryUnknown;
+
+  /// No description provided for @statsOverviewAlerts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Алерты'**
+  String get statsOverviewAlerts;
+
+  /// No description provided for @statsOverviewActions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Действия'**
+  String get statsOverviewActions;
+
+  /// No description provided for @statsOverviewOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не в сети'**
+  String get statsOverviewOffline;
+
+  /// No description provided for @statsOverviewOnline.
+  ///
+  /// In ru, this message translates to:
+  /// **'В сети'**
+  String get statsOverviewOnline;
+
+  /// No description provided for @statsOverviewPeriod.
+  ///
+  /// In ru, this message translates to:
+  /// **'за {days} дн.'**
+  String statsOverviewPeriod(int days);
+
+  /// No description provided for @statsOverviewWorstDevices.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проблемные устройства'**
+  String get statsOverviewWorstDevices;
+
+  /// No description provided for @statsOverviewNoProblems.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет проблемных устройств за период 👍'**
+  String get statsOverviewNoProblems;
+
+  /// No description provided for @statsPresenceEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет данных присутствия за период'**
+  String get statsPresenceEmpty;
+
+  /// No description provided for @statsPresenceHome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дома'**
+  String get statsPresenceHome;
+
+  /// No description provided for @statsPresenceNear.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рядом'**
+  String get statsPresenceNear;
+
+  /// No description provided for @statsPresenceAway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ушёл'**
+  String get statsPresenceAway;
+
+  /// No description provided for @statsPresenceUnknown.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неизвестно'**
+  String get statsPresenceUnknown;
+
+  /// No description provided for @statsPresencePeriod.
+  ///
+  /// In ru, this message translates to:
+  /// **'за {days} дн.'**
+  String statsPresencePeriod(int days);
+
+  /// No description provided for @statsPresenceCloudFallback.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переход на облако'**
+  String get statsPresenceCloudFallback;
+
+  /// No description provided for @statsPresenceCloudFallbackSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сколько раз heartbeat не сработал'**
+  String get statsPresenceCloudFallbackSubtitle;
+
+  /// No description provided for @statsPresenceDurationZero.
+  ///
+  /// In ru, this message translates to:
+  /// **'0'**
+  String get statsPresenceDurationZero;
+
+  /// No description provided for @statsPresenceDurationHoursMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{hours} ч {minutes} мин'**
+  String statsPresenceDurationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @statsPresenceDurationMinutes.
+  ///
+  /// In ru, this message translates to:
+  /// **'{minutes} мин'**
+  String statsPresenceDurationMinutes(int minutes);
+
+  /// No description provided for @statsPresenceDurationLessMinute.
+  ///
+  /// In ru, this message translates to:
+  /// **'менее минуты'**
+  String get statsPresenceDurationLessMinute;
+
+  /// No description provided for @statsScenesTop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Топ сцен'**
+  String get statsScenesTop;
+
+  /// No description provided for @statsScenesRuns.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count, plural, =0{Нет запусков} one{# раз} few{# раза} many{# раз} other{# раза}}'**
+  String statsScenesRuns(int count);
+
+  /// No description provided for @statsScenesNoRunsPeriod.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет срабатываний сцен за период'**
+  String get statsScenesNoRunsPeriod;
+
+  /// No description provided for @statsScenesForgottenTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забытые сцены (0 срабатываний)'**
+  String get statsScenesForgottenTitle;
+
+  /// No description provided for @statsScenesDeleteCandidate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кандидат на удаление'**
+  String get statsScenesDeleteCandidate;
+
+  /// No description provided for @statsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Статистика'**
+  String get statsTitle;
+
+  /// No description provided for @statsTabOverview.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обзор'**
+  String get statsTabOverview;
+
+  /// No description provided for @statsTabDevices.
+  ///
+  /// In ru, this message translates to:
+  /// **'Устройства'**
+  String get statsTabDevices;
+
+  /// No description provided for @statsTabEnergy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Энергия'**
+  String get statsTabEnergy;
+
+  /// No description provided for @statsTabVideo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Видео'**
+  String get statsTabVideo;
+
+  /// No description provided for @statsTabScenes.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сцены'**
+  String get statsTabScenes;
+
+  /// No description provided for @statsTabPresence.
+  ///
+  /// In ru, this message translates to:
+  /// **'Присутствие'**
+  String get statsTabPresence;
+
+  /// No description provided for @statsTabClimate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Климат'**
+  String get statsTabClimate;
+
+  /// No description provided for @statsTabNotifications.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления'**
+  String get statsTabNotifications;
+
+  /// No description provided for @statsVideoEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет детекций за период'**
+  String get statsVideoEmpty;
+
+  /// No description provided for @statsVideoByTypes.
+  ///
+  /// In ru, this message translates to:
+  /// **'По типам'**
+  String get statsVideoByTypes;
+
+  /// No description provided for @statsVideoByCameras.
+  ///
+  /// In ru, this message translates to:
+  /// **'По камерам'**
+  String get statsVideoByCameras;
+
+  /// No description provided for @statsVideoActivityByHour.
+  ///
+  /// In ru, this message translates to:
+  /// **'Активность по часам'**
+  String get statsVideoActivityByHour;
+
+  /// No description provided for @statsVideoHeatmapHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Чем интенсивнее цвет — тем больше детекций'**
+  String get statsVideoHeatmapHint;
+
+  /// No description provided for @statsVideoLabelPerson.
+  ///
+  /// In ru, this message translates to:
+  /// **'Человек'**
+  String get statsVideoLabelPerson;
+
+  /// No description provided for @statsVideoLabelCar.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автомобиль'**
+  String get statsVideoLabelCar;
+
+  /// No description provided for @statsVideoLabelDog.
+  ///
+  /// In ru, this message translates to:
+  /// **'Собака'**
+  String get statsVideoLabelDog;
+
+  /// No description provided for @statsVideoLabelCat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кошка'**
+  String get statsVideoLabelCat;
+
+  /// No description provided for @statsVideoLabelBird.
+  ///
+  /// In ru, this message translates to:
+  /// **'Птица'**
+  String get statsVideoLabelBird;
+
+  /// No description provided for @statsVideoLabelMotorcycle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мотоцикл'**
+  String get statsVideoLabelMotorcycle;
+
+  /// No description provided for @statsVideoLabelBicycle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Велосипед'**
+  String get statsVideoLabelBicycle;
+
+  /// No description provided for @statsVideoLabelTruck.
+  ///
+  /// In ru, this message translates to:
+  /// **'Грузовик'**
+  String get statsVideoLabelTruck;
+
+  /// No description provided for @statsVideoLabelBus.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автобус'**
+  String get statsVideoLabelBus;
+
+  /// No description provided for @statsVideoLabelBoat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лодка'**
+  String get statsVideoLabelBoat;
+
+  /// No description provided for @deviceCardWaterLeak.
+  ///
+  /// In ru, this message translates to:
+  /// **'Протечка'**
+  String get deviceCardWaterLeak;
+
+  /// No description provided for @deviceCardMotion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Движение'**
+  String get deviceCardMotion;
+
+  /// No description provided for @deviceCardContactOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыто'**
+  String get deviceCardContactOpen;
+
+  /// No description provided for @deviceSettingsName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название'**
+  String get deviceSettingsName;
+
+  /// No description provided for @deviceSettingsRoom.
+  ///
+  /// In ru, this message translates to:
+  /// **'Комната'**
+  String get deviceSettingsRoom;
+
+  /// No description provided for @deviceSettingsRtspUrl.
+  ///
+  /// In ru, this message translates to:
+  /// **'RTSP URL'**
+  String get deviceSettingsRtspUrl;
+
+  /// No description provided for @deviceSettingsZigbeeDevice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Zigbee-устройство'**
+  String get deviceSettingsZigbeeDevice;
+
+  /// No description provided for @deviceSettingsIeeeAddress.
+  ///
+  /// In ru, this message translates to:
+  /// **'IEEE-адрес'**
+  String get deviceSettingsIeeeAddress;
+
+  /// No description provided for @deviceSettingsModel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модель'**
+  String get deviceSettingsModel;
+
+  /// No description provided for @deviceSettingsVendor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Производитель'**
+  String get deviceSettingsVendor;
+
+  /// No description provided for @deviceSettingsBattery.
+  ///
+  /// In ru, this message translates to:
+  /// **'Батарея'**
+  String get deviceSettingsBattery;
+
+  /// No description provided for @deviceSettingsLinkQuality.
+  ///
+  /// In ru, this message translates to:
+  /// **'Качество связи'**
+  String get deviceSettingsLinkQuality;
+
+  /// No description provided for @deviceSettingsNotifications.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уведомления'**
+  String get deviceSettingsNotifications;
+
+  /// No description provided for @deviceSettingsDeviceId.
+  ///
+  /// In ru, this message translates to:
+  /// **'Device ID'**
+  String get deviceSettingsDeviceId;
+
+  /// No description provided for @deviceSettingsIpAddress.
+  ///
+  /// In ru, this message translates to:
+  /// **'IP-адрес'**
+  String get deviceSettingsIpAddress;
+
+  /// No description provided for @deviceSettingsLocalKey.
+  ///
+  /// In ru, this message translates to:
+  /// **'Local Key'**
+  String get deviceSettingsLocalKey;
+
+  /// No description provided for @deviceSettingsProtocolVersion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия протокола'**
+  String get deviceSettingsProtocolVersion;
+
+  /// No description provided for @deviceSettingsChannels.
+  ///
+  /// In ru, this message translates to:
+  /// **'Каналы'**
+  String get deviceSettingsChannels;
+
+  /// No description provided for @deviceSettingsDpsIndex.
+  ///
+  /// In ru, this message translates to:
+  /// **'Индекс DPS'**
+  String get deviceSettingsDpsIndex;
+
+  /// No description provided for @deviceSettingsDpsMap.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карта DPS'**
+  String get deviceSettingsDpsMap;
+
+  /// No description provided for @deviceSettingsAddDps.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить DPS'**
+  String get deviceSettingsAddDps;
+
+  /// No description provided for @deviceSettingsDisplayOnCard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отображение на карточке'**
+  String get deviceSettingsDisplayOnCard;
+
+  /// No description provided for @deviceSettingsDisplayHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите, какие данные показывать на главном экране'**
+  String get deviceSettingsDisplayHint;
+
+  /// No description provided for @deviceSettingsNoInfoParameters.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет информационных параметров'**
+  String get deviceSettingsNoInfoParameters;
+
+  /// No description provided for @deviceSettingsDeleteTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить устройство?'**
+  String get deviceSettingsDeleteTitle;
+
+  /// No description provided for @deviceSettingsDeleteMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить «{name}»?'**
+  String deviceSettingsDeleteMessage(String name);
+
+  /// No description provided for @deviceSettingsDelete.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить'**
+  String get deviceSettingsDelete;
+
+  /// No description provided for @deviceSettingsSave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить'**
+  String get deviceSettingsSave;
+
+  /// No description provided for @deviceSettingsCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get deviceSettingsCancel;
+
+  /// No description provided for @deviceSettingsCreateSensor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать датчик'**
+  String get deviceSettingsCreateSensor;
+
+  /// No description provided for @deviceSettingsSensorFromDevice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Из устройства: {name}'**
+  String deviceSettingsSensorFromDevice(String name);
+
+  /// No description provided for @deviceSettingsSensorType.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тип датчика'**
+  String get deviceSettingsSensorType;
+
+  /// No description provided for @deviceSettingsTemperature.
+  ///
+  /// In ru, this message translates to:
+  /// **'Температура'**
+  String get deviceSettingsTemperature;
+
+  /// No description provided for @deviceSettingsHumidity.
+  ///
+  /// In ru, this message translates to:
+  /// **'Влажность'**
+  String get deviceSettingsHumidity;
+
+  /// No description provided for @deviceSettingsPower.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мощность'**
+  String get deviceSettingsPower;
+
+  /// No description provided for @deviceSettingsCurrent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ток'**
+  String get deviceSettingsCurrent;
+
+  /// No description provided for @deviceSettingsVoltage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напряжение'**
+  String get deviceSettingsVoltage;
+
+  /// No description provided for @deviceSettingsDivider.
+  ///
+  /// In ru, this message translates to:
+  /// **'Делитель'**
+  String get deviceSettingsDivider;
+
+  /// No description provided for @deviceSettingsSensorCreated.
+  ///
+  /// In ru, this message translates to:
+  /// **'✅ Датчик «{name}» создан!'**
+  String deviceSettingsSensorCreated(String name);
+
+  /// No description provided for @deviceSettingsChannel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Канал'**
+  String get deviceSettingsChannel;
+
+  /// No description provided for @deviceSettingsChannelNumber.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер канала'**
+  String get deviceSettingsChannelNumber;
+
+  /// No description provided for @deviceSettingsDpsAddTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить DPS'**
+  String get deviceSettingsDpsAddTitle;
+
+  /// No description provided for @deviceSettingsDpsEditTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактировать DPS {key}'**
+  String deviceSettingsDpsEditTitle(String key);
+
+  /// No description provided for @deviceSettingsDpsNumber.
+  ///
+  /// In ru, this message translates to:
+  /// **'Номер DPS'**
+  String get deviceSettingsDpsNumber;
+
+  /// No description provided for @deviceSettingsDpsType.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тип'**
+  String get deviceSettingsDpsType;
+
+  /// No description provided for @deviceSettingsDpsRole.
+  ///
+  /// In ru, this message translates to:
+  /// **'Роль'**
+  String get deviceSettingsDpsRole;
+
+  /// No description provided for @deviceSettingsDpsIcon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Иконка'**
+  String get deviceSettingsDpsIcon;
+
+  /// No description provided for @deviceSettingsNoIcon.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без иконки'**
+  String get deviceSettingsNoIcon;
+
+  /// No description provided for @deviceSettingsRoleChannel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Канал'**
+  String get deviceSettingsRoleChannel;
+
+  /// No description provided for @deviceSettingsRoleMain.
+  ///
+  /// In ru, this message translates to:
+  /// **'Главная кнопка'**
+  String get deviceSettingsRoleMain;
+
+  /// No description provided for @deviceSettingsRoleAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Действие'**
+  String get deviceSettingsRoleAction;
+
+  /// No description provided for @deviceSettingsRoleToggle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переключатель'**
+  String get deviceSettingsRoleToggle;
+
+  /// No description provided for @deviceSettingsRoleInfo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Информация'**
+  String get deviceSettingsRoleInfo;
+
+  /// No description provided for @deviceSettingsRoleStatus.
+  ///
+  /// In ru, this message translates to:
+  /// **'Статус'**
+  String get deviceSettingsRoleStatus;
+
+  /// No description provided for @deviceSettingsRoleEnum.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выпадающий список'**
+  String get deviceSettingsRoleEnum;
+
+  /// No description provided for @deviceSettingsRoleSlider.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ползунок'**
+  String get deviceSettingsRoleSlider;
+
+  /// No description provided for @deviceSettingsDpsChannelTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Канал'**
+  String get deviceSettingsDpsChannelTitle;
+
+  /// No description provided for @deviceSettingsNotifyAlways.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всегда'**
+  String get deviceSettingsNotifyAlways;
+
+  /// No description provided for @deviceSettingsNotifyAway.
+  ///
+  /// In ru, this message translates to:
+  /// **'Когда никого нет'**
+  String get deviceSettingsNotifyAway;
+
+  /// No description provided for @deviceSettingsNotifyNight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ночью'**
+  String get deviceSettingsNotifyNight;
+
+  /// No description provided for @deviceSettingsNotifyAwayOrNight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Никого нет ИЛИ ночью'**
+  String get deviceSettingsNotifyAwayOrNight;
+
+  /// No description provided for @deviceSettingsNotifySummary.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} типов · {condition}'**
+  String deviceSettingsNotifySummary(int count, String condition);
+
+  /// No description provided for @deviceSettingsTypeBool.
+  ///
+  /// In ru, this message translates to:
+  /// **'вкл/выкл'**
+  String get deviceSettingsTypeBool;
+
+  /// No description provided for @deviceSettingsTypeValue.
+  ///
+  /// In ru, this message translates to:
+  /// **'число'**
+  String get deviceSettingsTypeValue;
+
+  /// No description provided for @deviceSettingsTypeEnum.
+  ///
+  /// In ru, this message translates to:
+  /// **'текстовый список'**
+  String get deviceSettingsTypeEnum;
+
+  /// No description provided for @deviceSettingsTypeSlider.
+  ///
+  /// In ru, this message translates to:
+  /// **'ползунок'**
+  String get deviceSettingsTypeSlider;
+
+  /// No description provided for @deviceSettingsIconNone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без иконки'**
+  String get deviceSettingsIconNone;
+
+  /// No description provided for @deviceSettingsIconPlayStop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пуск/Стоп'**
+  String get deviceSettingsIconPlayStop;
+
+  /// No description provided for @deviceSettingsIconHomeBase.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дом/База'**
+  String get deviceSettingsIconHomeBase;
+
+  /// No description provided for @deviceSettingsIconPower.
+  ///
+  /// In ru, this message translates to:
+  /// **'Питание'**
+  String get deviceSettingsIconPower;
+
+  /// No description provided for @deviceSettingsIconWater.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вода'**
+  String get deviceSettingsIconWater;
+
+  /// No description provided for @deviceSettingsIconMop.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мытьё'**
+  String get deviceSettingsIconMop;
+
+  /// No description provided for @deviceSettingsIconDoNotDisturb.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не беспокоить'**
+  String get deviceSettingsIconDoNotDisturb;
+
+  /// No description provided for @deviceSettingsIconBattery.
+  ///
+  /// In ru, this message translates to:
+  /// **'Батарея'**
+  String get deviceSettingsIconBattery;
+
+  /// No description provided for @deviceSettingsIconTimer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Таймер'**
+  String get deviceSettingsIconTimer;
+
+  /// No description provided for @deviceSettingsIconArea.
+  ///
+  /// In ru, this message translates to:
+  /// **'Площадь'**
+  String get deviceSettingsIconArea;
+
+  /// No description provided for @deviceSettingsIconFan.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вентилятор'**
+  String get deviceSettingsIconFan;
+
+  /// No description provided for @deviceSettingsIconCooling.
+  ///
+  /// In ru, this message translates to:
+  /// **'Охлаждение'**
+  String get deviceSettingsIconCooling;
+
+  /// No description provided for @deviceSettingsIconHeating.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обогрев'**
+  String get deviceSettingsIconHeating;
+
+  /// No description provided for @deviceSettingsIconDrying.
+  ///
+  /// In ru, this message translates to:
+  /// **'Осушение'**
+  String get deviceSettingsIconDrying;
+
+  /// No description provided for @deviceSettingsIconAuto.
+  ///
+  /// In ru, this message translates to:
+  /// **'Авто'**
+  String get deviceSettingsIconAuto;
+
+  /// No description provided for @deviceSettingsIconSleep.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сон'**
+  String get deviceSettingsIconSleep;
+
+  /// No description provided for @deviceSettingsIconVerticalBlinds.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вертикальные жалюзи'**
+  String get deviceSettingsIconVerticalBlinds;
+
+  /// No description provided for @deviceSettingsIconHorizontalBlinds.
+  ///
+  /// In ru, this message translates to:
+  /// **'Горизонтальные жалюзи'**
+  String get deviceSettingsIconHorizontalBlinds;
+
+  /// No description provided for @deviceSettingsIconAirQuality.
+  ///
+  /// In ru, this message translates to:
+  /// **'Качество воздуха'**
+  String get deviceSettingsIconAirQuality;
+
+  /// No description provided for @deviceSettingsIconFilter.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фильтр'**
+  String get deviceSettingsIconFilter;
+
+  /// No description provided for @deviceSettingsIconTemperature.
+  ///
+  /// In ru, this message translates to:
+  /// **'Температура'**
+  String get deviceSettingsIconTemperature;
+
+  /// No description provided for @deviceSettingsIconAirConditioner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кондиционер'**
+  String get deviceSettingsIconAirConditioner;
+
+  /// No description provided for @deviceSettingsIconHeater.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обогреватель'**
+  String get deviceSettingsIconHeater;
+
+  /// No description provided for @deviceSettingsIconAir.
+  ///
+  /// In ru, this message translates to:
+  /// **'Воздух'**
+  String get deviceSettingsIconAir;
+
+  /// No description provided for @deviceSettingsIconSuction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всасывание'**
+  String get deviceSettingsIconSuction;
+
+  /// No description provided for @deviceSettingsIconWaiting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ожидание'**
+  String get deviceSettingsIconWaiting;
+
+  /// No description provided for @deviceSettingsIconSynchronization.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизация'**
+  String get deviceSettingsIconSynchronization;
+
+  /// No description provided for @deviceSettingsDefaultChannelLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Канал {key}'**
+  String deviceSettingsDefaultChannelLabel(String key);
+
+  /// No description provided for @deviceSettingsAdd.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить'**
+  String get deviceSettingsAdd;
+
+  /// No description provided for @deviceSettingsCreate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать'**
+  String get deviceSettingsCreate;
+
+  /// No description provided for @todayDrawerToday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня'**
+  String get todayDrawerToday;
 }
 
 class _AppLocalizationsDelegate

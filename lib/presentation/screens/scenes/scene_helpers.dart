@@ -1,27 +1,31 @@
 /// Чистые хелперы для экрана сцен: форматирование команд, иконок,
 /// условий датчиков и присутствия.
-/// Не зависят от Riverpod — тестируются отдельно.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/device.dart';
 import '../../../domain/models/scene.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 class SceneHelpers {
   SceneHelpers._();
 
   // ─── Действия ───
 
-  static String actionLabel(String command) {
+  static String actionLabel(
+      String command,
+      AppLocalizations l10n,
+      ) {
     switch (command) {
       case 'turnOn':
-        return 'ВКЛ';
+        return l10n.sceneEditorActionOn;
       case 'turnOff':
-        return 'ВЫКЛ';
+        return l10n.sceneEditorActionOff;
       case 'setBrightness':
-        return 'ЯРК';
+        return l10n.sceneEditorActionBrightness;
       default:
+      // Неизвестная команда — техническое значение, оставляем как есть.
         return command.toUpperCase();
     }
   }
@@ -46,7 +50,6 @@ class SceneHelpers {
       case DeviceType.switch1:
       case DeviceType.switch2:
       case DeviceType.switch3:
-        return '💡';
       case DeviceType.light:
         return '💡';
       case DeviceType.sensor:
@@ -62,31 +65,34 @@ class SceneHelpers {
 
   // ─── Условия датчика ───
 
-  static String sensorConditionLabel(SceneTrigger trigger) {
+  static String sensorConditionLabel(
+      SceneTrigger trigger,
+      AppLocalizations l10n,
+      ) {
     final condition = trigger.sensorCondition ?? '';
-    final threshold = trigger.sensorThreshold ?? 0;
+    final threshold = (trigger.sensorThreshold ?? 0).toString();
 
     switch (condition) {
       case 'temperature_above':
-        return 'Темп. > $threshold°C';
+        return l10n.sceneEditorTemperatureAbove(threshold);
       case 'temperature_below':
-        return 'Темп. < $threshold°C';
+        return l10n.sceneEditorTemperatureBelow(threshold);
       case 'humidity_above':
-        return 'Влаж. > $threshold%';
+        return l10n.sceneEditorHumidityAbove(threshold);
       case 'humidity_below':
-        return 'Влаж. < $threshold%';
+        return l10n.sceneEditorHumidityBelow(threshold);
       case 'water_leak':
-        return '💧 Протечка';
+        return l10n.sceneEditorWaterLeak;
       case 'motion':
-        return '🏃 Движение';
+        return l10n.sceneEditorMotion;
       case 'contact_open':
-        return '🚪 Открыто';
+        return l10n.sceneEditorContactOpen;
       case 'contact_closed':
-        return '🚪 Закрыто';
+        return l10n.sceneEditorContactClosed;
       case 'smoke':
-        return '🔥 Дым';
+        return l10n.sceneEditorSmoke;
       case 'gas':
-        return '💨 Газ';
+        return l10n.sceneEditorGas;
       default:
         return '$condition $threshold';
     }
@@ -94,55 +100,98 @@ class SceneHelpers {
 
   // ─── Присутствие ───
 
-  static String presenceEventLabel(SceneTrigger trigger) {
+  static String presenceEventLabel(
+      SceneTrigger trigger,
+      AppLocalizations l10n,
+      ) {
     final event = trigger.presenceEvent;
-    if (event == null) return 'Присутствие';
+    if (event == null) return l10n.scenesPresence;
 
     switch (event) {
       case PresenceEvent.someoneHome:
-        return 'Кто-то пришёл';
+        return l10n.sceneEditorSomeoneHome;
       case PresenceEvent.nobodyHome:
-        return 'Никого нет';
+        return l10n.sceneEditorNobodyHome;
       case PresenceEvent.allHome:
-        return 'Все дома';
+        return l10n.sceneEditorAllHome;
       case PresenceEvent.phoneArrived:
-        return 'Телефон пришёл';
+        return l10n.sceneEditorPhoneArrived;
       case PresenceEvent.phoneLeft:
-        return 'Телефон ушёл';
+        return l10n.sceneEditorPhoneLeft;
       case PresenceEvent.phoneUnknown:
-        return 'Телефон потерян';
+        return l10n.sceneEditorPhoneUnknown;
     }
   }
 
   // ─── Повторы ───
 
-  static String repeatLabel(RepeatType repeat) {
+  static String repeatLabel(
+      RepeatType repeat,
+      AppLocalizations l10n,
+      ) {
     switch (repeat) {
       case RepeatType.daily:
-        return 'Каждый день';
+        return l10n.sceneEditorRepeatDaily;
       case RepeatType.weekly:
-        return 'По дням недели';
+        return l10n.sceneEditorRepeatWeekly;
       case RepeatType.interval:
-        return 'Интервал';
-      default:
-        return '';
+        return l10n.sceneEditorMinutes(1);
+      case RepeatType.once:
+        return l10n.sceneEditorRepeatOnce;
     }
   }
 
-  static String daysLabel(List<int>? days) {
+  static String daysLabel(
+      List<int>? days,
+      AppLocalizations l10n,
+      ) {
     if (days == null || days.isEmpty) return '';
-    final names = ['', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    return days.map((d) => names[d]).join(', ');
+
+    final names = [
+      '',
+      l10n.sceneEditorMonday,
+      l10n.sceneEditorTuesday,
+      l10n.sceneEditorWednesday,
+      l10n.sceneEditorThursday,
+      l10n.sceneEditorFriday,
+      l10n.sceneEditorSaturday,
+      l10n.sceneEditorSunday,
+    ];
+
+    return days
+        .where((day) => day > 0 && day < names.length)
+        .map((day) => names[day])
+        .join(', ');
   }
 
   // ─── Прочее ───
 
-  static String pluralize(int count) => 'устр.';
+  static String pluralize(
+      int count,
+      AppLocalizations l10n,
+      ) {
+    // Сохраняет прежнее назначение метода: вернуть краткую подпись единицы.
+    return l10n.sceneEditorDeviceUnitShort;
+  }
 
   static TimeOfDay? parseTime(String? timeStr) {
     if (timeStr == null) return null;
+
     final parts = timeStr.split(':');
     if (parts.length != 2) return null;
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+
+    if (hour == null ||
+        minute == null ||
+        hour < 0 ||
+        hour > 23 ||
+        minute < 0 ||
+        minute > 59) {
+      return null;
+    }
+
+    return TimeOfDay(hour: hour, minute: minute);
   }
 }

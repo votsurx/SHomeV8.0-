@@ -1,28 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../application/models/sms_phone.dart';
 import '../../application/state/sms_settings_provider.dart';
 import '../../data/services/sms_notification_service.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class SmsSettingsScreen extends ConsumerWidget {
   const SmsSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final settings = ref.watch(smsSettingsProvider);
     final notifier = ref.read(smsSettingsProvider.notifier);
 
+    final weekdays = [
+      l10n.smsSettingsMonday,
+      l10n.smsSettingsTuesday,
+      l10n.smsSettingsWednesday,
+      l10n.smsSettingsThursday,
+      l10n.smsSettingsFriday,
+      l10n.smsSettingsSaturday,
+      l10n.smsSettingsSunday,
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('SMS уведомления')),
+      appBar: AppBar(
+        title: Text(l10n.smsSettingsTitle),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SwitchListTile(
-            title: const Text('Включить SMS'),
-            subtitle: const Text('Отправлять уведомления по SMS'),
+            title: Text(l10n.smsSettingsEnable),
+            subtitle: Text(l10n.smsSettingsEnableSubtitle),
             value: settings.enabled,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(enabled: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(enabled: value));
             },
           ),
           const Divider(height: 32),
@@ -30,9 +45,12 @@ class SmsSettingsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Номера телефонов',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              Text(
+                l10n.smsSettingsPhoneNumbers,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.add),
@@ -41,193 +59,235 @@ class SmsSettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 8),
+
           if (settings.phones.isEmpty)
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'Нет добавленных номеров',
+                  l10n.smsSettingsNoPhones,
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               ),
             )
           else
-            ...settings.phones.map((phone) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.phone, color: Colors.blue),
-                title: Text(phone.name ?? phone.phone),
-                subtitle: phone.name != null ? Text(phone.phone) : null,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Switch(
-                      value: phone.enabled,
-                      onChanged: (val) {
-                        notifier.updatePhone(
-                          phone.phone,
-                          phone.copyWith(enabled: val),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        notifier.removePhone(phone.phone);
-                      },
-                    ),
-                  ],
+            ...settings.phones.map(
+                  (phone) => Card(
+                child: ListTile(
+                  leading: const Icon(Icons.phone, color: Colors.blue),
+                  title: Text(phone.name ?? phone.phone),
+                  subtitle: phone.name != null ? Text(phone.phone) : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Switch(
+                        value: phone.enabled,
+                        onChanged: (value) {
+                          notifier.updatePhone(
+                            phone.phone,
+                            phone.copyWith(enabled: value),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        tooltip: l10n.smsSettingsDelete,
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          notifier.removePhone(phone.phone);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            )),
+            ),
 
           const Divider(height: 32),
 
-          const Text(
-            'События для SMS',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          Text(
+            l10n.smsSettingsEventsTitle,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
+
           SwitchListTile(
-            title: const Text('Сцены'),
+            title: Text(l10n.smsSettingsScenes),
             value: settings.notifyScenes,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(notifyScenes: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(notifyScenes: value));
             },
           ),
           SwitchListTile(
-            title: const Text('Устройства'),
+            title: Text(l10n.smsSettingsDevices),
             value: settings.notifyDevices,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(notifyDevices: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(notifyDevices: value));
             },
           ),
+
           const Divider(height: 32),
-          // ═══ ТРЕВОГИ ═══
-          const Text(
-            'Тревоги',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+
+          Text(
+            l10n.smsSettingsAlarms,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
+
           SwitchListTile(
-            title: const Text('Zigbee: 💧 Протечка'),
+            title: Text(l10n.smsSettingsZigbeeWaterLeak),
             value: settings.notifyZigbeeWaterLeak,
-            onChanged: (val) {
+            onChanged: (value) {
               notifier.update(
-                  settings.copyWith(notifyZigbeeWaterLeak: val));
+                settings.copyWith(notifyZigbeeWaterLeak: value),
+              );
             },
           ),
           SwitchListTile(
-            title: const Text('Zigbee: 🔥 Дым'),
+            title: Text(l10n.smsSettingsZigbeeSmoke),
             value: settings.notifyZigbeeSmoke,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(notifyZigbeeSmoke: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(notifyZigbeeSmoke: value));
             },
           ),
           SwitchListTile(
-            title: const Text('Zigbee: 💨 Газ'),
+            title: Text(l10n.smsSettingsZigbeeGas),
             value: settings.notifyZigbeeGas,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(notifyZigbeeGas: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(notifyZigbeeGas: value));
             },
           ),
           SwitchListTile(
-            title: const Text('Zigbee: 🏃 Движение'),
+            title: Text(l10n.smsSettingsZigbeeMotion),
             value: settings.notifyZigbeeMotion,
-            onChanged: (val) {
+            onChanged: (value) {
               notifier.update(
-                  settings.copyWith(notifyZigbeeMotion: val));
+                settings.copyWith(notifyZigbeeMotion: value),
+              );
             },
           ),
           SwitchListTile(
-            title: const Text('Zigbee: 🚪 Контакт'),
+            title: Text(l10n.smsSettingsZigbeeContact),
             value: settings.notifyZigbeeContact,
-            onChanged: (val) {
+            onChanged: (value) {
               notifier.update(
-                  settings.copyWith(notifyZigbeeContact: val));
+                settings.copyWith(notifyZigbeeContact: value),
+              );
             },
           ),
           SwitchListTile(
-            title: const Text('Frigate: 🚶 Person'),
+            title: Text(l10n.smsSettingsFrigatePerson),
             value: settings.notifyFrigatePerson,
-            onChanged: (val) {
+            onChanged: (value) {
               notifier.update(
-                  settings.copyWith(notifyFrigatePerson: val));
+                settings.copyWith(notifyFrigatePerson: value),
+              );
             },
           ),
           SwitchListTile(
-            title: const Text('Frigate: 🚗 Car'),
+            title: Text(l10n.smsSettingsFrigateCar),
             value: settings.notifyFrigateCar,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(notifyFrigateCar: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(notifyFrigateCar: value));
             },
           ),
+
           const Divider(height: 32),
-          // ═══ ОШИБКИ ═══
-          const Text(
-            'Ошибки',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+
+          Text(
+            l10n.smsSettingsErrors,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
+
           SwitchListTile(
-            title: const Text('Zigbee offline'),
-            subtitle: const Text('Устройство потеряло связь'),
+            title: Text(l10n.smsSettingsZigbeeOffline),
+            subtitle: Text(l10n.smsSettingsZigbeeOfflineSubtitle),
             value: settings.notifyZigbeeOffline,
-            onChanged: (val) {
+            onChanged: (value) {
               notifier.update(
-                  settings.copyWith(notifyZigbeeOffline: val));
+                settings.copyWith(notifyZigbeeOffline: value),
+              );
             },
           ),
           SwitchListTile(
-            title: const Text('Frigate offline'),
-            subtitle: const Text('Frigate недоступен'),
+            title: Text(l10n.smsSettingsFrigateOffline),
+            subtitle: Text(l10n.smsSettingsFrigateOfflineSubtitle),
             value: settings.notifyFrigateOffline,
-            onChanged: (val) {
+            onChanged: (value) {
               notifier.update(
-                  settings.copyWith(notifyFrigateOffline: val));
+                settings.copyWith(notifyFrigateOffline: value),
+              );
             },
           ),
+
           const Divider(height: 32),
-          // ═══ АНТИДРЕБЕЗГ ═══
+
           DropdownButtonFormField<int>(
             initialValue: settings.smsCooldownMin,
-            decoration: const InputDecoration(
-              labelText: 'Антидребезг SMS',
-              prefixIcon: Icon(Icons.timer),
+            decoration: InputDecoration(
+              labelText: l10n.smsSettingsCooldown,
+              prefixIcon: const Icon(Icons.timer),
             ),
-            items: const [
-              DropdownMenuItem(value: 1, child: Text('1 минута')),
-              DropdownMenuItem(value: 5, child: Text('5 минут')),
-              DropdownMenuItem(value: 15, child: Text('15 минут')),
-              DropdownMenuItem(value: 30, child: Text('30 минут')),
+            items: [
+              DropdownMenuItem(
+                value: 1,
+                child: Text(l10n.smsSettingsOneMinute),
+              ),
+              DropdownMenuItem(
+                value: 5,
+                child: Text(l10n.smsSettingsMinutes(5)),
+              ),
+              DropdownMenuItem(
+                value: 15,
+                child: Text(l10n.smsSettingsMinutes(15)),
+              ),
+              DropdownMenuItem(
+                value: 30,
+                child: Text(l10n.smsSettingsMinutes(30)),
+              ),
             ],
-            onChanged: (val) {
-              if (val != null) {
-                notifier.update(settings.copyWith(smsCooldownMin: val));
+            onChanged: (value) {
+              if (value != null) {
+                notifier.update(settings.copyWith(smsCooldownMin: value));
               }
             },
           ),
+
           const Divider(height: 32),
 
           SwitchListTile(
-            title: const Text('Расписание'),
-            subtitle: const Text('Отправлять только в указанное время'),
+            title: Text(l10n.smsSettingsSchedule),
+            subtitle: Text(l10n.smsSettingsScheduleSubtitle),
             value: settings.useSchedule,
-            onChanged: (val) {
-              notifier.update(settings.copyWith(useSchedule: val));
+            onChanged: (value) {
+              notifier.update(settings.copyWith(useSchedule: value));
             },
           ),
+
           if (settings.useSchedule) ...[
             SwitchListTile(
-              title: const Text('Тревоги вне расписания'),
+              title: Text(l10n.smsSettingsAlarmsOutsideSchedule),
               value: settings.scheduleOnlyAlarms,
-              onChanged: (val) {
-                notifier.update(settings.copyWith(scheduleOnlyAlarms: val));
+              onChanged: (value) {
+                notifier.update(
+                  settings.copyWith(scheduleOnlyAlarms: value),
+                );
               },
             ),
             ListTile(
-              title: const Text('Время начала'),
+              title: Text(l10n.smsSettingsStartTime),
               subtitle: Text(
-                '${settings.startHour.toString().padLeft(2, '0')}:${settings.startMinute.toString().padLeft(2, '0')}',
+                '${settings.startHour.toString().padLeft(2, '0')}:'
+                    '${settings.startMinute.toString().padLeft(2, '0')}',
               ),
               trailing: const Icon(Icons.access_time),
               onTap: () async {
@@ -238,18 +298,22 @@ class SmsSettingsScreen extends ConsumerWidget {
                     minute: settings.startMinute,
                   ),
                 );
+
                 if (time != null) {
-                  notifier.update(settings.copyWith(
-                    startHour: time.hour,
-                    startMinute: time.minute,
-                  ));
+                  notifier.update(
+                    settings.copyWith(
+                      startHour: time.hour,
+                      startMinute: time.minute,
+                    ),
+                  );
                 }
               },
             ),
             ListTile(
-              title: const Text('Время окончания'),
+              title: Text(l10n.smsSettingsEndTime),
               subtitle: Text(
-                '${settings.endHour.toString().padLeft(2, '0')}:${settings.endMinute.toString().padLeft(2, '0')}',
+                '${settings.endHour.toString().padLeft(2, '0')}:'
+                    '${settings.endMinute.toString().padLeft(2, '0')}',
               ),
               trailing: const Icon(Icons.access_time),
               onTap: () async {
@@ -260,35 +324,37 @@ class SmsSettingsScreen extends ConsumerWidget {
                     minute: settings.endMinute,
                   ),
                 );
+
                 if (time != null) {
-                  notifier.update(settings.copyWith(
-                    endHour: time.hour,
-                    endMinute: time.minute,
-                  ));
+                  notifier.update(
+                    settings.copyWith(
+                      endHour: time.hour,
+                      endMinute: time.minute,
+                    ),
+                  );
                 }
               },
             ),
             const SizedBox(height: 8),
-            const Text('Дни недели:'),
+            Text(l10n.smsSettingsDaysOfWeek),
             const SizedBox(height: 8),
             Wrap(
               spacing: 4,
-              children: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-                  .asMap()
-                  .entries
-                  .map((e) {
-                final dayIndex = e.key + 1;
+              children: weekdays.asMap().entries.map((entry) {
+                final dayIndex = entry.key + 1;
                 final selected = settings.daysOfWeek.contains(dayIndex);
+
                 return FilterChip(
-                  label: Text(e.value),
+                  label: Text(entry.value),
                   selected: selected,
-                  onSelected: (sel) {
+                  onSelected: (isSelected) {
                     final days = List<int>.from(settings.daysOfWeek);
-                    if (sel) {
+                    if (isSelected) {
                       days.add(dayIndex);
                     } else {
                       days.remove(dayIndex);
                     }
+
                     notifier.update(settings.copyWith(daysOfWeek: days));
                   },
                 );
@@ -302,18 +368,21 @@ class SmsSettingsScreen extends ConsumerWidget {
             onPressed: () async {
               if (settings.phones.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Добавьте хотя бы один номер')),
+                  SnackBar(
+                    content: Text(l10n.smsSettingsAddPhoneRequired),
+                  ),
                 );
                 return;
               }
+
               final phone = settings.phones.first;
               await SmsNotificationService().sendSms(
                 phoneNumber: phone.phone,
-                message: '✅ Тестовое SMS из SHome!',
+                message: l10n.smsSettingsTestMessage,
               );
             },
             icon: const Icon(Icons.sms),
-            label: const Text('Отправить тест SMS'),
+            label: Text(l10n.smsSettingsSendTest),
           ),
         ],
       ),
@@ -321,29 +390,30 @@ class SmsSettingsScreen extends ConsumerWidget {
   }
 
   void _showAddPhoneDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Добавить номер'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.smsSettingsAddPhoneTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Имя (необязательно)',
-                hintText: 'Мой телефон',
+              decoration: InputDecoration(
+                labelText: l10n.smsSettingsNameOptional,
+                hintText: l10n.smsSettingsNameHint,
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Номер',
-                hintText: '+79991234567',
+              decoration: InputDecoration(
+                labelText: l10n.smsSettingsPhoneLabel,
+                hintText: l10n.smsSettingsPhoneHint,
               ),
               keyboardType: TextInputType.phone,
             ),
@@ -351,8 +421,8 @@ class SmsSettingsScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.smsSettingsCancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -367,9 +437,10 @@ class SmsSettingsScreen extends ConsumerWidget {
                       : nameController.text.trim(),
                 ),
               );
-              Navigator.pop(ctx);
+
+              Navigator.pop(dialogContext);
             },
-            child: const Text('Добавить'),
+            child: Text(l10n.smsSettingsAdd),
           ),
         ],
       ),

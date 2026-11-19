@@ -625,9 +625,129 @@
 
 
 ,
+  "sceneEditorTitleNew": "Новая сцена",
+  "sceneEditorTitleEdit": "Редактировать сцену",
+  "sceneEditorName": "Название",
+  "sceneEditorNameHint": "Выключить всё",
+  "sceneEditorTriggerType": "Тип запуска",
+  "sceneEditorTriggerManual": "🎬 Вручную",
+  "sceneEditorTriggerTime": "⏰ По времени",
+  "sceneEditorTriggerSensor": "🌡️ По датчику",
+  "sceneEditorTriggerPresence": "📍 По присутствию",
+  "sceneEditorRepeat": "Повтор",
+  "sceneEditorRepeatOnce": "Один раз",
+  "sceneEditorRepeatDaily": "Каждый день",
+  "sceneEditorRepeatWeekly": "По дням недели",
+  "sceneEditorDaysOfWeek": "Дни недели",
+  "sceneEditorMonday": "Пн",
+  "sceneEditorTuesday": "Вт",
+  "sceneEditorWednesday": "Ср",
+  "sceneEditorThursday": "Чт",
+  "sceneEditorFriday": "Пт",
+  "sceneEditorSaturday": "Сб",
+  "sceneEditorSunday": "Вс",
+  "sceneEditorSensor": "Датчик",
+  "sceneEditorSelectSensor": "Выберите датчик",
+  "sceneEditorCondition": "Условие",
+  "sceneEditorTemperatureAbove": "🌡️ Температура выше {threshold} °C",
+  "@sceneEditorTemperatureAbove": {
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "sceneEditorTemperatureBelow": "🌡️ Температура ниже {threshold} °C",
+  "@sceneEditorTemperatureBelow": {
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "sceneEditorHumidityAbove": "💧 Влажность выше {threshold}%",
+  "@sceneEditorHumidityAbove": {
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "sceneEditorHumidityBelow": "💧 Влажность ниже {threshold}%",
+  "@sceneEditorHumidityBelow": {
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "sceneEditorWaterLeak": "💧 Протечка",
+  "sceneEditorMotion": "🏃 Движение",
+  "sceneEditorContactOpen": "🚪 Открыто",
+  "sceneEditorContactClosed": "🚪 Закрыто",
+  "sceneEditorSmoke": "🔥 Дым",
+  "sceneEditorGas": "💨 Газ",
+  "sceneEditorThreshold": "Порог",
+  "sceneEditorPresenceEvent": "Событие",
+  "sceneEditorSomeoneHome": "Кто-то пришёл",
+  "sceneEditorNobodyHome": "Никого нет",
+  "sceneEditorAllHome": "Все дома",
+  "sceneEditorPhoneArrived": "Телефон пришёл",
+  "sceneEditorPhoneLeft": "Телефон ушёл",
+  "sceneEditorPhoneUnknown": "Телефон потерян",
+  "sceneEditorPhone": "Телефон",
+  "sceneEditorSelectPhone": "Выберите телефон",
+  "sceneEditorAdvanced": "Дополнительно",
+  "sceneEditorDetectionChannel": "Канал определения",
+  "sceneEditorChannelAny": "Любой",
+  "sceneEditorChannelWifi": "Только Wi-Fi",
+  "sceneEditorChannelGps": "Только GPS",
+  "sceneEditorStartDelay": "Задержка перед запуском",
+  "sceneEditorNoDelay": "Без задержки",
+  "sceneEditorMinute": "1 минута",
+  "sceneEditorMinutes": "{count} минут",
+  "@sceneEditorMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sceneEditorCooldown": "Антидребезг",
+  "sceneEditorConfigureConditions": "Настроить условия",
+  "sceneEditorConditionsConfigured": "Условия настроены ✓",
+  "sceneEditorActions": "Действия",
+  "sceneEditorNoDevices": "Нет устройств",
+  "sceneEditorActionOn": "ВКЛ",
+  "sceneEditorActionOff": "ВЫКЛ",
+  "sceneEditorCancel": "Отмена",
+  "sceneEditorSave": "Сохранить",
+  "sceneEditorCreate": "Создать",
+  "sceneEditorValidation": "⚠️ Введите название и выберите действия",
+  "sceneEditorUpdated": "✅ Сцена обновлена!",
+  "sceneEditorCreated": "✅ Сцена создана!",
+  "sceneEditorConditionsTitle": "Условия",
+  "sceneEditorTimeOfDay": "Время суток",
+  "sceneEditorFromTime": "С {time}",
+  "@sceneEditorFromTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sceneEditorUntilTime": "До {time}",
+  "@sceneEditorUntilTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sceneEditorDaysCondition": "Дни недели",
+  "sceneEditorReset": "Сбросить",
   "scenesTitle": "Сцены",
   "scenesEmpty": "Нет сцен. Создайте первую!",
-  "scenesManual": "Вручную",
   "scenesAutoTriggerMessage": "⏰ Сцена «{name}» запускается автоматически по триггеру",
   "@scenesAutoTriggerMessage": {
     "placeholders": {
@@ -635,63 +755,782 @@
         "type": "String"
       }
     }
+  }
+
+,
+  "sceneEditorActionBrightness": "ЯРК",
+  "sceneEditorDeviceUnitShort": "устр.",
+  "scenesPresence": "Присутствие",
+  "scenesDeviceFallback": "Устройство",
+  "scenesEdit": "Редактировать",
+  "scenesDelete": "Удалить"
+
+
+,
+  "screenSaverTitle": "Заставка",
+  "screenSaverSubtitle": "Показывать анимированную заставку после бездействия",
+  "screenSaverMotionWakeTitle": "Сбрасывать заставку по движению",
+  "screenSaverMotionWakeSubtitle": "Использовать фронтальную камеру, пока показана заставка",
+  "screenSaverSensitivity": "Чувствительность: {value}%",
+  "@screenSaverSensitivity": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
   },
-  "scenesActionCount": "{count} устр.",
-  "@scenesActionCount": {
+  "screenSaverSensitivityLow": "Низкая",
+  "screenSaverSensitivityHigh": "Высокая",
+  "screenSaverSensitivityHint": "Если заставка срабатывает без движения, уменьшите чувствительность.",
+  "screenSaverTimeoutTitle": "Время до заставки",
+  "screenSaverChoose": "Выбрать",
+  "screenSaverTimeout30": "30 секунд",
+  "screenSaverTimeout60": "1 минута",
+  "screenSaverTimeout120": "2 минуты",
+  "screenSaverTimeout300": "5 минут",
+  "screenSaverTimeout600": "10 минут",
+  "screenSaverTimeoutSeconds": "{value} секунд",
+  "@screenSaverTimeoutSeconds": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  }
+
+
+,
+  "settingsTitle": "Настройки",
+  "settingsPollInterval": "Интервал опроса",
+  "settingsIntervalSeconds": "{value} сек.",
+  "@settingsIntervalSeconds": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsIntervalMinutes": "{value} мин.",
+  "@settingsIntervalMinutes": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsPollIntervalChanged": "Интервал изменён на {interval}. Перезапустите приложение.",
+  "@settingsPollIntervalChanged": {
+    "placeholders": {
+      "interval": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsEventsRetention": "Хранить события",
+  "settingsDays": "{value} дней",
+  "@settingsDays": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsElectricityTariff": "Тариф электроэнергии",
+  "settingsCurrencyPerKwh": "{value} ₽/кВт·ч",
+  "@settingsCurrencyPerKwh": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsBackup": "Резервное копирование",
+  "settingsBackupSubtitle": "Экспорт / Импорт",
+  "settingsMqtt": "Настройки MQTT",
+  "settingsMqttSubtitle": "Брокер для Zigbee2MQTT",
+  "settingsCheckUpdates": "Проверить обновления",
+  "settingsCheckUpdatesSubtitle": "Проверить наличие новой версии",
+  "settingsInformation": "Информация",
+  "settingsInformationSubtitle": "Лицензии и соглашения",
+  "settingsExportReady": "✅ Конфиг готов к отправке",
+  "settingsError": "❌ Ошибка: {error}",
+  "@settingsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsImportDone": "✅ Импорт выполнен",
+  "settingsImportRestartHint": "Данные восстановлены.\n\nРекомендуется перезапустить приложение, чтобы все настройки (VK, облако, устройства) применились.",
+  "settingsLater": "Позже",
+  "settingsRestart": "Перезапустить",
+  "settingsBackupDialogTitle": "Резервное копирование",
+  "settingsExport": "Экспортировать",
+  "settingsExportSubtitle": "Поделиться через облако, почту или Telegram",
+  "settingsImport": "Импортировать",
+  "settingsImportSubtitle": "Выбрать файл на устройстве или в облаке",
+  "settingsRetentionDialogTitle": "Хранить события",
+  "settingsRetentionDays": "{value} дней",
+  "@settingsRetentionDays": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsTariffDialogTitle": "Тариф ₽/кВт·ч",
+  "settingsTariffInvalid": "Введите корректный тариф больше нуля",
+  "settingsTariffHint": "5.5"
+
+
+,
+  "smsSettingsTitle": "SMS-уведомления",
+  "smsSettingsEnable": "Включить SMS",
+  "smsSettingsEnableSubtitle": "Отправлять уведомления по SMS",
+  "smsSettingsPhoneNumbers": "Номера телефонов",
+  "smsSettingsNoPhones": "Нет добавленных номеров",
+  "smsSettingsEventsTitle": "События для SMS",
+  "smsSettingsScenes": "Сцены",
+  "smsSettingsDevices": "Устройства",
+  "smsSettingsAlarms": "Тревоги",
+  "smsSettingsZigbeeWaterLeak": "Zigbee: 💧 Протечка",
+  "smsSettingsZigbeeSmoke": "Zigbee: 🔥 Дым",
+  "smsSettingsZigbeeGas": "Zigbee: 💨 Газ",
+  "smsSettingsZigbeeMotion": "Zigbee: 🏃 Движение",
+  "smsSettingsZigbeeContact": "Zigbee: 🚪 Контакт",
+  "smsSettingsFrigatePerson": "Frigate: 🚶 Человек",
+  "smsSettingsFrigateCar": "Frigate: 🚗 Автомобиль",
+  "smsSettingsErrors": "Ошибки",
+  "smsSettingsZigbeeOffline": "Zigbee offline",
+  "smsSettingsZigbeeOfflineSubtitle": "Устройство потеряло связь",
+  "smsSettingsFrigateOffline": "Frigate offline",
+  "smsSettingsFrigateOfflineSubtitle": "Frigate недоступен",
+  "smsSettingsCooldown": "Антидребезг SMS",
+  "smsSettingsOneMinute": "1 минута",
+  "smsSettingsMinutes": "{count} минут",
+  "@smsSettingsMinutes": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "scenesTimeTemperature": "Темп. {operator} {threshold}°C",
-  "@scenesTimeTemperature": {
+  "smsSettingsSchedule": "Расписание",
+  "smsSettingsScheduleSubtitle": "Отправлять только в указанное время",
+  "smsSettingsAlarmsOutsideSchedule": "Тревоги вне расписания",
+  "smsSettingsStartTime": "Время начала",
+  "smsSettingsEndTime": "Время окончания",
+  "smsSettingsDaysOfWeek": "Дни недели:",
+  "smsSettingsMonday": "Пн",
+  "smsSettingsTuesday": "Вт",
+  "smsSettingsWednesday": "Ср",
+  "smsSettingsThursday": "Чт",
+  "smsSettingsFriday": "Пт",
+  "smsSettingsSaturday": "Сб",
+  "smsSettingsSunday": "Вс",
+  "smsSettingsAddPhoneRequired": "Добавьте хотя бы один номер",
+  "smsSettingsSendTest": "Отправить тестовое SMS",
+  "smsSettingsTestMessage": "✅ Тестовое SMS из SHome!",
+  "smsSettingsAddPhoneTitle": "Добавить номер",
+  "smsSettingsNameOptional": "Имя (необязательно)",
+  "smsSettingsNameHint": "Мой телефон",
+  "smsSettingsPhoneLabel": "Номер",
+  "smsSettingsPhoneHint": "+79991234567",
+  "smsSettingsCancel": "Отмена",
+  "smsSettingsAdd": "Добавить",
+  "smsSettingsDelete": "Удалить"
+
+
+,
+  "timersTitle": "Таймеры",
+  "timersEmpty": "Нет активных таймеров",
+  "timersAlreadyFired": "Уже сработал",
+  "timersLessThanMinute": "менее минуты",
+  "timersTurnOn": "Включится",
+  "timersTurnOff": "Выключится",
+  "timersCountdownMinutes": "через {minutes} мин",
+  "@timersCountdownMinutes": {
     "placeholders": {
-      "operator": {
-        "type": "String"
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "timersCountdownHoursMinutes": "через {hours} ч {minutes} мин",
+  "@timersCountdownHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
       },
-      "threshold": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "timersTodayAt": "Сегодня в {time}",
+  "@timersTodayAt": {
+    "placeholders": {
+      "time": {
         "type": "String"
       }
     }
   },
-  "scenesHumidity": "Влаж. {operator} {threshold}%",
-  "@scenesHumidity": {
+  "timersNewTitle": "Новый таймер",
+  "timersDeviceLabel": "Устройство",
+  "timersCommandOff": "ВЫКЛ",
+  "timersCommandOn": "ВКЛ",
+  "timersCancel": "Отмена",
+  "timersCreate": "Создать",
+  "timersDeleteTooltip": "Удалить таймер"
+
+
+,
+  "vkSettingsTitle": "VK Bot",
+  "vkSettingsEnable": "Включить VK",
+  "vkSettingsEnableSubtitle": "Отправлять уведомления в VK",
+  "vkSettingsTokenLabel": "VK Token",
+  "vkSettingsTokenHint": "Вставьте токен бота",
+  "vkSettingsUserIdLabel": "VK User ID",
+  "vkSettingsUserIdHint": "Например, 123456789",
+  "vkSettingsEvents": "События",
+  "vkSettingsScenes": "Сцены",
+  "vkSettingsScenesSubtitle": "Уведомления о выполнении сцен",
+  "vkSettingsDevices": "Устройства",
+  "vkSettingsDevicesSubtitle": "Изменение состояния устройств",
+  "vkSettingsAlarms": "Тревоги",
+  "vkSettingsZigbeeWaterLeak": "Zigbee: 💧 Протечка",
+  "vkSettingsZigbeeSmoke": "Zigbee: 🔥 Дым",
+  "vkSettingsZigbeeGas": "Zigbee: 💨 Газ",
+  "vkSettingsZigbeeMotion": "Zigbee: 🏃 Движение",
+  "vkSettingsZigbeeContact": "Zigbee: 🚪 Контакт",
+  "vkSettingsFrigatePerson": "Frigate: 🚶 Человек",
+  "vkSettingsFrigateCar": "Frigate: 🚗 Автомобиль",
+  "vkSettingsErrors": "Ошибки",
+  "vkSettingsZigbeeOffline": "Zigbee offline",
+  "vkSettingsZigbeeOfflineSubtitle": "Устройство потеряло связь",
+  "vkSettingsFrigateOffline": "Frigate offline",
+  "vkSettingsFrigateOfflineSubtitle": "Frigate недоступен",
+  "vkSettingsCooldown": "Антидребезг VK",
+  "vkSettingsCooldown1": "1 минута",
+  "vkSettingsCooldown5": "5 минут",
+  "vkSettingsCooldown15": "15 минут",
+  "vkSettingsCooldown30": "30 минут",
+  "vkSettingsSchedule": "Расписание",
+  "vkSettingsScheduleSubtitle": "Отправлять только в указанное время",
+  "vkSettingsAlarmsOutsideSchedule": "Тревоги вне расписания",
+  "vkSettingsAlarmsAlways": "Тревоги отправлять всегда",
+  "vkSettingsStartTime": "Время начала",
+  "vkSettingsEndTime": "Время окончания",
+  "vkSettingsDaysOfWeek": "Дни недели:",
+  "vkSettingsMonday": "Пн",
+  "vkSettingsTuesday": "Вт",
+  "vkSettingsWednesday": "Ср",
+  "vkSettingsThursday": "Чт",
+  "vkSettingsFriday": "Пт",
+  "vkSettingsSaturday": "Сб",
+  "vkSettingsSunday": "Вс",
+  "vkSettingsSendTest": "Отправить тест VK",
+  "vkSettingsTestMessage": "✅ Тестовое уведомление из SHome!"
+
+
+,
+  "zigbeeScanTitle": "Zigbee",
+  "zigbeeRefresh": "Обновить",
+  "zigbeeStopPairing": "Остановить сопряжение ({seconds} с)",
+  "@zigbeeStopPairing": {
     "placeholders": {
-      "operator": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "zigbeeOpenPairing": "Открыть сеть для сопряжения",
+  "zigbeePairingInstruction": "Зажмите кнопку на устройстве на 5 секунд",
+  "zigbeeNoDevices": "Устройства не найдены.\nНажмите «Открыть сеть» и добавьте устройство.",
+  "zigbeeDeviceAdded": "✅ {name} добавлено",
+  "@zigbeeDeviceAdded": {
+    "placeholders": {
+      "name": {
         "type": "String"
-      },
-      "threshold": {
+      }
+    }
+  }
+
+
+,
+  "changelogTitle": "История изменений",
+  "changelogLoadError": "Не удалось загрузить историю изменений",
+  "eulaTitle": "Лицензионное соглашение"
+
+
+,
+  "legalInfoTitle": "Информация",
+  "legalDeveloperLabel": "Разработчик: {name}",
+  "@legalDeveloperLabel": {
+    "placeholders": {
+      "name": {
         "type": "String"
       }
     }
   },
-  "scenesWaterLeak": "💧 Протечка",
-  "scenesMotion": "🏃 Движение",
-  "scenesContactOpen": "🚪 Открыто",
-  "scenesContactClosed": "🚪 Закрыто",
-  "scenesSmoke": "🔥 Дым",
-  "scenesGas": "💨 Газ",
-  "scenesPresence": "Присутствие",
-  "scenesSomeoneArrived": "Кто-то пришёл",
-  "scenesNobodyHome": "Никого нет",
-  "scenesEveryoneHome": "Все дома",
-  "scenesPhoneArrived": "Телефон пришёл",
-  "scenesPhoneLeft": "Телефон ушёл",
-  "scenesPhoneUnknown": "Телефон потерян",
-  "scenesEveryDay": "Каждый день",
-  "scenesWeekdays": "По дням недели",
-  "scenesInterval": "Интервал",
-  "scenesMondayShort": "Пн",
-  "scenesTuesdayShort": "Вт",
-  "scenesWednesdayShort": "Ср",
-  "scenesThursdayShort": "Чт",
-  "scenesFridayShort": "Пт",
-  "scenesSaturdayShort": "Сб",
-  "scenesSundayShort": "Вс",
-  "scenesActionOn": "ВКЛ",
-  "scenesActionOff": "ВЫКЛ",
-  "scenesActionBrightness": "ЯРК",
-  "scenesEdit": "Редактировать",
-  "scenesDelete": "Удалить"
+  "legalOwnerLabel": "Собственник: {name}",
+  "@legalOwnerLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "legalVersionLabel": "Версия: {version}",
+  "@legalVersionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "legalEulaTitle": "Лицензионное соглашение (EULA)",
+  "legalEulaSubtitle": "Правила использования приложения",
+  "legalPrivacyTitle": "Политика конфиденциальности",
+  "legalPrivacySubtitle": "Как мы обрабатываем ваши данные",
+  "legalTermsTitle": "Условия использования",
+  "legalTermsSubtitle": "Правила и ограничения",
+  "legalOpenSourceTitle": "Лицензии открытого ПО",
+  "legalOpenSourceSubtitle": "Сторонние библиотеки",
+  "legalChangelogTitle": "История изменений",
+  "legalChangelogSubtitle": "Что нового в каждой версии",
+  "legalVersionFooter": "Версия {version}",
+  "@legalVersionFooter": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
+
+
+,
+  "statsPeriod24h": "24ч",
+  "statsPeriod7d": "7д",
+  "statsPeriod30d": "30д",
+  "statsNoClimateData": "Нет данных датчиков за период",
+  "statsClimateByDevice": "Климат по устройствам",
+  "statsSampleCount": "{count, plural, =0{Нет измерений} one{{count} измерение} few{{count} измерения} many{{count} измерений} other{{count} измерения}}",
+  "@statsSampleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsTemperatureSummary": "🌡️ {min}° … {max}° (среднее: {average}°)",
+  "@statsTemperatureSummary": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "average": {
+        "type": "String"
+      }
+    }
+  },
+  "statsHumiditySummary": "💧 {min}% … {max}% (среднее: {average}%)",
+  "@statsHumiditySummary": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "average": {
+        "type": "String"
+      }
+    }
+  }
+
+,
+  "statsNoDeviceDataPeriod": "Нет данных за период",
+  "statsDeviceEventCounts": "Не в сети: {offline} · алерты: {alerts} · действия: {actions}",
+  "@statsDeviceEventCounts": {
+    "placeholders": {
+      "offline": { "type": "int" },
+      "alerts": { "type": "int" },
+      "actions": { "type": "int" }
+    }
+  },
+  "statsAlertsForDays": "Алерты за {days} дн.",
+  "@statsAlertsForDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "statsOfflineForDays": "Не в сети за {days} дн.",
+  "@statsOfflineForDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
+
+
+,
+  "statsEnergyConsumption": "Потребление",
+  "statsEnergyCost": "Стоимость",
+  "statsEnergyPeriod": "за {days} дн.",
+  "@statsEnergyPeriod": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsEnergyTariff": "тариф {tariff} ₽/кВт·ч",
+  "@statsEnergyTariff": {
+    "placeholders": {
+      "tariff": {
+        "type": "String"
+      }
+    }
+  },
+  "statsEnergyRubles": "{value} ₽",
+  "@statsEnergyRubles": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "statsEnergyKwh": "{value} кВт·ч",
+  "@statsEnergyKwh": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "statsEnergyNoData": "Нет данных энергопотребления за период",
+  "statsEnergyByDevice": "По устройствам"
+
+
+
+
+,
+  "statsNotificationsEmpty": "Нет уведомлений за период",
+  "statsNotificationsSent": "Отправлено",
+  "statsNotificationsSuppressed": "Подавлено",
+  "statsNotificationsPeriod": "за {days} дн.",
+  "@statsNotificationsPeriod": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNotificationsCooldownPercent": "cooldown ({percent}%)",
+  "@statsNotificationsCooldownPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNotificationsByChannel": "По каналам",
+  "statsNotificationsChannelSuppressed": "Подавлено: {count}",
+  "@statsNotificationsChannelSuppressed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNotificationsByCategory": "По категориям",
+  "statsNotificationsCategoryWaterLeak": "💧 Протечка",
+  "statsNotificationsCategorySmoke": "🔥 Дым",
+  "statsNotificationsCategoryGas": "💨 Газ",
+  "statsNotificationsCategoryMotion": "🏃 Движение",
+  "statsNotificationsCategoryContact": "🚪 Контакт",
+  "statsNotificationsCategoryPerson": "🎥 Человек",
+  "statsNotificationsCategoryCar": "🎥 Автомобиль",
+  "statsNotificationsCategoryOffline": "📡 Не в сети",
+  "statsNotificationsCategoryLowBattery": "🔋 Батарея",
+  "statsNotificationsCategoryStateChanged": "🎛 Состояние",
+  "statsNotificationsCategoryUnknown": "Другое"
+
+
+
+
+,
+  "statsOverviewAlerts": "Алерты",
+  "statsOverviewActions": "Действия",
+  "statsOverviewOffline": "Не в сети",
+  "statsOverviewOnline": "В сети",
+  "statsOverviewPeriod": "за {days} дн.",
+  "@statsOverviewPeriod": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsOverviewWorstDevices": "Проблемные устройства",
+  "statsOverviewNoProblems": "Нет проблемных устройств за период 👍"
+
+
+
+,
+  "statsPresenceEmpty": "Нет данных присутствия за период",
+  "statsPresenceHome": "Дома",
+  "statsPresenceNear": "Рядом",
+  "statsPresenceAway": "Ушёл",
+  "statsPresenceUnknown": "Неизвестно",
+  "statsPresencePeriod": "за {days} дн.",
+  "@statsPresencePeriod": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsPresenceCloudFallback": "Переход на облако",
+  "statsPresenceCloudFallbackSubtitle": "Сколько раз heartbeat не сработал",
+  "statsPresenceDurationZero": "0",
+  "statsPresenceDurationHoursMinutes": "{hours} ч {minutes} мин",
+  "@statsPresenceDurationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "statsPresenceDurationMinutes": "{minutes} мин",
+  "@statsPresenceDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "statsPresenceDurationLessMinute": "менее минуты"
+
+
+
+,
+  "statsScenesTop": "Топ сцен",
+  "statsScenesRuns": "{count, plural, =0{Нет запусков} one{# раз} few{# раза} many{# раз} other{# раза}}",
+  "@statsScenesRuns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsScenesNoRunsPeriod": "Нет срабатываний сцен за период",
+  "statsScenesForgottenTitle": "Забытые сцены (0 срабатываний)",
+  "statsScenesDeleteCandidate": "Кандидат на удаление"
+
+
+
+,
+  "statsTitle": "Статистика",
+  "statsTabOverview": "Обзор",
+  "statsTabDevices": "Устройства",
+  "statsTabEnergy": "Энергия",
+  "statsTabVideo": "Видео",
+  "statsTabScenes": "Сцены",
+  "statsTabPresence": "Присутствие",
+  "statsTabClimate": "Климат",
+  "statsTabNotifications": "Уведомления"
+
+
+
+,
+  "statsVideoEmpty": "Нет детекций за период",
+  "statsVideoByTypes": "По типам",
+  "statsVideoByCameras": "По камерам",
+  "statsVideoActivityByHour": "Активность по часам",
+  "statsVideoHeatmapHint": "Чем интенсивнее цвет — тем больше детекций",
+  "statsVideoLabelPerson": "Человек",
+  "statsVideoLabelCar": "Автомобиль",
+  "statsVideoLabelDog": "Собака",
+  "statsVideoLabelCat": "Кошка",
+  "statsVideoLabelBird": "Птица",
+  "statsVideoLabelMotorcycle": "Мотоцикл",
+  "statsVideoLabelBicycle": "Велосипед",
+  "statsVideoLabelTruck": "Грузовик",
+  "statsVideoLabelBus": "Автобус",
+  "statsVideoLabelBoat": "Лодка"
+
+
+,
+  "deviceCardWaterLeak": "Протечка",
+  "deviceCardMotion": "Движение",
+  "deviceCardContactOpen": "Открыто"
+
+
+,
+  "deviceSettingsName": "Название",
+  "deviceSettingsRoom": "Комната",
+  "deviceSettingsRtspUrl": "RTSP URL",
+  "deviceSettingsZigbeeDevice": "Zigbee-устройство",
+  "deviceSettingsIeeeAddress": "IEEE-адрес",
+  "deviceSettingsModel": "Модель",
+  "deviceSettingsVendor": "Производитель",
+  "deviceSettingsBattery": "Батарея",
+  "deviceSettingsLinkQuality": "Качество связи",
+  "deviceSettingsNotifications": "Уведомления",
+  "deviceSettingsDeviceId": "Device ID",
+  "deviceSettingsIpAddress": "IP-адрес",
+  "deviceSettingsLocalKey": "Local Key",
+  "deviceSettingsProtocolVersion": "Версия протокола",
+  "deviceSettingsChannels": "Каналы",
+  "deviceSettingsDpsIndex": "Индекс DPS",
+  "deviceSettingsDpsMap": "Карта DPS",
+  "deviceSettingsAddDps": "Добавить DPS",
+  "deviceSettingsDisplayOnCard": "Отображение на карточке",
+  "deviceSettingsDisplayHint": "Выберите, какие данные показывать на главном экране",
+  "deviceSettingsNoInfoParameters": "Нет информационных параметров",
+  "deviceSettingsDeleteTitle": "Удалить устройство?",
+  "deviceSettingsDeleteMessage": "Удалить «{name}»?",
+  "@deviceSettingsDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSettingsDelete": "Удалить",
+  "deviceSettingsSave": "Сохранить",
+  "deviceSettingsCancel": "Отмена",
+  "deviceSettingsCreateSensor": "Создать датчик",
+  "deviceSettingsSensorFromDevice": "Из устройства: {name}",
+  "@deviceSettingsSensorFromDevice": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSettingsSensorType": "Тип датчика",
+  "deviceSettingsTemperature": "Температура",
+  "deviceSettingsHumidity": "Влажность",
+  "deviceSettingsPower": "Мощность",
+  "deviceSettingsCurrent": "Ток",
+  "deviceSettingsVoltage": "Напряжение",
+  "deviceSettingsDivider": "Делитель",
+  "deviceSettingsSensorCreated": "✅ Датчик «{name}» создан!",
+  "@deviceSettingsSensorCreated": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSettingsChannel": "Канал",
+  "deviceSettingsChannelNumber": "Номер канала",
+  "deviceSettingsDpsAddTitle": "Добавить DPS",
+  "deviceSettingsDpsEditTitle": "Редактировать DPS {key}",
+  "@deviceSettingsDpsEditTitle": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSettingsDpsNumber": "Номер DPS",
+  "deviceSettingsDpsType": "Тип",
+  "deviceSettingsDpsRole": "Роль",
+  "deviceSettingsDpsIcon": "Иконка",
+  "deviceSettingsNoIcon": "Без иконки",
+  "deviceSettingsRoleChannel": "Канал",
+  "deviceSettingsRoleMain": "Главная кнопка",
+  "deviceSettingsRoleAction": "Действие",
+  "deviceSettingsRoleToggle": "Переключатель",
+  "deviceSettingsRoleInfo": "Информация",
+  "deviceSettingsRoleStatus": "Статус",
+  "deviceSettingsRoleEnum": "Выпадающий список",
+  "deviceSettingsRoleSlider": "Ползунок",
+  "deviceSettingsDpsChannelTitle": "Канал",
+  "deviceSettingsNotifyAlways": "Всегда",
+  "deviceSettingsNotifyAway": "Когда никого нет",
+  "deviceSettingsNotifyNight": "Ночью",
+  "deviceSettingsNotifyAwayOrNight": "Никого нет ИЛИ ночью",
+  "deviceSettingsNotifySummary": "{count} типов · {condition}",
+  "@deviceSettingsNotifySummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "condition": {
+        "type": "String"
+      }
+    }
+  }
+
+
+,
+  "deviceSettingsTypeBool": "вкл/выкл",
+  "deviceSettingsTypeValue": "число",
+  "deviceSettingsTypeEnum": "текстовый список",
+  "deviceSettingsTypeSlider": "ползунок",
+  "deviceSettingsIconNone": "Без иконки",
+  "deviceSettingsIconPlayStop": "Пуск/Стоп",
+  "deviceSettingsIconHomeBase": "Дом/База",
+  "deviceSettingsIconPower": "Питание",
+  "deviceSettingsIconWater": "Вода",
+  "deviceSettingsIconMop": "Мытьё",
+  "deviceSettingsIconDoNotDisturb": "Не беспокоить",
+  "deviceSettingsIconBattery": "Батарея",
+  "deviceSettingsIconTimer": "Таймер",
+  "deviceSettingsIconArea": "Площадь",
+  "deviceSettingsIconFan": "Вентилятор",
+  "deviceSettingsIconCooling": "Охлаждение",
+  "deviceSettingsIconHeating": "Обогрев",
+  "deviceSettingsIconDrying": "Осушение",
+  "deviceSettingsIconAuto": "Авто",
+  "deviceSettingsIconSleep": "Сон",
+  "deviceSettingsIconVerticalBlinds": "Вертикальные жалюзи",
+  "deviceSettingsIconHorizontalBlinds": "Горизонтальные жалюзи",
+  "deviceSettingsIconAirQuality": "Качество воздуха",
+  "deviceSettingsIconFilter": "Фильтр",
+  "deviceSettingsIconTemperature": "Температура",
+  "deviceSettingsIconAirConditioner": "Кондиционер",
+  "deviceSettingsIconHeater": "Обогреватель",
+  "deviceSettingsIconAir": "Воздух",
+  "deviceSettingsIconSuction": "Всасывание",
+  "deviceSettingsIconWaiting": "Ожидание",
+  "deviceSettingsIconSynchronization": "Синхронизация"
+
+,
+    "deviceSettingsSensorFromDevice": "Из устройства: {name}",
+     "@deviceSettingsSensorFromDevice": {
+       "placeholders": {
+         "name": {
+           "type": "String"
+         }
+       }
+     }
+
+,
+  "deviceSettingsDefaultChannelLabel": "Канал {key}",
+  "@deviceSettingsDefaultChannelLabel": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  }
+
+,
+  "deviceSettingsAdd": "Добавить",
+  "deviceSettingsCreate": "Создать"
+
+,
+  "todayDrawerToday": "Сегодня"
 }

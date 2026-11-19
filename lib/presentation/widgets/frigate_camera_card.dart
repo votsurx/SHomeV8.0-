@@ -6,6 +6,7 @@ import '../../application/state/devices_provider.dart';
 import '../../di/injection.dart';
 import '../../data/services/frigate_service.dart';
 import 'frigate_camera_settings.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class FrigateCameraCard extends ConsumerStatefulWidget {
   final Device device;
@@ -41,6 +42,7 @@ class _FrigateCameraCardState extends ConsumerState<FrigateCameraCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // P1: live-устройство из провайдера (только своё)
     final liveDevice = ref.watch(
       devicesProvider.select(
@@ -121,11 +123,10 @@ class _FrigateCameraCardState extends ConsumerState<FrigateCameraCard> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.settings,
-                        color: Colors.white, size: 20),
-                    tooltip: 'Настройки',
+                    icon: const Icon(Icons.settings, color: Colors.white, size: 20),
+                    tooltip: l10n.frigateCameraSettingsTooltip,
                     onPressed: () =>
-                        FrigateCameraSettings.show(context, ref, liveDevice),
+                        FrigateCameraSettings.show(context, ref, liveDevice, l10n),
                   ),
                 ],
               ),

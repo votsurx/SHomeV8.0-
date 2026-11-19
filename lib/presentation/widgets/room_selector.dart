@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/room.dart';
 import '../../application/state/rooms_provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class RoomSelector extends ConsumerWidget {
   /// ID выбранной комнаты (для подсветки чипса)
@@ -22,6 +23,7 @@ class RoomSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final rooms = ref.watch(roomsProvider);
 
     return SingleChildScrollView(
@@ -29,15 +31,30 @@ class RoomSelector extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          // Чип "Все" — показывает все устройства
-          _buildRoomChip(context, Room(id: 'all', name: 'Все', icon: '🏠'), selectedRoomId == 'all'),
-          // Чипсы для каждой комнаты из БД
-          ...rooms.map((room) => _buildRoomChip(context, room, selectedRoomId == room.id)),
-          // Кнопка быстрого добавления комнаты
+          // Чип «Все» показывает все устройства.
+          _buildRoomChip(
+            context,
+            Room(
+              id: 'all',
+              name: l10n.roomsAllDevices,
+              icon: '🏠',
+            ),
+            selectedRoomId == 'all',
+          ),
+
+          // Чипы комнат из базы данных: их имена пользовательские, не переводим.
+          ...rooms.map(
+                (room) => _buildRoomChip(
+              context,
+              room,
+              selectedRoomId == room.id,
+            ),
+          ),
+
           IconButton(
             onPressed: () => _showAddRoomDialog(context, ref),
             icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Добавить комнату',
+            tooltip: l10n.roomsAddButton,
           ),
         ],
       ),

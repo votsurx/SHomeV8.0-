@@ -364,6 +364,7 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
   }
 
   void _showCameraSettings(Device device) {
-    FrigateCameraSettings.show(context, ref, device);
+    final l10n = AppLocalizations.of(context);
+    FrigateCameraSettings.show(context, ref, device, l10n);
   }
 }

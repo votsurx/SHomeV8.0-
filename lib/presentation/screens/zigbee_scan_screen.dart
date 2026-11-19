@@ -1,14 +1,17 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../application/state/zigbee_provider.dart';
+
 import '../../application/state/devices_provider.dart';
 import '../../application/state/rooms_provider.dart';
+import '../../application/state/zigbee_provider.dart';
+import '../../data/mappers/zigbee_dps_mapper.dart';
+import '../../data/protocols/zigbee_protocol.dart';
+import '../../di/injection.dart';
 import '../../domain/models/device.dart';
 import '../../domain/models/zigbee_device.dart';
-import '../../data/mappers/zigbee_dps_mapper.dart';
-import '../../di/injection.dart';
-import '../../data/protocols/zigbee_protocol.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ZigbeeScanScreen extends ConsumerStatefulWidget {
   const ZigbeeScanScreen({super.key});
@@ -34,19 +37,32 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
     if (_isPermitJoin) {
       await protocol.permitJoin(false);
       _timer?.cancel();
+
+      if (!mounted) return;
+
       setState(() {
         _isPermitJoin = false;
         _countdown = 0;
       });
     } else {
       await protocol.permitJoin(true, time: 254);
+
+      if (!mounted) return;
+
       setState(() {
         _isPermitJoin = true;
         _countdown = 254;
       });
-      _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
         if (_countdown <= 1) {
-          t.cancel();
+          timer.cancel();
           setState(() {
             _isPermitJoin = false;
             _countdown = 0;
@@ -58,29 +74,35 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
     }
   }
 
-  Future<void> _addDevice(ZigbeeDevice zb) async {
+  Future<void> _addDevice(ZigbeeDevice zigbeeDevice) async {
+    final l10n = AppLocalizations.of(context);
     final devicesNotifier = ref.read(devicesProvider.notifier);
     final rooms = ref.read(roomsProvider);
     final roomId = rooms.isNotEmpty ? rooms.first.id : 'other';
 
-    final dpsMap = ZigbeeDpsMapper.toDpsMap(zb.exposes);
+    final dpsMap = ZigbeeDpsMapper.toDpsMap(zigbeeDevice.exposes);
 
     final device = Device(
-      id: 'zigbee_${zb.ieeeAddress}',
-      name: zb.friendlyName.isNotEmpty ? zb.friendlyName : zb.model,
+      id: 'zigbee_${zigbeeDevice.ieeeAddress}',
+      name: zigbeeDevice.friendlyName.isNotEmpty
+          ? zigbeeDevice.friendlyName
+          : zigbeeDevice.model,
       type: DeviceType.compound,
       roomId: roomId,
-      isOnline: zb.available,
-      state: zb.available ? DeviceState.online : DeviceState.offline,
-      deviceId: zb.ieeeAddress,
-      mqttTopic: 'zigbee2mqtt/${zb.friendlyName}',
+      isOnline: zigbeeDevice.available,
+      state: zigbeeDevice.available
+          ? DeviceState.online
+          : DeviceState.offline,
+      deviceId: zigbeeDevice.ieeeAddress,
+      mqttTopic: 'zigbee2mqtt/${zigbeeDevice.friendlyName}',
       properties: {
         'source': 'zigbee',
-        'friendly_name': zb.friendlyName,
-        'ieee_address': zb.ieeeAddress,
-        'model': zb.model,
-        'vendor': zb.vendor,
-        'exposes': zb.exposes.map((e) => e.toJson()).toList(),
+        'friendly_name': zigbeeDevice.friendlyName,
+        'ieee_address': zigbeeDevice.ieeeAddress,
+        'model': zigbeeDevice.model,
+        'vendor': zigbeeDevice.vendor,
+        'exposes':
+        zigbeeDevice.exposes.map((expose) => expose.toJson()).toList(),
         'dps_map': dpsMap,
         'isOn': false,
       },
@@ -89,30 +111,33 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
     await devicesNotifier.addDevice(device);
 
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('✅ ${device.name} добавлено')),
+      SnackBar(content: Text(l10n.zigbeeDeviceAdded(device.name))),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final devices = ref.watch(zigbeeDevicesProvider);
+    final l10n = AppLocalizations.of(context);
+    final zigbeeDevices = ref.watch(zigbeeDevicesProvider);
+    final appDevices = ref.watch(devicesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Zigbee'),
+        title: Text(l10n.zigbeeScanTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: l10n.zigbeeRefresh,
             onPressed: () {
-              // Перезапрашиваем список (bridge/devices — retained)
+              // Список bridge/devices обычно приходит из retained-сообщения.
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          // Кнопка Permit join
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -121,14 +146,17 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: _togglePermitJoin,
-                    icon: Icon(_isPermitJoin ? Icons.stop : Icons.wifi_find),
+                    icon: Icon(
+                      _isPermitJoin ? Icons.stop : Icons.wifi_find,
+                    ),
                     label: Text(
                       _isPermitJoin
-                          ? 'Остановить сопряжение ($_countdown с)'
-                          : 'Открыть сеть для сопряжения',
+                          ? l10n.zigbeeStopPairing(_countdown)
+                          : l10n.zigbeeOpenPairing,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isPermitJoin ? Colors.orange : Colors.purple,
+                      backgroundColor:
+                      _isPermitJoin ? Colors.orange : Colors.purple,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -138,32 +166,38 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
                   const SizedBox(height: 12),
                   LinearProgressIndicator(value: _countdown / 254),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Зажмите кнопку на устройстве на 5 секунд',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    l10n.zigbeePairingInstruction,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
                 ],
               ],
             ),
           ),
           const Divider(),
-          // Список устройств
           Expanded(
-            child: devices.isEmpty
-                ? const Center(
-              child: Text(
-                'Устройства не найдены.\nНажмите «Открыть сеть» и добавьте устройство.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+            child: zigbeeDevices.isEmpty
+                ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l10n.zigbeeNoDevices,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ),
             )
                 : ListView.builder(
-              itemCount: devices.length,
+              itemCount: zigbeeDevices.length,
               itemBuilder: (context, index) {
-                final zb = devices[index];
-                final isAdded = ref
-                    .watch(devicesProvider)
-                    .any((d) => d.deviceId == zb.ieeeAddress);
+                final zigbeeDevice = zigbeeDevices[index];
+                final isAdded = appDevices.any(
+                      (device) =>
+                  device.deviceId == zigbeeDevice.ieeeAddress,
+                );
 
                 return Card(
                   margin: const EdgeInsets.symmetric(
@@ -172,16 +206,37 @@ class _ZigbeeScanScreenState extends ConsumerState<ZigbeeScanScreen> {
                   ),
                   child: ListTile(
                     leading: Icon(
-                      zb.isRouter ? Icons.router : Icons.sensors,
-                      color: zb.available ? Colors.purple : Colors.grey,
+                      zigbeeDevice.isRouter
+                          ? Icons.router
+                          : Icons.sensors,
+                      color: zigbeeDevice.available
+                          ? Colors.purple
+                          : Colors.grey,
                     ),
-                    title: Text(zb.friendlyName.isNotEmpty ? zb.friendlyName : zb.model),
-                    subtitle: Text('${zb.vendor} • ${zb.model} • ${zb.type}'),
+                    title: Text(
+                      zigbeeDevice.friendlyName.isNotEmpty
+                          ? zigbeeDevice.friendlyName
+                          : zigbeeDevice.model,
+                    ),
+                    // Vendor, model и тип — данные устройства,
+                    // оставляем их без перевода.
+                    subtitle: Text(
+                      '${zigbeeDevice.vendor} • '
+                          '${zigbeeDevice.model} • '
+                          '${zigbeeDevice.type}',
+                    ),
                     trailing: isAdded
-                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        ? const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                    )
                         : IconButton(
-                      icon: const Icon(Icons.add_circle, color: Colors.purple),
-                      onPressed: () => _addDevice(zb),
+                      icon: const Icon(
+                        Icons.add_circle,
+                        color: Colors.purple,
+                      ),
+                      onPressed: () =>
+                          _addDevice(zigbeeDevice),
                     ),
                   ),
                 );

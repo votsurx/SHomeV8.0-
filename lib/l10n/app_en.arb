@@ -628,73 +628,918 @@
 
 
 ,
-    "scenesTitle": "Scenes",
-    "scenesEmpty": "No scenes. Create your first one!",
-    "scenesManual": "Manual",
-    "scenesAutoTriggerMessage": "⏰ “{name}” starts automatically when its trigger fires",
-    "@scenesAutoTriggerMessage": {
+    "sceneEditorTitleNew": "New scene",
+    "sceneEditorTitleEdit": "Edit scene",
+    "sceneEditorName": "Name",
+    "sceneEditorNameHint": "Turn everything off",
+    "sceneEditorTriggerType": "Trigger type",
+    "sceneEditorTriggerManual": "🎬 Manual",
+    "sceneEditorTriggerTime": "⏰ By time",
+    "sceneEditorTriggerSensor": "🌡️ By sensor",
+    "sceneEditorTriggerPresence": "📍 By presence",
+    "sceneEditorRepeat": "Repeat",
+    "sceneEditorRepeatOnce": "Once",
+    "sceneEditorRepeatDaily": "Every day",
+    "sceneEditorRepeatWeekly": "Days of the week",
+    "sceneEditorDaysOfWeek": "Days of the week",
+    "sceneEditorMonday": "Mon",
+    "sceneEditorTuesday": "Tue",
+    "sceneEditorWednesday": "Wed",
+    "sceneEditorThursday": "Thu",
+    "sceneEditorFriday": "Fri",
+    "sceneEditorSaturday": "Sat",
+    "sceneEditorSunday": "Sun",
+    "sceneEditorSensor": "Sensor",
+    "sceneEditorSelectSensor": "Select a sensor",
+    "sceneEditorCondition": "Condition",
+    "sceneEditorTemperatureAbove": "🌡️ Temperature above {threshold} °C",
+    "@sceneEditorTemperatureAbove": {
       "placeholders": {
-        "name": {
+        "threshold": {
           "type": "String"
         }
       }
     },
-    "scenesActionCount": "{count} devices",
-    "@scenesActionCount": {
+    "sceneEditorTemperatureBelow": "🌡️ Temperature below {threshold} °C",
+    "@sceneEditorTemperatureBelow": {
+      "placeholders": {
+        "threshold": {
+          "type": "String"
+        }
+      }
+    },
+    "sceneEditorHumidityAbove": "💧 Humidity above {threshold}%",
+    "@sceneEditorHumidityAbove": {
+      "placeholders": {
+        "threshold": {
+          "type": "String"
+        }
+      }
+    },
+    "sceneEditorHumidityBelow": "💧 Humidity below {threshold}%",
+    "@sceneEditorHumidityBelow": {
+      "placeholders": {
+        "threshold": {
+          "type": "String"
+        }
+      }
+    },
+    "sceneEditorWaterLeak": "💧 Water leak",
+    "sceneEditorMotion": "🏃 Motion",
+    "sceneEditorContactOpen": "🚪 Open",
+    "sceneEditorContactClosed": "🚪 Closed",
+    "sceneEditorSmoke": "🔥 Smoke",
+    "sceneEditorGas": "💨 Gas",
+    "sceneEditorThreshold": "Threshold",
+    "sceneEditorPresenceEvent": "Event",
+    "sceneEditorSomeoneHome": "Someone arrived",
+    "sceneEditorNobodyHome": "Nobody is home",
+    "sceneEditorAllHome": "Everyone is home",
+    "sceneEditorPhoneArrived": "Phone arrived",
+    "sceneEditorPhoneLeft": "Phone left",
+    "sceneEditorPhoneUnknown": "Phone status unknown",
+    "sceneEditorPhone": "Phone",
+    "sceneEditorSelectPhone": "Select a phone",
+    "sceneEditorAdvanced": "Advanced",
+    "sceneEditorDetectionChannel": "Detection channel",
+    "sceneEditorChannelAny": "Any",
+    "sceneEditorChannelWifi": "Wi-Fi only",
+    "sceneEditorChannelGps": "GPS only",
+    "sceneEditorStartDelay": "Start delay",
+    "sceneEditorNoDelay": "No delay",
+    "sceneEditorMinute": "1 minute",
+    "sceneEditorMinutes": "{count} minutes",
+    "@sceneEditorMinutes": {
       "placeholders": {
         "count": {
           "type": "int"
         }
       }
     },
-    "scenesTimeTemperature": "Temp. {operator} {threshold}°C",
-    "@scenesTimeTemperature": {
+    "sceneEditorCooldown": "Cooldown",
+    "sceneEditorConfigureConditions": "Configure conditions",
+    "sceneEditorConditionsConfigured": "Conditions configured ✓",
+    "sceneEditorActions": "Actions",
+    "sceneEditorNoDevices": "No devices",
+    "sceneEditorActionOn": "ON",
+    "sceneEditorActionOff": "OFF",
+    "sceneEditorCancel": "Cancel",
+    "sceneEditorSave": "Save",
+    "sceneEditorCreate": "Create",
+    "sceneEditorValidation": "⚠️ Enter a name and select at least one action",
+    "sceneEditorUpdated": "✅ Scene updated!",
+    "sceneEditorCreated": "✅ Scene created!",
+    "sceneEditorConditionsTitle": "Conditions",
+    "sceneEditorTimeOfDay": "Time of day",
+    "sceneEditorFromTime": "From {time}",
+    "@sceneEditorFromTime": {
       "placeholders": {
-        "operator": {
-          "type": "String"
-        },
-        "threshold": {
+        "time": {
           "type": "String"
         }
       }
     },
-    "scenesHumidity": "Humidity {operator} {threshold}%",
-    "@scenesHumidity": {
+    "sceneEditorUntilTime": "Until {time}",
+    "@sceneEditorUntilTime": {
       "placeholders": {
-        "operator": {
-          "type": "String"
-        },
-        "threshold": {
+        "time": {
           "type": "String"
         }
       }
     },
-    "scenesWaterLeak": "💧 Water leak",
-    "scenesMotion": "🏃 Motion",
-    "scenesContactOpen": "🚪 Open",
-    "scenesContactClosed": "🚪 Closed",
-    "scenesSmoke": "🔥 Smoke",
-    "scenesGas": "💨 Gas",
+    "sceneEditorDaysCondition": "Days of the week",
+    "sceneEditorReset": "Reset",
+    "scenesTitle": "Scenes",
+    "scenesEmpty": "No scenes. Create your first one!",
+    "scenesAutoTriggerMessage": "⏰ Scene “{name}” starts automatically when its trigger fires",
+    "@scenesAutoTriggerMessage": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    }
+
+
+,
+    "sceneEditorActionBrightness": "BRIGHT",
+    "sceneEditorDeviceUnitShort": "devices",
     "scenesPresence": "Presence",
-    "scenesSomeoneArrived": "Someone arrived",
-    "scenesNobodyHome": "Nobody is home",
-    "scenesEveryoneHome": "Everyone is home",
-    "scenesPhoneArrived": "Phone arrived",
-    "scenesPhoneLeft": "Phone left",
-    "scenesPhoneUnknown": "Phone status unknown",
-    "scenesEveryDay": "Every day",
-    "scenesWeekdays": "Days of the week",
-    "scenesInterval": "Interval",
-    "scenesMondayShort": "Mon",
-    "scenesTuesdayShort": "Tue",
-    "scenesWednesdayShort": "Wed",
-    "scenesThursdayShort": "Thu",
-    "scenesFridayShort": "Fri",
-    "scenesSaturdayShort": "Sat",
-    "scenesSundayShort": "Sun",
-    "scenesActionOn": "ON",
-    "scenesActionOff": "OFF",
-    "scenesActionBrightness": "BRIGHT",
+    "scenesDeviceFallback": "Device",
     "scenesEdit": "Edit",
     "scenesDelete": "Delete"
+
+
+,
+    "screenSaverTitle": "Screensaver",
+    "screenSaverSubtitle": "Show the animated screensaver after inactivity",
+    "screenSaverMotionWakeTitle": "Dismiss screensaver on motion",
+    "screenSaverMotionWakeSubtitle": "Use the front camera while the screensaver is visible",
+    "screenSaverSensitivity": "Sensitivity: {value}%",
+    "@screenSaverSensitivity": {
+      "placeholders": {
+        "value": {
+          "type": "int"
+        }
+      }
+    },
+    "screenSaverSensitivityLow": "Low",
+    "screenSaverSensitivityHigh": "High",
+    "screenSaverSensitivityHint": "If the screensaver dismisses without movement, lower the sensitivity.",
+    "screenSaverTimeoutTitle": "Inactivity time before screensaver",
+    "screenSaverChoose": "Choose",
+    "screenSaverTimeout30": "30 seconds",
+    "screenSaverTimeout60": "1 minute",
+    "screenSaverTimeout120": "2 minutes",
+    "screenSaverTimeout300": "5 minutes",
+    "screenSaverTimeout600": "10 minutes",
+    "screenSaverTimeoutSeconds": "{value} seconds",
+    "@screenSaverTimeoutSeconds": {
+      "placeholders": {
+        "value": {
+          "type": "int"
+        }
+      }
+    }
+
+
+,
+    "settingsTitle": "Settings",
+    "settingsPollInterval": "Polling interval",
+    "settingsIntervalSeconds": "{value} sec",
+    "@settingsIntervalSeconds": {
+      "placeholders": {
+        "value": {
+          "type": "int"
+        }
+      }
+    },
+    "settingsIntervalMinutes": "{value} min",
+    "@settingsIntervalMinutes": {
+      "placeholders": {
+        "value": {
+          "type": "int"
+        }
+      }
+    },
+    "settingsPollIntervalChanged": "Polling interval changed to {interval}. Restart the app.",
+    "@settingsPollIntervalChanged": {
+      "placeholders": {
+        "interval": {
+          "type": "String"
+        }
+      }
+    },
+    "settingsEventsRetention": "Event retention",
+    "settingsDays": "{value} days",
+    "@settingsDays": {
+      "placeholders": {
+        "value": {
+          "type": "int"
+        }
+      }
+    },
+    "settingsElectricityTariff": "Electricity tariff",
+    "settingsCurrencyPerKwh": "{value} ₽/kWh",
+    "@settingsCurrencyPerKwh": {
+      "placeholders": {
+        "value": {
+          "type": "String"
+        }
+      }
+    },
+    "settingsBackup": "Backup",
+    "settingsBackupSubtitle": "Export / Import",
+    "settingsMqtt": "MQTT settings",
+    "settingsMqttSubtitle": "Broker for Zigbee2MQTT",
+    "settingsCheckUpdates": "Check for updates",
+    "settingsCheckUpdatesSubtitle": "Check whether a new version is available",
+    "settingsInformation": "Information",
+    "settingsInformationSubtitle": "Licenses and agreements",
+    "settingsExportReady": "✅ Configuration is ready to share",
+    "settingsError": "❌ Error: {error}",
+    "@settingsError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "settingsImportDone": "✅ Import completed",
+    "settingsImportRestartHint": "Data restored.\n\nRestarting the app is recommended to apply all settings (VK, cloud, and devices).",
+    "settingsLater": "Later",
+    "settingsRestart": "Restart",
+    "settingsBackupDialogTitle": "Backup",
+    "settingsExport": "Export",
+    "settingsExportSubtitle": "Share via cloud, email, or Telegram",
+    "settingsImport": "Import",
+    "settingsImportSubtitle": "Choose a file on this device or in the cloud",
+    "settingsRetentionDialogTitle": "Event retention",
+    "settingsRetentionDays": "{value} days",
+    "@settingsRetentionDays": {
+      "placeholders": {
+        "value": {
+          "type": "int"
+        }
+      }
+    },
+    "settingsTariffDialogTitle": "Tariff ₽/kWh",
+    "settingsTariffInvalid": "Enter a valid tariff greater than zero",
+    "settingsTariffHint": "5.5"
+
+
+
+,
+    "smsSettingsTitle": "SMS notifications",
+    "smsSettingsEnable": "Enable SMS",
+    "smsSettingsEnableSubtitle": "Send notifications by SMS",
+    "smsSettingsPhoneNumbers": "Phone numbers",
+    "smsSettingsNoPhones": "No phone numbers added",
+    "smsSettingsEventsTitle": "Events sent by SMS",
+    "smsSettingsScenes": "Scenes",
+    "smsSettingsDevices": "Devices",
+    "smsSettingsAlarms": "Alerts",
+    "smsSettingsZigbeeWaterLeak": "Zigbee: 💧 Water leak",
+    "smsSettingsZigbeeSmoke": "Zigbee: 🔥 Smoke",
+    "smsSettingsZigbeeGas": "Zigbee: 💨 Gas",
+    "smsSettingsZigbeeMotion": "Zigbee: 🏃 Motion",
+    "smsSettingsZigbeeContact": "Zigbee: 🚪 Contact",
+    "smsSettingsFrigatePerson": "Frigate: 🚶 Person",
+    "smsSettingsFrigateCar": "Frigate: 🚗 Car",
+    "smsSettingsErrors": "Errors",
+    "smsSettingsZigbeeOffline": "Zigbee offline",
+    "smsSettingsZigbeeOfflineSubtitle": "Device lost connection",
+    "smsSettingsFrigateOffline": "Frigate offline",
+    "smsSettingsFrigateOfflineSubtitle": "Frigate is unavailable",
+    "smsSettingsCooldown": "SMS cooldown",
+    "smsSettingsOneMinute": "1 minute",
+    "smsSettingsMinutes": "{count} minutes",
+    "@smsSettingsMinutes": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "smsSettingsSchedule": "Schedule",
+    "smsSettingsScheduleSubtitle": "Send only during the specified time",
+    "smsSettingsAlarmsOutsideSchedule": "Alerts outside the schedule",
+    "smsSettingsStartTime": "Start time",
+    "smsSettingsEndTime": "End time",
+    "smsSettingsDaysOfWeek": "Days of the week:",
+    "smsSettingsMonday": "Mon",
+    "smsSettingsTuesday": "Tue",
+    "smsSettingsWednesday": "Wed",
+    "smsSettingsThursday": "Thu",
+    "smsSettingsFriday": "Fri",
+    "smsSettingsSaturday": "Sat",
+    "smsSettingsSunday": "Sun",
+    "smsSettingsAddPhoneRequired": "Add at least one phone number",
+    "smsSettingsSendTest": "Send test SMS",
+    "smsSettingsTestMessage": "✅ Test SMS from SHome!",
+    "smsSettingsAddPhoneTitle": "Add phone number",
+    "smsSettingsNameOptional": "Name (optional)",
+    "smsSettingsNameHint": "My phone",
+    "smsSettingsPhoneLabel": "Phone number",
+    "smsSettingsPhoneHint": "+19995550123",
+    "smsSettingsCancel": "Cancel",
+    "smsSettingsAdd": "Add",
+    "smsSettingsDelete": "Delete"
+
+
+,
+    "timersTitle": "Timers",
+    "timersEmpty": "No active timers",
+    "timersAlreadyFired": "Already fired",
+    "timersLessThanMinute": "less than a minute",
+    "timersTurnOn": "Will turn on",
+    "timersTurnOff": "Will turn off",
+    "timersCountdownMinutes": "in {minutes} min",
+    "@timersCountdownMinutes": {
+      "placeholders": {
+        "minutes": {
+          "type": "int"
+        }
+      }
+    },
+    "timersCountdownHoursMinutes": "in {hours} h {minutes} min",
+    "@timersCountdownHoursMinutes": {
+      "placeholders": {
+        "hours": {
+          "type": "int"
+        },
+        "minutes": {
+          "type": "int"
+        }
+      }
+    },
+    "timersTodayAt": "Today at {time}",
+    "@timersTodayAt": {
+      "placeholders": {
+        "time": {
+          "type": "String"
+        }
+      }
+    },
+    "timersNewTitle": "New timer",
+    "timersDeviceLabel": "Device",
+    "timersCommandOff": "OFF",
+    "timersCommandOn": "ON",
+    "timersCancel": "Cancel",
+    "timersCreate": "Create",
+    "timersDeleteTooltip": "Delete timer"
+
+
+
+,
+    "vkSettingsTitle": "VK Bot",
+    "vkSettingsEnable": "Enable VK",
+    "vkSettingsEnableSubtitle": "Send notifications to VK",
+    "vkSettingsTokenLabel": "VK Token",
+    "vkSettingsTokenHint": "Paste the bot token",
+    "vkSettingsUserIdLabel": "VK User ID",
+    "vkSettingsUserIdHint": "For example, 123456789",
+    "vkSettingsEvents": "Events",
+    "vkSettingsScenes": "Scenes",
+    "vkSettingsScenesSubtitle": "Notifications when scenes run",
+    "vkSettingsDevices": "Devices",
+    "vkSettingsDevicesSubtitle": "Device state changes",
+    "vkSettingsAlarms": "Alerts",
+    "vkSettingsZigbeeWaterLeak": "Zigbee: 💧 Water leak",
+    "vkSettingsZigbeeSmoke": "Zigbee: 🔥 Smoke",
+    "vkSettingsZigbeeGas": "Zigbee: 💨 Gas",
+    "vkSettingsZigbeeMotion": "Zigbee: 🏃 Motion",
+    "vkSettingsZigbeeContact": "Zigbee: 🚪 Contact",
+    "vkSettingsFrigatePerson": "Frigate: 🚶 Person",
+    "vkSettingsFrigateCar": "Frigate: 🚗 Car",
+    "vkSettingsErrors": "Errors",
+    "vkSettingsZigbeeOffline": "Zigbee offline",
+    "vkSettingsZigbeeOfflineSubtitle": "Device lost connection",
+    "vkSettingsFrigateOffline": "Frigate offline",
+    "vkSettingsFrigateOfflineSubtitle": "Frigate is unavailable",
+    "vkSettingsCooldown": "VK cooldown",
+    "vkSettingsCooldown1": "1 minute",
+    "vkSettingsCooldown5": "5 minutes",
+    "vkSettingsCooldown15": "15 minutes",
+    "vkSettingsCooldown30": "30 minutes",
+    "vkSettingsSchedule": "Schedule",
+    "vkSettingsScheduleSubtitle": "Send only during the specified time",
+    "vkSettingsAlarmsOutsideSchedule": "Alerts outside the schedule",
+    "vkSettingsAlarmsAlways": "Always send alerts",
+    "vkSettingsStartTime": "Start time",
+    "vkSettingsEndTime": "End time",
+    "vkSettingsDaysOfWeek": "Days of the week:",
+    "vkSettingsMonday": "Mon",
+    "vkSettingsTuesday": "Tue",
+    "vkSettingsWednesday": "Wed",
+    "vkSettingsThursday": "Thu",
+    "vkSettingsFriday": "Fri",
+    "vkSettingsSaturday": "Sat",
+    "vkSettingsSunday": "Sun",
+    "vkSettingsSendTest": "Send test VK message",
+    "vkSettingsTestMessage": "✅ Test notification from SHome!"
+
+
+
+,
+    "zigbeeScanTitle": "Zigbee",
+    "zigbeeRefresh": "Refresh",
+    "zigbeeStopPairing": "Stop pairing ({seconds} sec)",
+    "@zigbeeStopPairing": {
+      "placeholders": {
+        "seconds": {
+          "type": "int"
+        }
+      }
+    },
+    "zigbeeOpenPairing": "Open network for pairing",
+    "zigbeePairingInstruction": "Press and hold the button on the device for 5 seconds",
+    "zigbeeNoDevices": "No devices found.\nTap “Open network” and add a device.",
+    "zigbeeDeviceAdded": "✅ {name} added",
+    "@zigbeeDeviceAdded": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    }
+
+
+,
+    "changelogTitle": "Changelog",
+    "changelogLoadError": "Could not load the changelog",
+    "eulaTitle": "License Agreement"
+
+
+,
+    "legalInfoTitle": "Information",
+    "legalDeveloperLabel": "Developer: {name}",
+    "@legalDeveloperLabel": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "legalOwnerLabel": "Owner: {name}",
+    "@legalOwnerLabel": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "legalVersionLabel": "Version: {version}",
+    "@legalVersionLabel": {
+      "placeholders": {
+        "version": {
+          "type": "String"
+        }
+      }
+    },
+    "legalEulaTitle": "End User License Agreement (EULA)",
+    "legalEulaSubtitle": "Terms for using the application",
+    "legalPrivacyTitle": "Privacy Policy",
+    "legalPrivacySubtitle": "How we process your data",
+    "legalTermsTitle": "Terms of Service",
+    "legalTermsSubtitle": "Rules and restrictions",
+    "legalOpenSourceTitle": "Open-source licenses",
+    "legalOpenSourceSubtitle": "Third-party libraries",
+    "legalChangelogTitle": "Changelog",
+    "legalChangelogSubtitle": "What's new in each version",
+    "legalVersionFooter": "Version {version}",
+    "@legalVersionFooter": {
+      "placeholders": {
+        "version": {
+          "type": "String"
+        }
+      }
+    }
+
+
+,
+    "statsPeriod24h": "24h",
+    "statsPeriod7d": "7d",
+    "statsPeriod30d": "30d",
+    "statsNoClimateData": "No sensor data for this period",
+    "statsClimateByDevice": "Climate by device",
+    "statsSampleCount": "{count, plural, =0{No samples} one{{count} sample} other{{count} samples}}",
+    "@statsSampleCount": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "statsTemperatureSummary": "🌡️ {min}° … {max}° (avg: {average}°)",
+    "@statsTemperatureSummary": {
+      "placeholders": {
+        "min": {
+          "type": "String"
+        },
+        "max": {
+          "type": "String"
+        },
+        "average": {
+          "type": "String"
+        }
+      }
+    },
+    "statsHumiditySummary": "💧 {min}% … {max}% (avg: {average}%)",
+    "@statsHumiditySummary": {
+      "placeholders": {
+        "min": {
+          "type": "String"
+        },
+        "max": {
+          "type": "String"
+        },
+        "average": {
+          "type": "String"
+        }
+      }
+    }
+
+
+,
+    "statsNoDeviceDataPeriod": "No data for this period",
+    "statsDeviceEventCounts": "Offline: {offline} · alerts: {alerts} · actions: {actions}",
+    "@statsDeviceEventCounts": {
+      "placeholders": {
+        "offline": { "type": "int" },
+        "alerts": { "type": "int" },
+        "actions": { "type": "int" }
+      }
+    },
+    "statsAlertsForDays": "Alerts in the last {days} days",
+    "@statsAlertsForDays": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    },
+    "statsOfflineForDays": "Offline in the last {days} days",
+    "@statsOfflineForDays": {
+      "placeholders": {
+        "days": { "type": "int" }
+      }
+    }
+
+
+,
+    "statsEnergyConsumption": "Consumption",
+    "statsEnergyCost": "Cost",
+    "statsEnergyPeriod": "for {days} days",
+    "@statsEnergyPeriod": {
+      "placeholders": {
+        "days": {
+          "type": "int"
+        }
+      }
+    },
+    "statsEnergyTariff": "rate {tariff} RUB/kWh",
+    "@statsEnergyTariff": {
+      "placeholders": {
+        "tariff": {
+          "type": "String"
+        }
+      }
+    },
+    "statsEnergyRubles": "{value} RUB",
+    "@statsEnergyRubles": {
+      "placeholders": {
+        "value": {
+          "type": "String"
+        }
+      }
+    },
+    "statsEnergyKwh": "{value} kWh",
+    "@statsEnergyKwh": {
+      "placeholders": {
+        "value": {
+          "type": "String"
+        }
+      }
+    },
+    "statsEnergyNoData": "No energy consumption data for this period",
+    "statsEnergyByDevice": "By device"
+
+
+
+,
+    "statsNotificationsEmpty": "No notifications for this period",
+    "statsNotificationsSent": "Sent",
+    "statsNotificationsSuppressed": "Suppressed",
+    "statsNotificationsPeriod": "for {days} days",
+    "@statsNotificationsPeriod": {
+      "placeholders": {
+        "days": {
+          "type": "int"
+        }
+      }
+    },
+    "statsNotificationsCooldownPercent": "cooldown ({percent}%)",
+    "@statsNotificationsCooldownPercent": {
+      "placeholders": {
+        "percent": {
+          "type": "int"
+        }
+      }
+    },
+    "statsNotificationsByChannel": "By channel",
+    "statsNotificationsChannelSuppressed": "Suppressed: {count}",
+    "@statsNotificationsChannelSuppressed": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "statsNotificationsByCategory": "By category",
+    "statsNotificationsCategoryWaterLeak": "💧 Water leak",
+    "statsNotificationsCategorySmoke": "🔥 Smoke",
+    "statsNotificationsCategoryGas": "💨 Gas",
+    "statsNotificationsCategoryMotion": "🏃 Motion",
+    "statsNotificationsCategoryContact": "🚪 Contact",
+    "statsNotificationsCategoryPerson": "🎥 Person",
+    "statsNotificationsCategoryCar": "🎥 Car",
+    "statsNotificationsCategoryOffline": "📡 Offline",
+    "statsNotificationsCategoryLowBattery": "🔋 Battery",
+    "statsNotificationsCategoryStateChanged": "🎛 State",
+    "statsNotificationsCategoryUnknown": "Other"
+
+
+
+
+,
+    "statsOverviewAlerts": "Alerts",
+    "statsOverviewActions": "Actions",
+    "statsOverviewOffline": "Offline",
+    "statsOverviewOnline": "Online",
+    "statsOverviewPeriod": "for {days} days",
+    "@statsOverviewPeriod": {
+      "placeholders": {
+        "days": {
+          "type": "int"
+        }
+      }
+    },
+    "statsOverviewWorstDevices": "Devices with issues",
+    "statsOverviewNoProblems": "No devices with issues during this period 👍"
+
+
+
+
+,
+    "statsPresenceEmpty": "No presence data for this period",
+    "statsPresenceHome": "At home",
+    "statsPresenceNear": "Nearby",
+    "statsPresenceAway": "Away",
+    "statsPresenceUnknown": "Unknown",
+    "statsPresencePeriod": "for {days} days",
+    "@statsPresencePeriod": {
+      "placeholders": {
+        "days": {
+          "type": "int"
+        }
+      }
+    },
+    "statsPresenceCloudFallback": "Cloud fallback",
+    "statsPresenceCloudFallbackSubtitle": "Number of heartbeat failures",
+    "statsPresenceDurationZero": "0",
+    "statsPresenceDurationHoursMinutes": "{hours} h {minutes} min",
+    "@statsPresenceDurationHoursMinutes": {
+      "placeholders": {
+        "hours": {
+          "type": "int"
+        },
+        "minutes": {
+          "type": "int"
+        }
+      }
+    },
+    "statsPresenceDurationMinutes": "{minutes} min",
+    "@statsPresenceDurationMinutes": {
+      "placeholders": {
+        "minutes": {
+          "type": "int"
+        }
+      }
+    },
+    "statsPresenceDurationLessMinute": "less than a minute"
+
+
+,
+    "statsScenesTop": "Top scenes",
+    "statsScenesRuns": "{count, plural, =0{No runs} one{# run} other{# runs}}",
+    "@statsScenesRuns": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "statsScenesNoRunsPeriod": "No scene runs during this period",
+    "statsScenesForgottenTitle": "Unused scenes (0 runs)",
+    "statsScenesDeleteCandidate": "Candidate for removal"
+
+
+
+,
+    "statsTitle": "Statistics",
+    "statsTabOverview": "Overview",
+    "statsTabDevices": "Devices",
+    "statsTabEnergy": "Energy",
+    "statsTabVideo": "Video",
+    "statsTabScenes": "Scenes",
+    "statsTabPresence": "Presence",
+    "statsTabClimate": "Climate",
+    "statsTabNotifications": "Notifications"
+
+
+
+,
+    "statsVideoEmpty": "No detections for this period",
+    "statsVideoByTypes": "By type",
+    "statsVideoByCameras": "By camera",
+    "statsVideoActivityByHour": "Activity by hour",
+    "statsVideoHeatmapHint": "More intense color means more detections",
+    "statsVideoLabelPerson": "Person",
+    "statsVideoLabelCar": "Car",
+    "statsVideoLabelDog": "Dog",
+    "statsVideoLabelCat": "Cat",
+    "statsVideoLabelBird": "Bird",
+    "statsVideoLabelMotorcycle": "Motorcycle",
+    "statsVideoLabelBicycle": "Bicycle",
+    "statsVideoLabelTruck": "Truck",
+    "statsVideoLabelBus": "Bus",
+    "statsVideoLabelBoat": "Boat"
+
+
+
+
+,
+    "deviceCardWaterLeak": "Water leak",
+    "deviceCardMotion": "Motion",
+    "deviceCardContactOpen": "Open"
+
+
+,
+    "deviceSettingsName": "Name",
+    "deviceSettingsRoom": "Room",
+    "deviceSettingsRtspUrl": "RTSP URL",
+    "deviceSettingsZigbeeDevice": "Zigbee device",
+    "deviceSettingsIeeeAddress": "IEEE address",
+    "deviceSettingsModel": "Model",
+    "deviceSettingsVendor": "Manufacturer",
+    "deviceSettingsBattery": "Battery",
+    "deviceSettingsLinkQuality": "Link quality",
+    "deviceSettingsNotifications": "Notifications",
+    "deviceSettingsDeviceId": "Device ID",
+    "deviceSettingsIpAddress": "IP address",
+    "deviceSettingsLocalKey": "Local Key",
+    "deviceSettingsProtocolVersion": "Protocol version",
+    "deviceSettingsChannels": "Channels",
+    "deviceSettingsDpsIndex": "DPS index",
+    "deviceSettingsDpsMap": "DPS map",
+    "deviceSettingsAddDps": "Add DPS",
+    "deviceSettingsDisplayOnCard": "Card display",
+    "deviceSettingsDisplayHint": "Choose which data to show on the main screen",
+    "deviceSettingsNoInfoParameters": "No informational parameters",
+    "deviceSettingsDeleteTitle": "Delete device?",
+    "deviceSettingsDeleteMessage": "Delete “{name}”?",
+    "@deviceSettingsDeleteMessage": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "deviceSettingsDelete": "Delete",
+    "deviceSettingsSave": "Save",
+    "deviceSettingsCancel": "Cancel",
+    "deviceSettingsCreateSensor": "Create sensor",
+    "deviceSettingsSensorFromDevice": "From device: {name}",
+    "@deviceSettingsSensorFromDevice": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "deviceSettingsSensorType": "Sensor type",
+    "deviceSettingsTemperature": "Temperature",
+    "deviceSettingsHumidity": "Humidity",
+    "deviceSettingsPower": "Power",
+    "deviceSettingsCurrent": "Current",
+    "deviceSettingsVoltage": "Voltage",
+    "deviceSettingsDivider": "Divisor",
+    "deviceSettingsSensorCreated": "✅ Sensor “{name}” created!",
+    "@deviceSettingsSensorCreated": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "deviceSettingsChannel": "Channel",
+    "deviceSettingsChannelNumber": "Channel number",
+    "deviceSettingsDpsAddTitle": "Add DPS",
+    "deviceSettingsDpsEditTitle": "Edit DPS {key}",
+    "@deviceSettingsDpsEditTitle": {
+      "placeholders": {
+        "key": {
+          "type": "String"
+        }
+      }
+    },
+    "deviceSettingsDpsNumber": "DPS number",
+    "deviceSettingsDpsType": "Type",
+    "deviceSettingsDpsRole": "Role",
+    "deviceSettingsDpsIcon": "Icon",
+    "deviceSettingsNoIcon": "No icon",
+    "deviceSettingsRoleChannel": "Channel",
+    "deviceSettingsRoleMain": "Main button",
+    "deviceSettingsRoleAction": "Action",
+    "deviceSettingsRoleToggle": "Toggle",
+    "deviceSettingsRoleInfo": "Information",
+    "deviceSettingsRoleStatus": "Status",
+    "deviceSettingsRoleEnum": "Dropdown",
+    "deviceSettingsRoleSlider": "Slider",
+    "deviceSettingsDpsChannelTitle": "Channel",
+    "deviceSettingsNotifyAlways": "Always",
+    "deviceSettingsNotifyAway": "When nobody is home",
+    "deviceSettingsNotifyNight": "At night",
+    "deviceSettingsNotifyAwayOrNight": "When nobody is home OR at night",
+    "deviceSettingsNotifySummary": "{count} types · {condition}",
+    "@deviceSettingsNotifySummary": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        },
+        "condition": {
+          "type": "String"
+        }
+      }
+    }
+
+
+,
+    "deviceSettingsTypeBool": "on/off",
+    "deviceSettingsTypeValue": "number",
+    "deviceSettingsTypeEnum": "text list",
+    "deviceSettingsTypeSlider": "slider",
+    "deviceSettingsIconNone": "No icon",
+    "deviceSettingsIconPlayStop": "Play/Stop",
+    "deviceSettingsIconHomeBase": "Home/Base",
+    "deviceSettingsIconPower": "Power",
+    "deviceSettingsIconWater": "Water",
+    "deviceSettingsIconMop": "Mopping",
+    "deviceSettingsIconDoNotDisturb": "Do not disturb",
+    "deviceSettingsIconBattery": "Battery",
+    "deviceSettingsIconTimer": "Timer",
+    "deviceSettingsIconArea": "Area",
+    "deviceSettingsIconFan": "Fan",
+    "deviceSettingsIconCooling": "Cooling",
+    "deviceSettingsIconHeating": "Heating",
+    "deviceSettingsIconDrying": "Drying",
+    "deviceSettingsIconAuto": "Auto",
+    "deviceSettingsIconSleep": "Sleep",
+    "deviceSettingsIconVerticalBlinds": "Vertical blinds",
+    "deviceSettingsIconHorizontalBlinds": "Horizontal blinds",
+    "deviceSettingsIconAirQuality": "Air quality",
+    "deviceSettingsIconFilter": "Filter",
+    "deviceSettingsIconTemperature": "Temperature",
+    "deviceSettingsIconAirConditioner": "Air conditioner",
+    "deviceSettingsIconHeater": "Heater",
+    "deviceSettingsIconAir": "Air",
+    "deviceSettingsIconSuction": "Suction",
+    "deviceSettingsIconWaiting": "Waiting",
+    "deviceSettingsIconSynchronization": "Synchronization"
+
+,
+    "deviceSettingsSensorFromDevice": "From device: {name}",
+     "@deviceSettingsSensorFromDevice": {
+       "placeholders": {
+         "name": {
+           "type": "String"
+         }
+       }
+     }
+
+,
+    "deviceSettingsDefaultChannelLabel": "Channel {key}",
+    "@deviceSettingsDefaultChannelLabel": {
+      "placeholders": {
+        "key": {
+          "type": "String"
+        }
+      }
+    }
+
+,
+    "deviceSettingsAdd": "Add",
+    "deviceSettingsCreate": "Create"
+
+,
+    "todayDrawerToday": "Today"
 }

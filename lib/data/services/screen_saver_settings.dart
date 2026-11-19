@@ -51,12 +51,12 @@ class ScreenSaverSettings {
 
   static Future<void> _readSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    motionSensitivity:prefs.getInt(_motionSensitivityKey) ?? 50;
 
     value.value = ScreenSaverConfig(
       enabled: prefs.getBool(_enabledKey) ?? true,
       idleTimeoutSeconds: prefs.getInt(_timeoutKey) ?? 120,
       motionWakeEnabled: prefs.getBool(_motionWakeKey) ?? false,
+      motionSensitivity: prefs.getInt(_motionSensitivityKey) ?? 50,
     );
   }
   static Future<void> setMotionSensitivity(int sensitivity) async {

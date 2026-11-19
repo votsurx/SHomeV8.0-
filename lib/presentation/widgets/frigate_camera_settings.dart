@@ -14,9 +14,10 @@ import 'package:go_router/go_router.dart';
 import '../../application/state/devices_provider.dart';
 import '../../application/state/rooms_provider.dart';
 import '../../domain/models/device.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class FrigateCameraSettings {
-  static void show(BuildContext context, WidgetRef ref, Device device) {
+  static void show(BuildContext context, WidgetRef ref, Device device, l10n) {
     final nameController = TextEditingController(text: device.name);
     final rtspPortController = TextEditingController(
       text: (device.properties['rtsp_port'] as int?)?.toString() ?? '8554',
@@ -151,7 +152,7 @@ class FrigateCameraSettings {
                           color: Colors.orange),
                       title: const Text('Уведомления'),
                       subtitle: Text(
-                        _getNotifySummary(latestDevice),
+                          _getNotifySummary(latestDevice, l10n),
                         style: const TextStyle(fontSize: 11),
                       ),
                       trailing: const Icon(Icons.chevron_right),
@@ -251,19 +252,21 @@ class FrigateCameraSettings {
     );
   }
 
-  static String _getNotifySummary(Device device) {
-    final labels =
-        (device.properties['notify_labels'] as List?)?.cast<String>() ?? [];
-    final condition =
-        device.properties['notify_condition'] as String? ?? 'always';
+  static String _getNotifySummary(Device device, AppLocalizations l10n,) {
+    final condition = device.properties['notify_condition'] as String? ?? 'always';
+
     final conditionLabel = switch (condition) {
-      'always' => 'Всегда',
-      'away' => 'Когда никого нет',
-      'night' => 'Ночью',
-      'away_or_night' => 'Никого нет ИЛИ ночью',
-      _ => 'Всегда',
+      'always' => l10n.deviceSettingsNotifyAlways,
+      'away' => l10n.deviceSettingsNotifyAway,
+      'night' => l10n.deviceSettingsNotifyNight,
+      'away_or_night' => l10n.deviceSettingsNotifyAwayOrNight,
+      _ => l10n.deviceSettingsNotifyAlways,
     };
-    return '${labels.length} объектов · $conditionLabel';
+
+    final typeCount =
+        (device.properties['notify_types'] as List?)?.length ?? 5;
+
+    return l10n.deviceSettingsNotifySummary(typeCount, conditionLabel);
   }
 
   static Future<void> _confirmDelete(

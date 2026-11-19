@@ -1,24 +1,30 @@
+/// Экран юридических документов.
+library;
+
 import 'package:flutter/material.dart';
+
+import 'package:shome/l10n/generated/app_localizations.dart';
+
 import 'changelog_screen.dart';
-import 'legal_documents.dart';
 import 'eula_screen.dart';
+import 'legal_documents.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_screen.dart';
 
-/// Экран юридических документов
 class LegalDocumentsScreen extends StatelessWidget {
   const LegalDocumentsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Информация'),
+        title: Text(l10n.legalInfoTitle),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: ListView(
         children: [
-          // Информация о приложении
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
@@ -43,16 +49,16 @@ class LegalDocumentsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Разработчик: ${LegalDocuments.developer}',
+                  l10n.legalDeveloperLabel(LegalDocuments.developer),
                   style: const TextStyle(fontSize: 14),
                 ),
                 Text(
-                  'Собственник: ${LegalDocuments.owner}',
+                  l10n.legalOwnerLabel(LegalDocuments.owner),
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Версия: ${LegalDocuments.fullVersion}',
+                  l10n.legalVersionLabel(LegalDocuments.fullVersion),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -63,43 +69,47 @@ class LegalDocumentsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Список документов
           _buildDocumentTile(
             context,
             icon: Icons.description,
-            title: 'Лицензионное соглашение (EULA)',
-            subtitle: 'Правила использования приложения',
+            title: l10n.legalEulaTitle,
+            subtitle: l10n.legalEulaSubtitle,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const EulaScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const EulaScreen(),
+              ),
             ),
           ),
           _buildDocumentTile(
             context,
             icon: Icons.privacy_tip,
-            title: 'Политика конфиденциальности',
-            subtitle: 'Как мы обрабатываем ваши данные',
+            title: l10n.legalPrivacyTitle,
+            subtitle: l10n.legalPrivacySubtitle,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const PrivacyPolicyScreen(),
+              ),
             ),
           ),
           _buildDocumentTile(
             context,
             icon: Icons.rule,
-            title: 'Условия использования',
-            subtitle: 'Правила и ограничения',
+            title: l10n.legalTermsTitle,
+            subtitle: l10n.legalTermsSubtitle,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const TermsScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const TermsScreen(),
+              ),
             ),
           ),
-
           _buildDocumentTile(
             context,
             icon: Icons.copyright,
-            title: 'Лицензии открытого ПО',
-            subtitle: 'Сторонние библиотеки',
+            title: l10n.legalOpenSourceTitle,
+            subtitle: l10n.legalOpenSourceSubtitle,
             onTap: () => showLicensePage(
               context: context,
               applicationName: LegalDocuments.appName,
@@ -110,17 +120,21 @@ class LegalDocumentsScreen extends StatelessWidget {
           _buildDocumentTile(
             context,
             icon: Icons.history,
-            title: 'История изменений',
-            subtitle: 'Что нового в каждой версии',
+            title: l10n.legalChangelogTitle,
+            subtitle: l10n.legalChangelogSubtitle,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ChangelogScreen()),
+              MaterialPageRoute<void>(
+                builder: (_) => const ChangelogScreen(),
+              ),
             ),
           ),
           const SizedBox(height: 16),
           Center(
             child: Text(
-              '${LegalDocuments.copyright}\n${LegalDocuments.developer}\nВерсия ${LegalDocuments.fullVersion}',
+              '${LegalDocuments.copyright}\n'
+                  '${LegalDocuments.developer}\n'
+                  '${l10n.legalVersionFooter(LegalDocuments.fullVersion)}',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -144,7 +158,10 @@ class LegalDocumentsScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+        leading: Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),

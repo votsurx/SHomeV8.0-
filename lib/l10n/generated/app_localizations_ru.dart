@@ -1177,13 +1177,240 @@ class AppLocalizationsRu extends AppLocalizations {
   String get roomsDeleteButton => 'Удалить';
 
   @override
+  String get sceneEditorTitleNew => 'Новая сцена';
+
+  @override
+  String get sceneEditorTitleEdit => 'Редактировать сцену';
+
+  @override
+  String get sceneEditorName => 'Название';
+
+  @override
+  String get sceneEditorNameHint => 'Выключить всё';
+
+  @override
+  String get sceneEditorTriggerType => 'Тип запуска';
+
+  @override
+  String get sceneEditorTriggerManual => '🎬 Вручную';
+
+  @override
+  String get sceneEditorTriggerTime => '⏰ По времени';
+
+  @override
+  String get sceneEditorTriggerSensor => '🌡️ По датчику';
+
+  @override
+  String get sceneEditorTriggerPresence => '📍 По присутствию';
+
+  @override
+  String get sceneEditorRepeat => 'Повтор';
+
+  @override
+  String get sceneEditorRepeatOnce => 'Один раз';
+
+  @override
+  String get sceneEditorRepeatDaily => 'Каждый день';
+
+  @override
+  String get sceneEditorRepeatWeekly => 'По дням недели';
+
+  @override
+  String get sceneEditorDaysOfWeek => 'Дни недели';
+
+  @override
+  String get sceneEditorMonday => 'Пн';
+
+  @override
+  String get sceneEditorTuesday => 'Вт';
+
+  @override
+  String get sceneEditorWednesday => 'Ср';
+
+  @override
+  String get sceneEditorThursday => 'Чт';
+
+  @override
+  String get sceneEditorFriday => 'Пт';
+
+  @override
+  String get sceneEditorSaturday => 'Сб';
+
+  @override
+  String get sceneEditorSunday => 'Вс';
+
+  @override
+  String get sceneEditorSensor => 'Датчик';
+
+  @override
+  String get sceneEditorSelectSensor => 'Выберите датчик';
+
+  @override
+  String get sceneEditorCondition => 'Условие';
+
+  @override
+  String sceneEditorTemperatureAbove(String threshold) {
+    return '🌡️ Температура выше $threshold °C';
+  }
+
+  @override
+  String sceneEditorTemperatureBelow(String threshold) {
+    return '🌡️ Температура ниже $threshold °C';
+  }
+
+  @override
+  String sceneEditorHumidityAbove(String threshold) {
+    return '💧 Влажность выше $threshold%';
+  }
+
+  @override
+  String sceneEditorHumidityBelow(String threshold) {
+    return '💧 Влажность ниже $threshold%';
+  }
+
+  @override
+  String get sceneEditorWaterLeak => '💧 Протечка';
+
+  @override
+  String get sceneEditorMotion => '🏃 Движение';
+
+  @override
+  String get sceneEditorContactOpen => '🚪 Открыто';
+
+  @override
+  String get sceneEditorContactClosed => '🚪 Закрыто';
+
+  @override
+  String get sceneEditorSmoke => '🔥 Дым';
+
+  @override
+  String get sceneEditorGas => '💨 Газ';
+
+  @override
+  String get sceneEditorThreshold => 'Порог';
+
+  @override
+  String get sceneEditorPresenceEvent => 'Событие';
+
+  @override
+  String get sceneEditorSomeoneHome => 'Кто-то пришёл';
+
+  @override
+  String get sceneEditorNobodyHome => 'Никого нет';
+
+  @override
+  String get sceneEditorAllHome => 'Все дома';
+
+  @override
+  String get sceneEditorPhoneArrived => 'Телефон пришёл';
+
+  @override
+  String get sceneEditorPhoneLeft => 'Телефон ушёл';
+
+  @override
+  String get sceneEditorPhoneUnknown => 'Телефон потерян';
+
+  @override
+  String get sceneEditorPhone => 'Телефон';
+
+  @override
+  String get sceneEditorSelectPhone => 'Выберите телефон';
+
+  @override
+  String get sceneEditorAdvanced => 'Дополнительно';
+
+  @override
+  String get sceneEditorDetectionChannel => 'Канал определения';
+
+  @override
+  String get sceneEditorChannelAny => 'Любой';
+
+  @override
+  String get sceneEditorChannelWifi => 'Только Wi-Fi';
+
+  @override
+  String get sceneEditorChannelGps => 'Только GPS';
+
+  @override
+  String get sceneEditorStartDelay => 'Задержка перед запуском';
+
+  @override
+  String get sceneEditorNoDelay => 'Без задержки';
+
+  @override
+  String get sceneEditorMinute => '1 минута';
+
+  @override
+  String sceneEditorMinutes(int count) {
+    return '$count минут';
+  }
+
+  @override
+  String get sceneEditorCooldown => 'Антидребезг';
+
+  @override
+  String get sceneEditorConfigureConditions => 'Настроить условия';
+
+  @override
+  String get sceneEditorConditionsConfigured => 'Условия настроены ✓';
+
+  @override
+  String get sceneEditorActions => 'Действия';
+
+  @override
+  String get sceneEditorNoDevices => 'Нет устройств';
+
+  @override
+  String get sceneEditorActionOn => 'ВКЛ';
+
+  @override
+  String get sceneEditorActionOff => 'ВЫКЛ';
+
+  @override
+  String get sceneEditorCancel => 'Отмена';
+
+  @override
+  String get sceneEditorSave => 'Сохранить';
+
+  @override
+  String get sceneEditorCreate => 'Создать';
+
+  @override
+  String get sceneEditorValidation => '⚠️ Введите название и выберите действия';
+
+  @override
+  String get sceneEditorUpdated => '✅ Сцена обновлена!';
+
+  @override
+  String get sceneEditorCreated => '✅ Сцена создана!';
+
+  @override
+  String get sceneEditorConditionsTitle => 'Условия';
+
+  @override
+  String get sceneEditorTimeOfDay => 'Время суток';
+
+  @override
+  String sceneEditorFromTime(String time) {
+    return 'С $time';
+  }
+
+  @override
+  String sceneEditorUntilTime(String time) {
+    return 'До $time';
+  }
+
+  @override
+  String get sceneEditorDaysCondition => 'Дни недели';
+
+  @override
+  String get sceneEditorReset => 'Сбросить';
+
+  @override
   String get scenesTitle => 'Сцены';
 
   @override
   String get scenesEmpty => 'Нет сцен. Создайте первую!';
-
-  @override
-  String get scenesManual => 'Вручную';
 
   @override
   String scenesAutoTriggerMessage(String name) {
@@ -1191,101 +1418,1238 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String scenesActionCount(int count) {
-    return '$count устр.';
-  }
+  String get sceneEditorActionBrightness => 'ЯРК';
 
   @override
-  String scenesTimeTemperature(String operator, String threshold) {
-    return 'Темп. $operator $threshold°C';
-  }
-
-  @override
-  String scenesHumidity(String operator, String threshold) {
-    return 'Влаж. $operator $threshold%';
-  }
-
-  @override
-  String get scenesWaterLeak => '💧 Протечка';
-
-  @override
-  String get scenesMotion => '🏃 Движение';
-
-  @override
-  String get scenesContactOpen => '🚪 Открыто';
-
-  @override
-  String get scenesContactClosed => '🚪 Закрыто';
-
-  @override
-  String get scenesSmoke => '🔥 Дым';
-
-  @override
-  String get scenesGas => '💨 Газ';
+  String get sceneEditorDeviceUnitShort => 'устр.';
 
   @override
   String get scenesPresence => 'Присутствие';
 
   @override
-  String get scenesSomeoneArrived => 'Кто-то пришёл';
-
-  @override
-  String get scenesNobodyHome => 'Никого нет';
-
-  @override
-  String get scenesEveryoneHome => 'Все дома';
-
-  @override
-  String get scenesPhoneArrived => 'Телефон пришёл';
-
-  @override
-  String get scenesPhoneLeft => 'Телефон ушёл';
-
-  @override
-  String get scenesPhoneUnknown => 'Телефон потерян';
-
-  @override
-  String get scenesEveryDay => 'Каждый день';
-
-  @override
-  String get scenesWeekdays => 'По дням недели';
-
-  @override
-  String get scenesInterval => 'Интервал';
-
-  @override
-  String get scenesMondayShort => 'Пн';
-
-  @override
-  String get scenesTuesdayShort => 'Вт';
-
-  @override
-  String get scenesWednesdayShort => 'Ср';
-
-  @override
-  String get scenesThursdayShort => 'Чт';
-
-  @override
-  String get scenesFridayShort => 'Пт';
-
-  @override
-  String get scenesSaturdayShort => 'Сб';
-
-  @override
-  String get scenesSundayShort => 'Вс';
-
-  @override
-  String get scenesActionOn => 'ВКЛ';
-
-  @override
-  String get scenesActionOff => 'ВЫКЛ';
-
-  @override
-  String get scenesActionBrightness => 'ЯРК';
+  String get scenesDeviceFallback => 'Устройство';
 
   @override
   String get scenesEdit => 'Редактировать';
 
   @override
   String get scenesDelete => 'Удалить';
+
+  @override
+  String get screenSaverTitle => 'Заставка';
+
+  @override
+  String get screenSaverSubtitle =>
+      'Показывать анимированную заставку после бездействия';
+
+  @override
+  String get screenSaverMotionWakeTitle => 'Сбрасывать заставку по движению';
+
+  @override
+  String get screenSaverMotionWakeSubtitle =>
+      'Использовать фронтальную камеру, пока показана заставка';
+
+  @override
+  String screenSaverSensitivity(int value) {
+    return 'Чувствительность: $value%';
+  }
+
+  @override
+  String get screenSaverSensitivityLow => 'Низкая';
+
+  @override
+  String get screenSaverSensitivityHigh => 'Высокая';
+
+  @override
+  String get screenSaverSensitivityHint =>
+      'Если заставка срабатывает без движения, уменьшите чувствительность.';
+
+  @override
+  String get screenSaverTimeoutTitle => 'Время до заставки';
+
+  @override
+  String get screenSaverChoose => 'Выбрать';
+
+  @override
+  String get screenSaverTimeout30 => '30 секунд';
+
+  @override
+  String get screenSaverTimeout60 => '1 минута';
+
+  @override
+  String get screenSaverTimeout120 => '2 минуты';
+
+  @override
+  String get screenSaverTimeout300 => '5 минут';
+
+  @override
+  String get screenSaverTimeout600 => '10 минут';
+
+  @override
+  String screenSaverTimeoutSeconds(int value) {
+    return '$value секунд';
+  }
+
+  @override
+  String get settingsPollInterval => 'Интервал опроса';
+
+  @override
+  String settingsIntervalSeconds(int value) {
+    return '$value сек.';
+  }
+
+  @override
+  String settingsIntervalMinutes(int value) {
+    return '$value мин.';
+  }
+
+  @override
+  String settingsPollIntervalChanged(String interval) {
+    return 'Интервал изменён на $interval. Перезапустите приложение.';
+  }
+
+  @override
+  String get settingsEventsRetention => 'Хранить события';
+
+  @override
+  String settingsDays(int value) {
+    return '$value дней';
+  }
+
+  @override
+  String get settingsElectricityTariff => 'Тариф электроэнергии';
+
+  @override
+  String settingsCurrencyPerKwh(String value) {
+    return '$value ₽/кВт·ч';
+  }
+
+  @override
+  String get settingsBackup => 'Резервное копирование';
+
+  @override
+  String get settingsBackupSubtitle => 'Экспорт / Импорт';
+
+  @override
+  String get settingsMqtt => 'Настройки MQTT';
+
+  @override
+  String get settingsMqttSubtitle => 'Брокер для Zigbee2MQTT';
+
+  @override
+  String get settingsCheckUpdates => 'Проверить обновления';
+
+  @override
+  String get settingsCheckUpdatesSubtitle => 'Проверить наличие новой версии';
+
+  @override
+  String get settingsInformation => 'Информация';
+
+  @override
+  String get settingsInformationSubtitle => 'Лицензии и соглашения';
+
+  @override
+  String get settingsExportReady => '✅ Конфиг готов к отправке';
+
+  @override
+  String settingsError(String error) {
+    return '❌ Ошибка: $error';
+  }
+
+  @override
+  String get settingsImportDone => '✅ Импорт выполнен';
+
+  @override
+  String get settingsImportRestartHint =>
+      'Данные восстановлены.\n\nРекомендуется перезапустить приложение, чтобы все настройки (VK, облако, устройства) применились.';
+
+  @override
+  String get settingsLater => 'Позже';
+
+  @override
+  String get settingsRestart => 'Перезапустить';
+
+  @override
+  String get settingsBackupDialogTitle => 'Резервное копирование';
+
+  @override
+  String get settingsExport => 'Экспортировать';
+
+  @override
+  String get settingsExportSubtitle =>
+      'Поделиться через облако, почту или Telegram';
+
+  @override
+  String get settingsImport => 'Импортировать';
+
+  @override
+  String get settingsImportSubtitle =>
+      'Выбрать файл на устройстве или в облаке';
+
+  @override
+  String get settingsRetentionDialogTitle => 'Хранить события';
+
+  @override
+  String settingsRetentionDays(int value) {
+    return '$value дней';
+  }
+
+  @override
+  String get settingsTariffDialogTitle => 'Тариф ₽/кВт·ч';
+
+  @override
+  String get settingsTariffInvalid => 'Введите корректный тариф больше нуля';
+
+  @override
+  String get settingsTariffHint => '5.5';
+
+  @override
+  String get smsSettingsTitle => 'SMS-уведомления';
+
+  @override
+  String get smsSettingsEnable => 'Включить SMS';
+
+  @override
+  String get smsSettingsEnableSubtitle => 'Отправлять уведомления по SMS';
+
+  @override
+  String get smsSettingsPhoneNumbers => 'Номера телефонов';
+
+  @override
+  String get smsSettingsNoPhones => 'Нет добавленных номеров';
+
+  @override
+  String get smsSettingsEventsTitle => 'События для SMS';
+
+  @override
+  String get smsSettingsScenes => 'Сцены';
+
+  @override
+  String get smsSettingsDevices => 'Устройства';
+
+  @override
+  String get smsSettingsAlarms => 'Тревоги';
+
+  @override
+  String get smsSettingsZigbeeWaterLeak => 'Zigbee: 💧 Протечка';
+
+  @override
+  String get smsSettingsZigbeeSmoke => 'Zigbee: 🔥 Дым';
+
+  @override
+  String get smsSettingsZigbeeGas => 'Zigbee: 💨 Газ';
+
+  @override
+  String get smsSettingsZigbeeMotion => 'Zigbee: 🏃 Движение';
+
+  @override
+  String get smsSettingsZigbeeContact => 'Zigbee: 🚪 Контакт';
+
+  @override
+  String get smsSettingsFrigatePerson => 'Frigate: 🚶 Человек';
+
+  @override
+  String get smsSettingsFrigateCar => 'Frigate: 🚗 Автомобиль';
+
+  @override
+  String get smsSettingsErrors => 'Ошибки';
+
+  @override
+  String get smsSettingsZigbeeOffline => 'Zigbee offline';
+
+  @override
+  String get smsSettingsZigbeeOfflineSubtitle => 'Устройство потеряло связь';
+
+  @override
+  String get smsSettingsFrigateOffline => 'Frigate offline';
+
+  @override
+  String get smsSettingsFrigateOfflineSubtitle => 'Frigate недоступен';
+
+  @override
+  String get smsSettingsCooldown => 'Антидребезг SMS';
+
+  @override
+  String get smsSettingsOneMinute => '1 минута';
+
+  @override
+  String smsSettingsMinutes(int count) {
+    return '$count минут';
+  }
+
+  @override
+  String get smsSettingsSchedule => 'Расписание';
+
+  @override
+  String get smsSettingsScheduleSubtitle =>
+      'Отправлять только в указанное время';
+
+  @override
+  String get smsSettingsAlarmsOutsideSchedule => 'Тревоги вне расписания';
+
+  @override
+  String get smsSettingsStartTime => 'Время начала';
+
+  @override
+  String get smsSettingsEndTime => 'Время окончания';
+
+  @override
+  String get smsSettingsDaysOfWeek => 'Дни недели:';
+
+  @override
+  String get smsSettingsMonday => 'Пн';
+
+  @override
+  String get smsSettingsTuesday => 'Вт';
+
+  @override
+  String get smsSettingsWednesday => 'Ср';
+
+  @override
+  String get smsSettingsThursday => 'Чт';
+
+  @override
+  String get smsSettingsFriday => 'Пт';
+
+  @override
+  String get smsSettingsSaturday => 'Сб';
+
+  @override
+  String get smsSettingsSunday => 'Вс';
+
+  @override
+  String get smsSettingsAddPhoneRequired => 'Добавьте хотя бы один номер';
+
+  @override
+  String get smsSettingsSendTest => 'Отправить тестовое SMS';
+
+  @override
+  String get smsSettingsTestMessage => '✅ Тестовое SMS из SHome!';
+
+  @override
+  String get smsSettingsAddPhoneTitle => 'Добавить номер';
+
+  @override
+  String get smsSettingsNameOptional => 'Имя (необязательно)';
+
+  @override
+  String get smsSettingsNameHint => 'Мой телефон';
+
+  @override
+  String get smsSettingsPhoneLabel => 'Номер';
+
+  @override
+  String get smsSettingsPhoneHint => '+79991234567';
+
+  @override
+  String get smsSettingsCancel => 'Отмена';
+
+  @override
+  String get smsSettingsAdd => 'Добавить';
+
+  @override
+  String get smsSettingsDelete => 'Удалить';
+
+  @override
+  String get timersTitle => 'Таймеры';
+
+  @override
+  String get timersEmpty => 'Нет активных таймеров';
+
+  @override
+  String get timersAlreadyFired => 'Уже сработал';
+
+  @override
+  String get timersLessThanMinute => 'менее минуты';
+
+  @override
+  String get timersTurnOn => 'Включится';
+
+  @override
+  String get timersTurnOff => 'Выключится';
+
+  @override
+  String timersCountdownMinutes(int minutes) {
+    return 'через $minutes мин';
+  }
+
+  @override
+  String timersCountdownHoursMinutes(int hours, int minutes) {
+    return 'через $hours ч $minutes мин';
+  }
+
+  @override
+  String timersTodayAt(String time) {
+    return 'Сегодня в $time';
+  }
+
+  @override
+  String get timersNewTitle => 'Новый таймер';
+
+  @override
+  String get timersDeviceLabel => 'Устройство';
+
+  @override
+  String get timersCommandOff => 'ВЫКЛ';
+
+  @override
+  String get timersCommandOn => 'ВКЛ';
+
+  @override
+  String get timersCancel => 'Отмена';
+
+  @override
+  String get timersCreate => 'Создать';
+
+  @override
+  String get timersDeleteTooltip => 'Удалить таймер';
+
+  @override
+  String get vkSettingsTitle => 'VK Bot';
+
+  @override
+  String get vkSettingsEnable => 'Включить VK';
+
+  @override
+  String get vkSettingsEnableSubtitle => 'Отправлять уведомления в VK';
+
+  @override
+  String get vkSettingsTokenLabel => 'VK Token';
+
+  @override
+  String get vkSettingsTokenHint => 'Вставьте токен бота';
+
+  @override
+  String get vkSettingsUserIdLabel => 'VK User ID';
+
+  @override
+  String get vkSettingsUserIdHint => 'Например, 123456789';
+
+  @override
+  String get vkSettingsEvents => 'События';
+
+  @override
+  String get vkSettingsScenes => 'Сцены';
+
+  @override
+  String get vkSettingsScenesSubtitle => 'Уведомления о выполнении сцен';
+
+  @override
+  String get vkSettingsDevices => 'Устройства';
+
+  @override
+  String get vkSettingsDevicesSubtitle => 'Изменение состояния устройств';
+
+  @override
+  String get vkSettingsAlarms => 'Тревоги';
+
+  @override
+  String get vkSettingsZigbeeWaterLeak => 'Zigbee: 💧 Протечка';
+
+  @override
+  String get vkSettingsZigbeeSmoke => 'Zigbee: 🔥 Дым';
+
+  @override
+  String get vkSettingsZigbeeGas => 'Zigbee: 💨 Газ';
+
+  @override
+  String get vkSettingsZigbeeMotion => 'Zigbee: 🏃 Движение';
+
+  @override
+  String get vkSettingsZigbeeContact => 'Zigbee: 🚪 Контакт';
+
+  @override
+  String get vkSettingsFrigatePerson => 'Frigate: 🚶 Человек';
+
+  @override
+  String get vkSettingsFrigateCar => 'Frigate: 🚗 Автомобиль';
+
+  @override
+  String get vkSettingsErrors => 'Ошибки';
+
+  @override
+  String get vkSettingsZigbeeOffline => 'Zigbee offline';
+
+  @override
+  String get vkSettingsZigbeeOfflineSubtitle => 'Устройство потеряло связь';
+
+  @override
+  String get vkSettingsFrigateOffline => 'Frigate offline';
+
+  @override
+  String get vkSettingsFrigateOfflineSubtitle => 'Frigate недоступен';
+
+  @override
+  String get vkSettingsCooldown => 'Антидребезг VK';
+
+  @override
+  String get vkSettingsCooldown1 => '1 минута';
+
+  @override
+  String get vkSettingsCooldown5 => '5 минут';
+
+  @override
+  String get vkSettingsCooldown15 => '15 минут';
+
+  @override
+  String get vkSettingsCooldown30 => '30 минут';
+
+  @override
+  String get vkSettingsSchedule => 'Расписание';
+
+  @override
+  String get vkSettingsScheduleSubtitle =>
+      'Отправлять только в указанное время';
+
+  @override
+  String get vkSettingsAlarmsOutsideSchedule => 'Тревоги вне расписания';
+
+  @override
+  String get vkSettingsAlarmsAlways => 'Тревоги отправлять всегда';
+
+  @override
+  String get vkSettingsStartTime => 'Время начала';
+
+  @override
+  String get vkSettingsEndTime => 'Время окончания';
+
+  @override
+  String get vkSettingsDaysOfWeek => 'Дни недели:';
+
+  @override
+  String get vkSettingsMonday => 'Пн';
+
+  @override
+  String get vkSettingsTuesday => 'Вт';
+
+  @override
+  String get vkSettingsWednesday => 'Ср';
+
+  @override
+  String get vkSettingsThursday => 'Чт';
+
+  @override
+  String get vkSettingsFriday => 'Пт';
+
+  @override
+  String get vkSettingsSaturday => 'Сб';
+
+  @override
+  String get vkSettingsSunday => 'Вс';
+
+  @override
+  String get vkSettingsSendTest => 'Отправить тест VK';
+
+  @override
+  String get vkSettingsTestMessage => '✅ Тестовое уведомление из SHome!';
+
+  @override
+  String get zigbeeScanTitle => 'Zigbee';
+
+  @override
+  String get zigbeeRefresh => 'Обновить';
+
+  @override
+  String zigbeeStopPairing(int seconds) {
+    return 'Остановить сопряжение ($seconds с)';
+  }
+
+  @override
+  String get zigbeeOpenPairing => 'Открыть сеть для сопряжения';
+
+  @override
+  String get zigbeePairingInstruction =>
+      'Зажмите кнопку на устройстве на 5 секунд';
+
+  @override
+  String get zigbeeNoDevices =>
+      'Устройства не найдены.\nНажмите «Открыть сеть» и добавьте устройство.';
+
+  @override
+  String zigbeeDeviceAdded(String name) {
+    return '✅ $name добавлено';
+  }
+
+  @override
+  String get changelogTitle => 'История изменений';
+
+  @override
+  String get changelogLoadError => 'Не удалось загрузить историю изменений';
+
+  @override
+  String get eulaTitle => 'Лицензионное соглашение';
+
+  @override
+  String get legalInfoTitle => 'Информация';
+
+  @override
+  String legalDeveloperLabel(String name) {
+    return 'Разработчик: $name';
+  }
+
+  @override
+  String legalOwnerLabel(String name) {
+    return 'Собственник: $name';
+  }
+
+  @override
+  String legalVersionLabel(String version) {
+    return 'Версия: $version';
+  }
+
+  @override
+  String get legalEulaTitle => 'Лицензионное соглашение (EULA)';
+
+  @override
+  String get legalEulaSubtitle => 'Правила использования приложения';
+
+  @override
+  String get legalPrivacyTitle => 'Политика конфиденциальности';
+
+  @override
+  String get legalPrivacySubtitle => 'Как мы обрабатываем ваши данные';
+
+  @override
+  String get legalTermsTitle => 'Условия использования';
+
+  @override
+  String get legalTermsSubtitle => 'Правила и ограничения';
+
+  @override
+  String get legalOpenSourceTitle => 'Лицензии открытого ПО';
+
+  @override
+  String get legalOpenSourceSubtitle => 'Сторонние библиотеки';
+
+  @override
+  String get legalChangelogTitle => 'История изменений';
+
+  @override
+  String get legalChangelogSubtitle => 'Что нового в каждой версии';
+
+  @override
+  String legalVersionFooter(String version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get statsPeriod24h => '24ч';
+
+  @override
+  String get statsPeriod7d => '7д';
+
+  @override
+  String get statsPeriod30d => '30д';
+
+  @override
+  String get statsNoClimateData => 'Нет данных датчиков за период';
+
+  @override
+  String get statsClimateByDevice => 'Климат по устройствам';
+
+  @override
+  String statsSampleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count измерения',
+      many: '$count измерений',
+      few: '$count измерения',
+      one: '$count измерение',
+      zero: 'Нет измерений',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsTemperatureSummary(String min, String max, String average) {
+    return '🌡️ $min° … $max° (среднее: $average°)';
+  }
+
+  @override
+  String statsHumiditySummary(String min, String max, String average) {
+    return '💧 $min% … $max% (среднее: $average%)';
+  }
+
+  @override
+  String get statsNoDeviceDataPeriod => 'Нет данных за период';
+
+  @override
+  String statsDeviceEventCounts(int offline, int alerts, int actions) {
+    return 'Не в сети: $offline · алерты: $alerts · действия: $actions';
+  }
+
+  @override
+  String statsAlertsForDays(int days) {
+    return 'Алерты за $days дн.';
+  }
+
+  @override
+  String statsOfflineForDays(int days) {
+    return 'Не в сети за $days дн.';
+  }
+
+  @override
+  String get statsEnergyConsumption => 'Потребление';
+
+  @override
+  String get statsEnergyCost => 'Стоимость';
+
+  @override
+  String statsEnergyPeriod(int days) {
+    return 'за $days дн.';
+  }
+
+  @override
+  String statsEnergyTariff(String tariff) {
+    return 'тариф $tariff ₽/кВт·ч';
+  }
+
+  @override
+  String statsEnergyRubles(String value) {
+    return '$value ₽';
+  }
+
+  @override
+  String statsEnergyKwh(String value) {
+    return '$value кВт·ч';
+  }
+
+  @override
+  String get statsEnergyNoData => 'Нет данных энергопотребления за период';
+
+  @override
+  String get statsEnergyByDevice => 'По устройствам';
+
+  @override
+  String get statsNotificationsEmpty => 'Нет уведомлений за период';
+
+  @override
+  String get statsNotificationsSent => 'Отправлено';
+
+  @override
+  String get statsNotificationsSuppressed => 'Подавлено';
+
+  @override
+  String statsNotificationsPeriod(int days) {
+    return 'за $days дн.';
+  }
+
+  @override
+  String statsNotificationsCooldownPercent(int percent) {
+    return 'cooldown ($percent%)';
+  }
+
+  @override
+  String get statsNotificationsByChannel => 'По каналам';
+
+  @override
+  String statsNotificationsChannelSuppressed(int count) {
+    return 'Подавлено: $count';
+  }
+
+  @override
+  String get statsNotificationsByCategory => 'По категориям';
+
+  @override
+  String get statsNotificationsCategoryWaterLeak => '💧 Протечка';
+
+  @override
+  String get statsNotificationsCategorySmoke => '🔥 Дым';
+
+  @override
+  String get statsNotificationsCategoryGas => '💨 Газ';
+
+  @override
+  String get statsNotificationsCategoryMotion => '🏃 Движение';
+
+  @override
+  String get statsNotificationsCategoryContact => '🚪 Контакт';
+
+  @override
+  String get statsNotificationsCategoryPerson => '🎥 Человек';
+
+  @override
+  String get statsNotificationsCategoryCar => '🎥 Автомобиль';
+
+  @override
+  String get statsNotificationsCategoryOffline => '📡 Не в сети';
+
+  @override
+  String get statsNotificationsCategoryLowBattery => '🔋 Батарея';
+
+  @override
+  String get statsNotificationsCategoryStateChanged => '🎛 Состояние';
+
+  @override
+  String get statsNotificationsCategoryUnknown => 'Другое';
+
+  @override
+  String get statsOverviewAlerts => 'Алерты';
+
+  @override
+  String get statsOverviewActions => 'Действия';
+
+  @override
+  String get statsOverviewOffline => 'Не в сети';
+
+  @override
+  String get statsOverviewOnline => 'В сети';
+
+  @override
+  String statsOverviewPeriod(int days) {
+    return 'за $days дн.';
+  }
+
+  @override
+  String get statsOverviewWorstDevices => 'Проблемные устройства';
+
+  @override
+  String get statsOverviewNoProblems => 'Нет проблемных устройств за период 👍';
+
+  @override
+  String get statsPresenceEmpty => 'Нет данных присутствия за период';
+
+  @override
+  String get statsPresenceHome => 'Дома';
+
+  @override
+  String get statsPresenceNear => 'Рядом';
+
+  @override
+  String get statsPresenceAway => 'Ушёл';
+
+  @override
+  String get statsPresenceUnknown => 'Неизвестно';
+
+  @override
+  String statsPresencePeriod(int days) {
+    return 'за $days дн.';
+  }
+
+  @override
+  String get statsPresenceCloudFallback => 'Переход на облако';
+
+  @override
+  String get statsPresenceCloudFallbackSubtitle =>
+      'Сколько раз heartbeat не сработал';
+
+  @override
+  String get statsPresenceDurationZero => '0';
+
+  @override
+  String statsPresenceDurationHoursMinutes(int hours, int minutes) {
+    return '$hours ч $minutes мин';
+  }
+
+  @override
+  String statsPresenceDurationMinutes(int minutes) {
+    return '$minutes мин';
+  }
+
+  @override
+  String get statsPresenceDurationLessMinute => 'менее минуты';
+
+  @override
+  String get statsScenesTop => 'Топ сцен';
+
+  @override
+  String statsScenesRuns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# раза',
+      many: '# раз',
+      few: '# раза',
+      one: '# раз',
+      zero: 'Нет запусков',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get statsScenesNoRunsPeriod => 'Нет срабатываний сцен за период';
+
+  @override
+  String get statsScenesForgottenTitle => 'Забытые сцены (0 срабатываний)';
+
+  @override
+  String get statsScenesDeleteCandidate => 'Кандидат на удаление';
+
+  @override
+  String get statsTitle => 'Статистика';
+
+  @override
+  String get statsTabOverview => 'Обзор';
+
+  @override
+  String get statsTabDevices => 'Устройства';
+
+  @override
+  String get statsTabEnergy => 'Энергия';
+
+  @override
+  String get statsTabVideo => 'Видео';
+
+  @override
+  String get statsTabScenes => 'Сцены';
+
+  @override
+  String get statsTabPresence => 'Присутствие';
+
+  @override
+  String get statsTabClimate => 'Климат';
+
+  @override
+  String get statsTabNotifications => 'Уведомления';
+
+  @override
+  String get statsVideoEmpty => 'Нет детекций за период';
+
+  @override
+  String get statsVideoByTypes => 'По типам';
+
+  @override
+  String get statsVideoByCameras => 'По камерам';
+
+  @override
+  String get statsVideoActivityByHour => 'Активность по часам';
+
+  @override
+  String get statsVideoHeatmapHint =>
+      'Чем интенсивнее цвет — тем больше детекций';
+
+  @override
+  String get statsVideoLabelPerson => 'Человек';
+
+  @override
+  String get statsVideoLabelCar => 'Автомобиль';
+
+  @override
+  String get statsVideoLabelDog => 'Собака';
+
+  @override
+  String get statsVideoLabelCat => 'Кошка';
+
+  @override
+  String get statsVideoLabelBird => 'Птица';
+
+  @override
+  String get statsVideoLabelMotorcycle => 'Мотоцикл';
+
+  @override
+  String get statsVideoLabelBicycle => 'Велосипед';
+
+  @override
+  String get statsVideoLabelTruck => 'Грузовик';
+
+  @override
+  String get statsVideoLabelBus => 'Автобус';
+
+  @override
+  String get statsVideoLabelBoat => 'Лодка';
+
+  @override
+  String get deviceCardWaterLeak => 'Протечка';
+
+  @override
+  String get deviceCardMotion => 'Движение';
+
+  @override
+  String get deviceCardContactOpen => 'Открыто';
+
+  @override
+  String get deviceSettingsName => 'Название';
+
+  @override
+  String get deviceSettingsRoom => 'Комната';
+
+  @override
+  String get deviceSettingsRtspUrl => 'RTSP URL';
+
+  @override
+  String get deviceSettingsZigbeeDevice => 'Zigbee-устройство';
+
+  @override
+  String get deviceSettingsIeeeAddress => 'IEEE-адрес';
+
+  @override
+  String get deviceSettingsModel => 'Модель';
+
+  @override
+  String get deviceSettingsVendor => 'Производитель';
+
+  @override
+  String get deviceSettingsBattery => 'Батарея';
+
+  @override
+  String get deviceSettingsLinkQuality => 'Качество связи';
+
+  @override
+  String get deviceSettingsNotifications => 'Уведомления';
+
+  @override
+  String get deviceSettingsDeviceId => 'Device ID';
+
+  @override
+  String get deviceSettingsIpAddress => 'IP-адрес';
+
+  @override
+  String get deviceSettingsLocalKey => 'Local Key';
+
+  @override
+  String get deviceSettingsProtocolVersion => 'Версия протокола';
+
+  @override
+  String get deviceSettingsChannels => 'Каналы';
+
+  @override
+  String get deviceSettingsDpsIndex => 'Индекс DPS';
+
+  @override
+  String get deviceSettingsDpsMap => 'Карта DPS';
+
+  @override
+  String get deviceSettingsAddDps => 'Добавить DPS';
+
+  @override
+  String get deviceSettingsDisplayOnCard => 'Отображение на карточке';
+
+  @override
+  String get deviceSettingsDisplayHint =>
+      'Выберите, какие данные показывать на главном экране';
+
+  @override
+  String get deviceSettingsNoInfoParameters => 'Нет информационных параметров';
+
+  @override
+  String get deviceSettingsDeleteTitle => 'Удалить устройство?';
+
+  @override
+  String deviceSettingsDeleteMessage(String name) {
+    return 'Удалить «$name»?';
+  }
+
+  @override
+  String get deviceSettingsDelete => 'Удалить';
+
+  @override
+  String get deviceSettingsSave => 'Сохранить';
+
+  @override
+  String get deviceSettingsCancel => 'Отмена';
+
+  @override
+  String get deviceSettingsCreateSensor => 'Создать датчик';
+
+  @override
+  String deviceSettingsSensorFromDevice(String name) {
+    return 'Из устройства: $name';
+  }
+
+  @override
+  String get deviceSettingsSensorType => 'Тип датчика';
+
+  @override
+  String get deviceSettingsTemperature => 'Температура';
+
+  @override
+  String get deviceSettingsHumidity => 'Влажность';
+
+  @override
+  String get deviceSettingsPower => 'Мощность';
+
+  @override
+  String get deviceSettingsCurrent => 'Ток';
+
+  @override
+  String get deviceSettingsVoltage => 'Напряжение';
+
+  @override
+  String get deviceSettingsDivider => 'Делитель';
+
+  @override
+  String deviceSettingsSensorCreated(String name) {
+    return '✅ Датчик «$name» создан!';
+  }
+
+  @override
+  String get deviceSettingsChannel => 'Канал';
+
+  @override
+  String get deviceSettingsChannelNumber => 'Номер канала';
+
+  @override
+  String get deviceSettingsDpsAddTitle => 'Добавить DPS';
+
+  @override
+  String deviceSettingsDpsEditTitle(String key) {
+    return 'Редактировать DPS $key';
+  }
+
+  @override
+  String get deviceSettingsDpsNumber => 'Номер DPS';
+
+  @override
+  String get deviceSettingsDpsType => 'Тип';
+
+  @override
+  String get deviceSettingsDpsRole => 'Роль';
+
+  @override
+  String get deviceSettingsDpsIcon => 'Иконка';
+
+  @override
+  String get deviceSettingsNoIcon => 'Без иконки';
+
+  @override
+  String get deviceSettingsRoleChannel => 'Канал';
+
+  @override
+  String get deviceSettingsRoleMain => 'Главная кнопка';
+
+  @override
+  String get deviceSettingsRoleAction => 'Действие';
+
+  @override
+  String get deviceSettingsRoleToggle => 'Переключатель';
+
+  @override
+  String get deviceSettingsRoleInfo => 'Информация';
+
+  @override
+  String get deviceSettingsRoleStatus => 'Статус';
+
+  @override
+  String get deviceSettingsRoleEnum => 'Выпадающий список';
+
+  @override
+  String get deviceSettingsRoleSlider => 'Ползунок';
+
+  @override
+  String get deviceSettingsDpsChannelTitle => 'Канал';
+
+  @override
+  String get deviceSettingsNotifyAlways => 'Всегда';
+
+  @override
+  String get deviceSettingsNotifyAway => 'Когда никого нет';
+
+  @override
+  String get deviceSettingsNotifyNight => 'Ночью';
+
+  @override
+  String get deviceSettingsNotifyAwayOrNight => 'Никого нет ИЛИ ночью';
+
+  @override
+  String deviceSettingsNotifySummary(int count, String condition) {
+    return '$count типов · $condition';
+  }
+
+  @override
+  String get deviceSettingsTypeBool => 'вкл/выкл';
+
+  @override
+  String get deviceSettingsTypeValue => 'число';
+
+  @override
+  String get deviceSettingsTypeEnum => 'текстовый список';
+
+  @override
+  String get deviceSettingsTypeSlider => 'ползунок';
+
+  @override
+  String get deviceSettingsIconNone => 'Без иконки';
+
+  @override
+  String get deviceSettingsIconPlayStop => 'Пуск/Стоп';
+
+  @override
+  String get deviceSettingsIconHomeBase => 'Дом/База';
+
+  @override
+  String get deviceSettingsIconPower => 'Питание';
+
+  @override
+  String get deviceSettingsIconWater => 'Вода';
+
+  @override
+  String get deviceSettingsIconMop => 'Мытьё';
+
+  @override
+  String get deviceSettingsIconDoNotDisturb => 'Не беспокоить';
+
+  @override
+  String get deviceSettingsIconBattery => 'Батарея';
+
+  @override
+  String get deviceSettingsIconTimer => 'Таймер';
+
+  @override
+  String get deviceSettingsIconArea => 'Площадь';
+
+  @override
+  String get deviceSettingsIconFan => 'Вентилятор';
+
+  @override
+  String get deviceSettingsIconCooling => 'Охлаждение';
+
+  @override
+  String get deviceSettingsIconHeating => 'Обогрев';
+
+  @override
+  String get deviceSettingsIconDrying => 'Осушение';
+
+  @override
+  String get deviceSettingsIconAuto => 'Авто';
+
+  @override
+  String get deviceSettingsIconSleep => 'Сон';
+
+  @override
+  String get deviceSettingsIconVerticalBlinds => 'Вертикальные жалюзи';
+
+  @override
+  String get deviceSettingsIconHorizontalBlinds => 'Горизонтальные жалюзи';
+
+  @override
+  String get deviceSettingsIconAirQuality => 'Качество воздуха';
+
+  @override
+  String get deviceSettingsIconFilter => 'Фильтр';
+
+  @override
+  String get deviceSettingsIconTemperature => 'Температура';
+
+  @override
+  String get deviceSettingsIconAirConditioner => 'Кондиционер';
+
+  @override
+  String get deviceSettingsIconHeater => 'Обогреватель';
+
+  @override
+  String get deviceSettingsIconAir => 'Воздух';
+
+  @override
+  String get deviceSettingsIconSuction => 'Всасывание';
+
+  @override
+  String get deviceSettingsIconWaiting => 'Ожидание';
+
+  @override
+  String get deviceSettingsIconSynchronization => 'Синхронизация';
+
+  @override
+  String deviceSettingsDefaultChannelLabel(String key) {
+    return 'Канал $key';
+  }
+
+  @override
+  String get deviceSettingsAdd => 'Добавить';
+
+  @override
+  String get deviceSettingsCreate => 'Создать';
+
+  @override
+  String get todayDrawerToday => 'Сегодня';
 }

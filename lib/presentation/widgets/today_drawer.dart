@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/local/database.dart';
 import '../../application/state/current_room_provider.dart';
 import '../../data/services/stats_cache.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class TodayDrawer extends ConsumerStatefulWidget {
   /// Если null — берётся currentRoomIdProvider (реактивно).
@@ -75,7 +76,10 @@ class _TodayDrawerState extends ConsumerState<TodayDrawer> {
                 children: [
                   const Icon(Icons.today, color: Colors.blue),
                   const SizedBox(width: 8),
-                  Text('Сегодня', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    AppLocalizations.of(context).todayDrawerToday,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.refresh),

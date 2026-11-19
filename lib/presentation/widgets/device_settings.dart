@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../domain/models/device.dart';
 import '../../application/state/devices_provider.dart';
 import '../../application/state/rooms_provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class DeviceSettings {
   // ===================================================================
@@ -14,6 +15,7 @@ class DeviceSettings {
   // ===================================================================
 
   static void show(BuildContext context, WidgetRef ref, Device device) {
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: device.name);
     final rooms = ref.watch(roomsProvider);
     String selectedRoomId = device.roomId;
@@ -66,7 +68,9 @@ class DeviceSettings {
                   const SizedBox(height: 12),
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Название', prefixIcon: Icon(Icons.edit)),
+                    decoration: InputDecoration(
+                      labelText: l10n.deviceSettingsName,
+                    ),
                   ),
                   const SizedBox(height: 8),
 
@@ -75,7 +79,10 @@ class DeviceSettings {
                   // ╚══════════════════════════════════════════╝
                   DropdownButtonFormField<String>(
                     initialValue: selectedRoomId,
-                    decoration: const InputDecoration(labelText: 'Комната', prefixIcon: Icon(Icons.meeting_room)),
+                    decoration: InputDecoration(
+                      labelText: l10n.deviceSettingsRoom,
+                      prefixIcon: const Icon(Icons.meeting_room),
+                    ),
                     items: rooms
                         .map((r) => DropdownMenuItem(
                       value: r.id,
@@ -104,8 +111,12 @@ class DeviceSettings {
                   if (isZigbee) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Zigbee-устройство',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple[700], fontSize: 13),
+                      l10n.deviceSettingsZigbeeDevice,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple[700],
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 4),
 
@@ -121,49 +132,69 @@ class DeviceSettings {
                     const SizedBox(height: 8),
 
                     TextField(
-                      controller: TextEditingController(text: latestDevice.properties['model'] ?? ''),
-                      decoration: const InputDecoration(
-                        labelText: 'Модель',
-                        prefixIcon: Icon(Icons.devices),
+                      controller: TextEditingController(
+                        text: latestDevice.properties['model'] ?? '',
+                      ),
+                      decoration: InputDecoration(
+                        labelText: l10n.deviceSettingsModel,
+                        prefixIcon: const Icon(Icons.devices),
                       ),
                       readOnly: true,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 8),
 
                     TextField(
-                      controller: TextEditingController(text: latestDevice.properties['vendor'] ?? ''),
-                      decoration: const InputDecoration(
-                        labelText: 'Производитель',
-                        prefixIcon: Icon(Icons.business),
+                      controller: TextEditingController(
+                        text: latestDevice.properties['vendor'] ?? '',
+                      ),
+                      decoration: InputDecoration(
+                        labelText: l10n.deviceSettingsVendor,
+                        prefixIcon: const Icon(Icons.business),
                       ),
                       readOnly: true,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 8),
 
                     if (latestDevice.properties['battery'] != null) ...[
                       TextField(
-                        controller: TextEditingController(text: '${latestDevice.properties['battery']}%'),
-                        decoration: const InputDecoration(
-                          labelText: 'Батарея',
-                          prefixIcon: Icon(Icons.battery_full),
+                        controller: TextEditingController(
+                          text: '${latestDevice.properties['battery']}%',
+                        ),
+                        decoration: InputDecoration(
+                          labelText: l10n.deviceSettingsBattery,
+                          prefixIcon: const Icon(Icons.battery_full),
                         ),
                         readOnly: true,
-                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(height: 8),
                     ],
 
                     if (latestDevice.properties['linkquality'] != null) ...[
                       TextField(
-                        controller: TextEditingController(text: '${latestDevice.properties['linkquality']} lqi'),
-                        decoration: const InputDecoration(
-                          labelText: 'Качество связи',
-                          prefixIcon: Icon(Icons.signal_cellular_alt),
+                        controller: TextEditingController(
+                          text: '${latestDevice.properties['linkquality']} lqi',
+                        ),
+                        decoration: InputDecoration(
+                          labelText: l10n.deviceSettingsLinkQuality,
+                          prefixIcon: const Icon(Icons.signal_cellular_alt),
                         ),
                         readOnly: true,
-                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(height: 8),
                     ],
@@ -174,9 +205,9 @@ class DeviceSettings {
                       Card(
                         child: ListTile(
                           leading: const Icon(Icons.notifications_active, color: Colors.orange),
-                          title: const Text('Уведомления'),
+                          title: Text(l10n.deviceSettingsNotifications),
                           subtitle: Text(
-                            _getNotifySummary(latestDevice),
+                            _getNotifySummary(latestDevice, l10n),
                             style: const TextStyle(fontSize: 11),
                           ),
                           trailing: const Icon(Icons.chevron_right),
@@ -199,9 +230,9 @@ class DeviceSettings {
                           Icons.notifications_active,
                           color: Colors.orange,
                         ),
-                        title: const Text('Уведомления'),
+                        title: Text(l10n.deviceSettingsNotifications),
                         subtitle: Text(
-                          _getNotifySummary(latestDevice),
+                          _getNotifySummary(latestDevice, l10n),
                           style: const TextStyle(fontSize: 11),
                         ),
                         trailing: const Icon(Icons.chevron_right),
@@ -230,7 +261,10 @@ class DeviceSettings {
 
                     TextField(
                       controller: addressController,
-                      decoration: const InputDecoration(labelText: 'IP Адрес', prefixIcon: Icon(Icons.wifi)),
+                      decoration: InputDecoration(
+                        labelText: l10n.deviceSettingsIpAddress,
+                        prefixIcon: const Icon(Icons.wifi),
+                      ),
                     ),
                     const SizedBox(height: 8),
 
@@ -243,7 +277,10 @@ class DeviceSettings {
                     DropdownButtonFormField<double>(
                       initialValue: selectedVersion,
                       decoration:
-                      const InputDecoration(labelText: 'Версия протокола', prefixIcon: Icon(Icons.info_outline)),
+                    InputDecoration(
+                    labelText: l10n.deviceSettingsProtocolVersion,
+                    prefixIcon: const Icon(Icons.info_outline),
+                    ),
                       items: const [
                         DropdownMenuItem(value: 3.1, child: Text('3.1')),
                         DropdownMenuItem(value: 3.3, child: Text('3.3')),
@@ -264,13 +301,24 @@ class DeviceSettings {
                     if (latestDevice.type == DeviceType.switch1 ||
                         latestDevice.type == DeviceType.switch2 ||
                         latestDevice.type == DeviceType.switch3) ...[
-                      Text('Каналы:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
+                      Text(
+                        '${l10n.deviceSettingsChannels}:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[700],
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref),
+                      ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref, l10n),
                     ] else ...[
                       TextField(
                         controller: dpsControllers.first,
-                        decoration: const InputDecoration(labelText: 'DPS Индекс', hintText: '1', prefixIcon: Icon(Icons.tune)),
+                        decoration: InputDecoration(
+                          labelText: l10n.deviceSettingsDpsIndex,
+                          hintText: '1',
+                          prefixIcon: const Icon(Icons.tune),
+                        ),
                         keyboardType: TextInputType.number,
                       ),
                     ],
@@ -281,15 +329,21 @@ class DeviceSettings {
                   // ╚══════════════════════════════════════════╝
                   if (!isZigbee && (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac)) ...[
                     const SizedBox(height: 8),
-                    Text('DPS карта:',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700], fontSize: 13)),
+                    Text(
+                      '${l10n.deviceSettingsDpsMap}:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[700],
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref),
+                    ..._buildDpsMapEditor(latestDevice, setModalState, ctx, ref, l10n),
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
-                      onPressed: () => _showDpsEditor(ctx, setModalState, latestDevice, null, ref),
+                      onPressed: () => _showDpsEditor(ctx, setModalState, latestDevice, null, ref, l10n,),
                       icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Добавить DPS'),
+                      label: Text(l10n.deviceSettingsAddDps),
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 36),
                       ),
@@ -301,7 +355,7 @@ class DeviceSettings {
                   // ╚══════════════════════════════════════════╝
                   if (!isZigbee && (latestDevice.type == DeviceType.compound || latestDevice.type == DeviceType.hvac)) ...[
                     const SizedBox(height: 12),
-                    _buildDisplaySettings(ref, latestDevice, () => setModalState(() {})),
+                    _buildDisplaySettings(ref, latestDevice, () => setModalState(() {}), l10n),
                   ],
 
                   // ╔══════════════════════════════════════════╗
@@ -338,7 +392,7 @@ class DeviceSettings {
                           Navigator.pop(ctx);
                         },
                         icon: const Icon(Icons.save),
-                        label: const Text('Сохранить'),
+                        label: Text(l10n.deviceSettingsSave),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                       ),
                     ),
@@ -348,8 +402,10 @@ class DeviceSettings {
                         onPressed: () => showDialog(
                           context: ctx,
                           builder: (dCtx) => AlertDialog(
-                            title: const Text('Удалить?'),
-                            content: Text('Удалить "${latestDevice.name}"?'),
+                            title: Text(l10n.deviceSettingsDeleteTitle),
+                            content: Text(
+                              l10n.deviceSettingsDeleteMessage(latestDevice.name),
+                            ),
                             actions: [
                               TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Отмена')),
                               ElevatedButton(
@@ -359,13 +415,13 @@ class DeviceSettings {
                                   Navigator.pop(ctx);
                                 },
                                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                                child: const Text('Удалить'),
+                                child: Text(l10n.deviceSettingsDelete),
                               ),
                             ],
                           ),
                         ),
                         icon: const Icon(Icons.delete),
-                        label: const Text('Удалить'),
+                        label: Text(l10n.deviceSettingsDelete),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                       ),
                     ),
@@ -384,10 +440,10 @@ class DeviceSettings {
                       child: OutlinedButton.icon(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          _showCreateSensorDialog(context, ref, latestDevice);
+                          _showCreateSensorDialog(context, ref, latestDevice, l10n);
                         },
                         icon: const Icon(Icons.add_chart, size: 18),
-                        label: const Text('Создать датчик'),
+                        label: Text(l10n.deviceSettingsCreateSensor),
                       ),
                     ),
                   ],
@@ -405,28 +461,36 @@ class DeviceSettings {
   // СВОДКА УВЕДОМЛЕНИЙ
   // ===================================================================
 
-  static String _getNotifySummary(Device device) {
-    final condition = device.properties['notify_condition'] as String? ?? 'always';
+  static String _getNotifySummary(
+      Device device,
+      AppLocalizations l10n,
+      ) {
+    final condition =
+        device.properties['notify_condition'] as String? ?? 'always';
+
     final conditionLabel = switch (condition) {
-      'always' => 'Всегда',
-      'away' => 'Когда никого нет',
-      'night' => 'Ночью',
-      'away_or_night' => 'Никого нет ИЛИ ночью',
-      _ => 'Всегда',
+      'always' => l10n.deviceSettingsNotifyAlways,
+      'away' => l10n.deviceSettingsNotifyAway,
+      'night' => l10n.deviceSettingsNotifyNight,
+      'away_or_night' => l10n.deviceSettingsNotifyAwayOrNight,
+      _ => l10n.deviceSettingsNotifyAlways,
     };
-    final types = (device.properties['notify_types'] as List?)?.length ?? 5;
-    return '$types типов · $conditionLabel';
+
+    final typeCount =
+        (device.properties['notify_types'] as List?)?.length ?? 5;
+
+    return l10n.deviceSettingsNotifySummary(typeCount, conditionLabel);
   }
 
   // ===================================================================
   // DPS КАРТА — отображение списка DPS
   // ===================================================================
 
-  static List<Widget> _buildDpsMapEditor(
-      Device device,
+  static List<Widget> _buildDpsMapEditor(Device device,
       void Function(VoidCallback) setModalState,
       BuildContext ctx,
       WidgetRef ref,
+      AppLocalizations l10n,
       ) {
     final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
 
@@ -452,9 +516,9 @@ class DeviceSettings {
         trailing: const Icon(Icons.edit, size: 16),
         onTap: () {
           if (role == 'channel') {
-            _showChannelEditor(ctx, setModalState, device, key, ref);
+            _showChannelEditor(ctx, setModalState, device, key, ref, l10n);
           } else {
-            _showDpsEditor(ctx, setModalState, device, key, ref);
+            _showDpsEditor(ctx, setModalState, device, key, ref, l10n);
           }
         },
       );
@@ -522,6 +586,7 @@ class DeviceSettings {
       Device device,
       String? dpsKey,
       WidgetRef ref,
+      AppLocalizations l10n,
       ) {
     final isNew = dpsKey == null;
     final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
@@ -547,28 +612,48 @@ class DeviceSettings {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(isNew ? 'Добавить DPS' : 'Редактировать DPS $dpsKey'),
+          title: Text(
+            isNew
+                ? l10n.deviceSettingsDpsAddTitle
+                : l10n.deviceSettingsDpsEditTitle(dpsKey),
+          ),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               TextField(
                 controller: keyController,
-                decoration: const InputDecoration(labelText: 'Номер DPS'),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsDpsNumber,
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: labelController,
-                decoration: const InputDecoration(labelText: 'Название'),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsName,
+                ),
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: selectedType,
                 decoration: const InputDecoration(labelText: 'Тип'),
-                items: const [
-                  DropdownMenuItem(value: 'bool', child: Text('bool (вкл/выкл)')),
-                  DropdownMenuItem(value: 'value', child: Text('value (число)')),
-                  DropdownMenuItem(value: 'enum', child: Text('enum (текст)')),
-                  DropdownMenuItem(value: 'slider', child: Text('slider (ползунок)')),
+                items: [
+                  DropdownMenuItem(
+                    value: 'bool',
+                    child: Text('bool (${l10n.deviceSettingsTypeBool})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'value',
+                    child: Text('value (${l10n.deviceSettingsTypeValue})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'enum',
+                    child: Text('enum (${l10n.deviceSettingsTypeEnum})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'slider',
+                    child: Text('slider (${l10n.deviceSettingsTypeSlider})'),
+                  ),
                 ],
                 onChanged: (v) {
                   if (v != null) setDialogState(() => selectedType = v);
@@ -577,16 +662,42 @@ class DeviceSettings {
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
-                decoration: const InputDecoration(labelText: 'Роль'),
-                items: const [
-                  DropdownMenuItem(value: 'main', child: Text('main (главная кнопка)')),
-                  DropdownMenuItem(value: 'action', child: Text('action (действие)')),
-                  DropdownMenuItem(value: 'toggle', child: Text('toggle (переключатель)')),
-                  DropdownMenuItem(value: 'info', child: Text('info (информация)')),
-                  DropdownMenuItem(value: 'status', child: Text('status (статус)')),
-                  DropdownMenuItem(value: 'enum', child: Text('enum (выпадающий список)')),
-                  DropdownMenuItem(value: 'slider', child: Text('slider (ползунок)')),
-                  DropdownMenuItem(value: 'channel', child: Text('channel (канал)')),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsDpsRole,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'main',
+                    child: Text('main (${l10n.deviceSettingsRoleMain})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'action',
+                    child: Text('action (${l10n.deviceSettingsRoleAction})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'toggle',
+                    child: Text('toggle (${l10n.deviceSettingsRoleToggle})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'info',
+                    child: Text('info (${l10n.deviceSettingsRoleInfo})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'status',
+                    child: Text('status (${l10n.deviceSettingsRoleStatus})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'enum',
+                    child: Text('enum (${l10n.deviceSettingsRoleEnum})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'slider',
+                    child: Text('slider (${l10n.deviceSettingsRoleSlider})'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'channel',
+                    child: Text('channel (${l10n.deviceSettingsRoleChannel})'),
+                  ),
                 ],
                 onChanged: (v) {
                   if (v != null) setDialogState(() => selectedRole = v);
@@ -595,35 +706,118 @@ class DeviceSettings {
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: selectedIcon.isEmpty ? null : selectedIcon,
-                decoration: const InputDecoration(labelText: 'Иконка'),
-                items: const [
-                  DropdownMenuItem(value: '', child: Text('Без иконки')),
-                  DropdownMenuItem(value: 'play', child: Text('▶/⏹ Пуск/Стоп')),
-                  DropdownMenuItem(value: 'home', child: Text('🏠 Дом/База')),
-                  DropdownMenuItem(value: 'power', child: Text('⚡ Питание')),
-                  DropdownMenuItem(value: 'water', child: Text('💧 Вода')),
-                  DropdownMenuItem(value: 'mop', child: Text('🧹 Мытьё')),
-                  DropdownMenuItem(value: 'do_not_disturb', child: Text('🔕 Не беспокоить')),
-                  DropdownMenuItem(value: 'battery', child: Text('🔋 Батарея')),
-                  DropdownMenuItem(value: 'timer', child: Text('⏱ Таймер')),
-                  DropdownMenuItem(value: 'area', child: Text('📐 Площадь')),
-                  DropdownMenuItem(value: 'fan', child: Text('🌀 Вентилятор')),
-                  DropdownMenuItem(value: 'cool', child: Text('❄️ Охлаждение')),
-                  DropdownMenuItem(value: 'heat', child: Text('🔥 Обогрев')),
-                  DropdownMenuItem(value: 'dry', child: Text('💨 Осушение')),
-                  DropdownMenuItem(value: 'auto', child: Text('🔄 Авто')),
-                  DropdownMenuItem(value: 'sleep', child: Text('😴 Сон')),
-                  DropdownMenuItem(value: 'swing_vertical', child: Text('↕️ Вертикальные жалюзи')),
-                  DropdownMenuItem(value: 'swing_horizontal', child: Text('↔️ Горизонтальные жалюзи')),
-                  DropdownMenuItem(value: 'air_quality', child: Text('🌬️ Качество воздуха')),
-                  DropdownMenuItem(value: 'filter', child: Text('🧹 Фильтр')),
-                  DropdownMenuItem(value: 'temp', child: Text('🌡 Температура')),
-                  DropdownMenuItem(value: 'ac', child: Text('❄️ Кондиционер')),
-                  DropdownMenuItem(value: 'heater', child: Text('🔥 Обогреватель')),
-                  DropdownMenuItem(value: 'air', child: Text('🍃 Воздух')),
-                  DropdownMenuItem(value: 'suction', child: Text('🌪️ Всасывание')),
-                  DropdownMenuItem(value: 'wait', child: Text('⏳ Ожидание')),
-                  DropdownMenuItem(value: 'sync', child: Text('🔄 Синхронизация')),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsDpsIcon,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: '',
+                    child: Text(l10n.deviceSettingsIconNone),
+                  ),
+                  DropdownMenuItem(
+                    value: 'play',
+                    child: Text('▶/⏹ ${l10n.deviceSettingsIconPlayStop}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'home',
+                    child: Text('🏠 ${l10n.deviceSettingsIconHomeBase}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'power',
+                    child: Text('⚡ ${l10n.deviceSettingsIconPower}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'water',
+                    child: Text('💧 ${l10n.deviceSettingsIconWater}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'mop',
+                    child: Text('🧹 ${l10n.deviceSettingsIconMop}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'do_not_disturb',
+                    child: Text('🔕 ${l10n.deviceSettingsIconDoNotDisturb}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'battery',
+                    child: Text('🔋 ${l10n.deviceSettingsIconBattery}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'timer',
+                    child: Text('⏱ ${l10n.deviceSettingsIconTimer}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'area',
+                    child: Text('📐 ${l10n.deviceSettingsIconArea}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'fan',
+                    child: Text('🌀 ${l10n.deviceSettingsIconFan}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'cool',
+                    child: Text('❄️ ${l10n.deviceSettingsIconCooling}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'heat',
+                    child: Text('🔥 ${l10n.deviceSettingsIconHeating}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'dry',
+                    child: Text('💨 ${l10n.deviceSettingsIconDrying}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'auto',
+                    child: Text('🔄 ${l10n.deviceSettingsIconAuto}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'sleep',
+                    child: Text('😴 ${l10n.deviceSettingsIconSleep}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'swing_vertical',
+                    child: Text('↕️ ${l10n.deviceSettingsIconVerticalBlinds}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'swing_horizontal',
+                    child: Text('↔️ ${l10n.deviceSettingsIconHorizontalBlinds}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'air_quality',
+                    child: Text('🌬️ ${l10n.deviceSettingsIconAirQuality}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'filter',
+                    child: Text('🧹 ${l10n.deviceSettingsIconFilter}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'temp',
+                    child: Text('🌡 ${l10n.deviceSettingsIconTemperature}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'ac',
+                    child: Text('❄️ ${l10n.deviceSettingsIconAirConditioner}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'heater',
+                    child: Text('🔥 ${l10n.deviceSettingsIconHeater}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'air',
+                    child: Text('🍃 ${l10n.deviceSettingsIconAir}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'suction',
+                    child: Text('🌪️ ${l10n.deviceSettingsIconSuction}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'wait',
+                    child: Text('⏳ ${l10n.deviceSettingsIconWaiting}'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'sync',
+                    child: Text('🔄 ${l10n.deviceSettingsIconSynchronization}'),
+                  ),
                 ],
                 onChanged: (v) => setDialogState(() => selectedIcon = v ?? ''),
               ),
@@ -636,9 +830,15 @@ class DeviceSettings {
                   Navigator.pop(ctx);
                   _deleteDps(device, dpsKey, ref);
                 },
-                child: const Text('Удалить', style: TextStyle(color: Colors.red)),
+                child: Text(
+                  l10n.deviceSettingsDelete,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.deviceSettingsCancel),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final newKey = keyController.text.trim();
@@ -675,7 +875,11 @@ class DeviceSettings {
                 if (ctx.mounted) Navigator.pop(ctx);
                 setModalState(() {});
               },
-              child: Text(isNew ? 'Добавить' : 'Сохранить'),
+              child: Text(
+                isNew
+                    ? l10n.deviceSettingsAdd
+                    : l10n.deviceSettingsSave,
+              ),
             ),
           ],
         ),
@@ -697,7 +901,11 @@ class DeviceSettings {
   // СОЗДАТЬ ДАТЧИК
   // ===================================================================
 
-  static void _showCreateSensorDialog(BuildContext context, WidgetRef ref, Device device) {
+  static void _showCreateSensorDialog(BuildContext context,
+      WidgetRef ref,
+      Device device,
+      AppLocalizations l10n,
+      ) {
     SensorType selectedSensorType = SensorType.temperature;
     final dpsController = TextEditingController(text: '21');
     final dividerController = TextEditingController(text: '10');
@@ -707,20 +915,37 @@ class DeviceSettings {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Создать датчик'),
+          title: Text(l10n.deviceSettingsCreateSensor),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Text('Из устройства: ${device.name}'),
+              Text(l10n.deviceSettingsSensorFromDevice(device.name)),
               const SizedBox(height: 12),
               DropdownButtonFormField<SensorType>(
                 initialValue: selectedSensorType,
-                decoration: const InputDecoration(labelText: 'Тип датчика'),
-                items: const [
-                  DropdownMenuItem(value: SensorType.temperature, child: Text('Температура')),
-                  DropdownMenuItem(value: SensorType.humidity, child: Text('Влажность')),
-                  DropdownMenuItem(value: SensorType.power, child: Text('Мощность')),
-                  DropdownMenuItem(value: SensorType.current, child: Text('Ток')),
-                  DropdownMenuItem(value: SensorType.voltage, child: Text('Напряжение')),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsSensorType,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: SensorType.temperature,
+                    child: Text(l10n.deviceSettingsTemperature),
+                  ),
+                  DropdownMenuItem(
+                    value: SensorType.humidity,
+                    child: Text(l10n.deviceSettingsHumidity),
+                  ),
+                  DropdownMenuItem(
+                    value: SensorType.power,
+                    child: Text(l10n.deviceSettingsPower),
+                  ),
+                  DropdownMenuItem(
+                    value: SensorType.current,
+                    child: Text(l10n.deviceSettingsCurrent),
+                  ),
+                  DropdownMenuItem(
+                    value: SensorType.voltage,
+                    child: Text(l10n.deviceSettingsVoltage),
+                  ),
                 ],
                 onChanged: (v) {
                   if (v != null) {
@@ -760,15 +985,35 @@ class DeviceSettings {
                 },
               ),
               const SizedBox(height: 8),
-              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Название')),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsName,
+                ),
+              ),
               const SizedBox(height: 8),
-              TextField(controller: dpsController, decoration: const InputDecoration(labelText: 'DPS индекс'), keyboardType: TextInputType.number),
+              TextField(
+                controller: dpsController,
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsDpsIndex,
+                ),
+                keyboardType: TextInputType.number,
+              ),
               const SizedBox(height: 8),
-              TextField(controller: dividerController, decoration: const InputDecoration(labelText: 'Делитель'), keyboardType: TextInputType.number),
+              TextField(
+                controller: dividerController,
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsDivider,
+                ),
+                keyboardType: TextInputType.number,
+              ),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.deviceSettingsCancel),
+            ),
             ElevatedButton(
               onPressed: () {
                 final dps = int.tryParse(dpsController.text) ?? 21;
@@ -789,10 +1034,14 @@ class DeviceSettings {
                 ));
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('✅ Датчик "${nameController.text}" создан!')),
+                  SnackBar(
+                    content: Text(
+                      l10n.deviceSettingsSensorCreated(nameController.text),
+                    ),
+                  ),
                 );
               },
-              child: const Text('Создать'),
+              child: Text(l10n.deviceSettingsCreate),
             ),
           ],
         ),
@@ -800,7 +1049,11 @@ class DeviceSettings {
     );
   }
 
-  static Widget _buildDisplaySettings(WidgetRef ref, Device device, VoidCallback setModalState) {
+  static Widget _buildDisplaySettings(WidgetRef ref,
+      Device device,
+      VoidCallback setModalState,
+      AppLocalizations l10n,
+      ) {
     return Card(
       color: Colors.blue.shade50,
       child: Padding(
@@ -836,14 +1089,14 @@ class DeviceSettings {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Выберите, какие данные показывать на главном экране',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                  l10n.deviceSettingsDisplayHint,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
                 if (displayEntries.isEmpty)
                   Text(
-                    'Нет информационных параметров',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    l10n.deviceSettingsNoInfoParameters,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                   )
                 else
                   ...displayEntries.map((entry) {
@@ -886,11 +1139,15 @@ class DeviceSettings {
       Device device,
       String channelKey,
       WidgetRef ref,
+      AppLocalizations l10n,
       ) {
     final dpsMap = Map<String, dynamic>.from(device.properties['dps_map'] as Map? ?? {});
     final currentConfig = dpsMap[channelKey] as Map<String, dynamic>? ?? {};
     final keyController = TextEditingController(text: channelKey);
-    final labelController = TextEditingController(text: currentConfig['label'] ?? 'Канал $channelKey');
+    final labelController = TextEditingController(
+      text: currentConfig['label'] as String? ??
+          l10n.deviceSettingsDefaultChannelLabel(channelKey),
+    );
 
     showDialog(
       context: context,
@@ -902,18 +1159,25 @@ class DeviceSettings {
             children: [
               TextField(
                 controller: keyController,
-                decoration: const InputDecoration(labelText: 'Номер канала'),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsChannelNumber,
+                ),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: labelController,
-                decoration: const InputDecoration(labelText: 'Название'),
+                decoration: InputDecoration(
+                  labelText: l10n.deviceSettingsName,
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.deviceSettingsCancel),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final newKey = keyController.text.trim();
@@ -943,7 +1207,7 @@ class DeviceSettings {
                 if (ctx.mounted) Navigator.pop(ctx);
                 setModalState(() {});
               },
-              child: const Text('Сохранить'),
+              child: Text(l10n.deviceSettingsSave),
             ),
           ],
         ),
