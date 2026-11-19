@@ -17,6 +17,9 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
     #==============Перемещение виджетов==========
   reorderable_grid_view: ^2.2.8
@@ -118,6 +121,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.8
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/icons/

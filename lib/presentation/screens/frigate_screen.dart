@@ -1,13 +1,18 @@
+/// Экран управления камерами Frigate.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../application/state/frigate_provider.dart';
+
 import '../../application/state/devices_provider.dart';
-import '../../application/state/rooms_provider.dart';   // ← НОВЫЙ ИМПОРТ
+import '../../application/state/frigate_provider.dart';
+import '../../application/state/rooms_provider.dart';
+import '../../data/services/frigate_service.dart';
+import '../../di/injection.dart';
 import '../../domain/models/device.dart';
 import '../../domain/models/frigate_models.dart';
-import '../../di/injection.dart';
-import '../../data/services/frigate_service.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../widgets/frigate_camera_settings.dart';
 
 class FrigateScreen extends ConsumerStatefulWidget {
@@ -26,46 +31,54 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
 
   Future<void> _refresh() async {
     await ref.read(frigateCamerasProvider.notifier).refresh();
+
     final stats = await getIt<FrigateService>().getStats();
     ref.read(frigateStatsProvider.notifier).state = stats;
   }
 
-  /// Получить имя комнаты по ID
-  String _getRoomDisplay(String roomId) {
+  String _getRoomDisplay(String roomId, AppLocalizations l10n) {
     final rooms = ref.read(roomsProvider);
-    final room = rooms.where((r) => r.id == roomId).firstOrNull;
+    final room = rooms.where((item) => item.id == roomId).firstOrNull;
+
     if (room != null) {
       return '${room.icon ?? "🏠"} ${room.name}';
     }
-    // Fallback
-    if (roomId == 'other') return '🔌 Техника';
-    if (roomId == 'living') return '🛋️ Гостиная';
-    if (roomId == 'bedroom') return '🛏️ Спальня';
-    if (roomId == 'kitchen') return '🍳 Кухня';
-    return roomId;
+
+    switch (roomId) {
+      case 'other':
+        return l10n.frigateRoomOther;
+      case 'living':
+        return l10n.frigateRoomLiving;
+      case 'bedroom':
+        return l10n.frigateRoomBedroom;
+      case 'kitchen':
+        return l10n.frigateRoomKitchen;
+      default:
+        return roomId;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final stats = ref.watch(frigateStatsProvider);
     final cameras = ref.watch(frigateCamerasProvider);
     final devices = ref.watch(devicesProvider);
 
-    // ВАЖНО: подписываемся на roomsProvider, чтобы обновлять при изменении
+    // Подписываемся, чтобы обновить названия комнат при их изменении.
     ref.watch(roomsProvider);
 
     final frigateDevices = devices
-        .where((d) => d.properties['source'] == 'frigate')
+        .where((device) => device.properties['source'] == 'frigate')
         .toList();
 
     final addedNames = frigateDevices
-        .map((d) => d.properties['camera_name'] as String?)
+        .map((device) => device.properties['camera_name'] as String?)
         .whereType<String>()
         .toSet();
 
-    final availableCameras = cameras
-        .where((c) => !addedNames.contains(c.name))
-        .toList();
+    final availableCameras =
+    cameras.where((camera) => !addedNames.contains(camera.name)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -73,12 +86,12 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: 'Настройки Frigate',
+            tooltip: l10n.frigateSettingsTooltip,
             onPressed: () => context.push('/frigate_settings'),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Обновить',
+            tooltip: l10n.frigateRefreshTooltip,
             onPressed: _refresh,
           ),
         ],
@@ -88,44 +101,54 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            if (stats != null) _buildStatsCard(stats),
+            if (stats != null) _buildStatsCard(stats, l10n),
             const SizedBox(height: 16),
 
             if (frigateDevices.isNotEmpty) ...[
-              const Text(
-                '🎥 Камеры в SHome',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.frigateSHomeCameras,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
-              ...frigateDevices.map((d) => _buildDeviceCard(d)),
+              ...frigateDevices.map(
+                    (device) => _buildDeviceCard(device, l10n),
+              ),
               const SizedBox(height: 24),
             ],
 
             if (availableCameras.isNotEmpty) ...[
-              const Text(
-                '📍 Доступные в Frigate',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.frigateAvailableCameras,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
-              ...availableCameras.map((c) => _buildAvailableCameraCard(c)),
+              ...availableCameras.map(
+                    (camera) => _buildAvailableCameraCard(camera, l10n),
+              ),
             ] else if (frigateDevices.isEmpty) ...[
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(32),
                   child: Text(
-                    'Нет доступных камер.\nПроверьте настройки Frigate.',
+                    l10n.frigateNoCameras,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ),
               ),
             ] else ...[
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(32),
                   child: Text(
-                    '✅ Все камеры добавлены',
-                    style: TextStyle(color: Colors.green),
+                    l10n.frigateAllCamerasAdded,
+                    style: const TextStyle(color: Colors.green),
                   ),
                 ),
               ),
@@ -136,25 +159,43 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
     );
   }
 
-  Widget _buildStatsCard(FrigateStats stats) {
+  Widget _buildStatsCard(
+      FrigateStats stats,
+      AppLocalizations l10n,
+      ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '📊 Статистика',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              l10n.frigateStatistics,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _statItem('Камеры', '${stats.camerasOnline}/${stats.camerasTotal}'),
-                _statItem('Детекторы', '${stats.detectorsOnline}/${stats.detectorsTotal}'),
-                _statItem('CPU', '${stats.cpuUsage.toStringAsFixed(1)}%'),
-                _statItem('RAM', '${stats.memoryUsage.toStringAsFixed(0)} MB'),
+                _statItem(
+                  l10n.frigateStatCameras,
+                  '${stats.camerasOnline}/${stats.camerasTotal}',
+                ),
+                _statItem(
+                  l10n.frigateStatDetectors,
+                  '${stats.detectorsOnline}/${stats.detectorsTotal}',
+                ),
+                _statItem(
+                  l10n.frigateStatCpu,
+                  '${stats.cpuUsage.toStringAsFixed(1)}%',
+                ),
+                _statItem(
+                  l10n.frigateStatRam,
+                  '${stats.memoryUsage.toStringAsFixed(0)} MB',
+                ),
               ],
             ),
           ],
@@ -166,33 +207,47 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
   Widget _statItem(String label, String value) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
       ],
     );
   }
 
-  /// Карточка добавленной камеры (в SHome)
-  Widget _buildDeviceCard(Device device) {
-    final roomDisplay = _getRoomDisplay(device.roomId);
+  Widget _buildDeviceCard(
+      Device device,
+      AppLocalizations l10n,
+      ) {
+    final roomDisplay = _getRoomDisplay(device.roomId, l10n);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: const Icon(Icons.videocam, color: Colors.green),
         title: Text(device.name),
-        subtitle: Text('Комната: $roomDisplay'),  // ← имя вместо ID
+        subtitle: Text(l10n.frigateRoomPrefix(roomDisplay)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               icon: const Icon(Icons.settings),
-              tooltip: 'Настройки',
+              tooltip: l10n.frigateCameraSettingsTooltip,
               onPressed: () => _showCameraSettings(device),
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              tooltip: 'Удалить из SHome',
+              tooltip: l10n.frigateRemoveFromSHomeTooltip,
               onPressed: () => _removeDevice(device),
             ),
           ],
@@ -201,7 +256,10 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
     );
   }
 
-  Widget _buildAvailableCameraCard(FrigateCamera camera) {
+  Widget _buildAvailableCameraCard(
+      FrigateCamera camera,
+      AppLocalizations l10n,
+      ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -210,7 +268,7 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
         subtitle: Text('${camera.width}x${camera.height} • ${camera.fps} fps'),
         trailing: IconButton(
           icon: const Icon(Icons.add_circle, color: Colors.green),
-          tooltip: 'Добавить в SHome',
+          tooltip: l10n.frigateAddToSHomeTooltip,
           onPressed: () => _addCamera(camera),
         ),
       ),
@@ -218,14 +276,20 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
   }
 
   Future<void> _addCamera(FrigateCamera camera) async {
+    final l10n = AppLocalizations.of(context);
     final devices = ref.read(devicesProvider);
-    final alreadyExists = devices.any((d) =>
-    d.properties['source'] == 'frigate' &&
-        d.properties['camera_name'] == camera.name);
+
+    final alreadyExists = devices.any(
+          (device) =>
+      device.properties['source'] == 'frigate' &&
+          device.properties['camera_name'] == camera.name,
+    );
 
     if (alreadyExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('⚠️ ${camera.name} уже добавлена')),
+        SnackBar(
+          content: Text(l10n.frigateCameraAlreadyAdded(camera.name)),
+        ),
       );
       return;
     }
@@ -253,41 +317,50 @@ class _FrigateScreenState extends ConsumerState<FrigateScreen> {
     await ref.read(devicesProvider.notifier).addDevice(device);
 
     if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('✅ ${camera.name} добавлена'),
+        content: Text(l10n.frigateCameraAdded(camera.name)),
         backgroundColor: Colors.green,
       ),
     );
   }
 
   Future<void> _removeDevice(Device device) async {
+    final l10n = AppLocalizations.of(context);
+
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Удалить камеру?'),
-        content: Text('${device.name} будет удалена из SHome.'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.frigateDeleteCameraTitle),
+        content: Text(l10n.frigateDeleteCameraMessage(device.name)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Отмена'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.frigateCancel),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Удалить'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: Text(l10n.frigateDelete),
           ),
         ],
       ),
     );
 
-    if (confirm == true) {
-      await ref.read(devicesProvider.notifier).removeDevice(device.id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('🗑️ ${device.name} удалена')),
-      );
-    }
+    if (confirm != true) return;
+
+    await ref.read(devicesProvider.notifier).removeDevice(device.id);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.frigateCameraRemoved(device.name)),
+      ),
+    );
   }
 
   void _showCameraSettings(Device device) {

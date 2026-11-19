@@ -5,9 +5,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../application/state/devices_provider.dart';
 import '../../data/local/database.dart';
 import '../../data/services/stats_cache.dart';
-import '../../application/state/devices_provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 enum EventCategory { all, alerts, actions, errors }
 
@@ -29,10 +30,7 @@ class EventsScreen extends ConsumerStatefulWidget {
 class _EventsScreenState extends ConsumerState<EventsScreen> {
   static const _pageSize = 50;
 
-  // Последние события из StatsCache — показываются сверху.
   List<dynamic> _cacheEvents = [];
-
-  // Более старые события из БД — подгружаются при прокрутке.
   final List<dynamic> _dbEvents = [];
 
   int _dbOffset = 0;
@@ -80,8 +78,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     _cacheEvents = StatsCache.instance.recentEvents.reversed.toList();
 
     final exclude = _cacheEvents
-        .map((event) =>
-    '${event.timestamp}|${event.event}|${event.deviceId ?? ''}')
+        .map(
+          (event) =>
+      '${event.timestamp}|${event.event}|${event.deviceId ?? ''}',
+    )
         .toSet();
 
     final dbEvents = await AppDatabase.getEventsPaginated(
@@ -108,8 +108,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     setState(() => _loadingMore = true);
 
     final exclude = _cacheEvents
-        .map((event) =>
-    '${event.timestamp}|${event.event}|${event.deviceId ?? ''}')
+        .map(
+          (event) =>
+      '${event.timestamp}|${event.event}|${event.deviceId ?? ''}',
+    )
         .toSet();
 
     final more = await AppDatabase.getEventsPaginated(
@@ -136,8 +138,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       _loadMoreFromDb();
     }
   }
-
-  // ═══ ФИЛЬТРАЦИЯ ═══
 
   List<dynamic> get _allEvents => [..._cacheEvents, ..._dbEvents];
 
@@ -191,17 +191,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     }).toList();
   }
 
-  // ═══ СОСТОЯНИЕ ПРИСУТСТВИЯ ═══
-
-  /// Возвращает часть после стрелки, то есть новое состояние.
-  ///
-  /// Для старых записей без стрелки использует доступный текст события.
   String _presenceCurrentRaw(dynamic eventEntity) {
     final value = eventEntity.value?.toString().trim();
 
     if (value != null && value.isNotEmpty) {
-      final parts = value.split('→');
-      return parts.last.trim();
+      return value.split('→').last.trim();
     }
 
     final event = eventEntity.event?.toString() ?? '';
@@ -238,18 +232,21 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     return _PresenceVisualState.unknown;
   }
 
-  String _presenceLabel(dynamic eventEntity) {
+  String _presenceLabel(
+      dynamic eventEntity,
+      AppLocalizations l10n,
+      ) {
     switch (_presenceVisualState(eventEntity)) {
       case _PresenceVisualState.away:
-        return 'Ушёл';
+        return l10n.eventsPresenceAway;
       case _PresenceVisualState.homeCloud:
-        return 'Дома (облако)';
+        return l10n.eventsPresenceHomeCloud;
       case _PresenceVisualState.homeWifi:
-        return 'Дома (Wi-Fi)';
+        return l10n.eventsPresenceHomeWifi;
       case _PresenceVisualState.home:
-        return 'Дома';
+        return l10n.eventsPresenceHome;
       case _PresenceVisualState.unknown:
-        return 'Неизвестно';
+        return l10n.eventsPresenceUnknown;
     }
   }
 
@@ -266,8 +263,6 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         return Colors.grey;
     }
   }
-
-  // ═══ ИКОНКИ / ЦВЕТА / МЕТКИ ═══
 
   IconData _eventIcon(String event) {
     if (_isPresenceEvent(event)) {
@@ -348,61 +343,94 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     return Colors.blue;
   }
 
-  String _eventLabel(String event) {
-    if (_isPresenceEvent(event)) return 'Присутствие';
+  String _eventLabel(String event, AppLocalizations l10n) {
+    if (_isPresenceEvent(event)) return l10n.eventsPresence;
 
     switch (event) {
       case 'turnOn':
-        return 'Включено';
+        return l10n.eventsTurnedOn;
       case 'turnOff':
-        return 'Выключено';
+        return l10n.eventsTurnedOff;
       case 'scene':
-        return 'Сцена';
+        return l10n.eventsScene;
       case 'roomAdded':
-        return 'Комната добавлена';
+        return l10n.eventsRoomAdded;
       case 'roomRemoved':
-        return 'Комната удалена';
+        return l10n.eventsRoomRemoved;
       case 'timer':
-        return 'Таймер';
+        return l10n.eventsTimer;
       case 'deviceAdded':
-        return 'Устройство добавлено';
+        return l10n.eventsDeviceAdded;
       case 'deviceRemoved':
-        return 'Устройство удалено';
+        return l10n.eventsDeviceRemoved;
       case 'sceneCreated':
-        return 'Сцена создана';
+        return l10n.eventsSceneCreated;
       case 'sceneDeleted':
-        return 'Сцена удалена';
+        return l10n.eventsSceneDeleted;
       case 'online':
-        return 'В сети';
+        return l10n.eventsOnline;
       case 'offline':
-        return 'Не в сети';
+        return l10n.eventsOffline;
       case 'error':
-        return 'Ошибка';
+        return l10n.eventsError;
+      case 'alarm_water_leak':
+        return l10n.eventsAlarmWaterLeak;
+      case 'alarm_smoke':
+        return l10n.eventsAlarmSmoke;
+      case 'alarm_gas':
+        return l10n.eventsAlarmGas;
+      case 'alarm_motion':
+        return l10n.eventsAlarmMotion;
+      case 'alarm_contact_open':
+        return l10n.eventsAlarmContactOpen;
+      case 'alarm_contact_closed':
+        return l10n.eventsAlarmContactClosed;
+      case 'alarm_temperature_above':
+        return l10n.eventsAlarmTemperatureAbove;
+      case 'alarm_temperature_below':
+        return l10n.eventsAlarmTemperatureBelow;
+      case 'alarm_humidity_above':
+        return l10n.eventsAlarmHumidityAbove;
+      case 'alarm_humidity_below':
+        return l10n.eventsAlarmHumidityBelow;
+      case 'frigate_person':
+        return l10n.eventsFrigatePerson;
+      case 'frigate_car':
+        return l10n.eventsFrigateCar;
+      case 'frigate_dog':
+        return l10n.eventsFrigateDog;
+      case 'frigate_cat':
+        return l10n.eventsFrigateCat;
+      case 'frigate_bird':
+        return l10n.eventsFrigateBird;
     }
 
-    if (event == 'alarm_water_leak') return '💧 Протечка';
-    if (event == 'alarm_smoke') return '🔥 Дым';
-    if (event == 'alarm_gas') return '💨 Газ';
-    if (event == 'alarm_motion') return '🏃 Движение';
-    if (event == 'alarm_contact_open') return '🚪 Открыто';
-    if (event == 'alarm_contact_closed') return '🚪 Закрыто';
-    if (event == 'alarm_temperature_above') return '🌡️ Температура >';
-    if (event == 'alarm_temperature_below') return '🌡️ Температура <';
-    if (event == 'alarm_humidity_above') return '💧 Влажность >';
-    if (event == 'alarm_humidity_below') return '💧 Влажность <';
-
     if (event.startsWith('frigate_')) {
-      final label = event.replaceFirst('frigate_', '');
-      return '🎥 $label';
+      return l10n.eventsFrigateOther;
     }
 
     return event;
   }
 
-  // ═══ BUILD ═══
+  String _categoryLabel(
+      EventCategory category,
+      AppLocalizations l10n,
+      ) {
+    switch (category) {
+      case EventCategory.all:
+        return l10n.eventsFilterAll;
+      case EventCategory.alerts:
+        return l10n.eventsFilterAlerts;
+      case EventCategory.actions:
+        return l10n.eventsFilterActions;
+      case EventCategory.errors:
+        return l10n.eventsFilterErrors;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final devices = ref.watch(devicesProvider);
     final filtered = _filteredEvents;
 
@@ -416,37 +444,33 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('События'),
+        title: Text(l10n.eventsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Обновить',
+            tooltip: l10n.eventsRefresh,
             onPressed: _loadInitial,
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Очистить всё',
+            tooltip: l10n.eventsClearAll,
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Очистить события?'),
-                  content: const Text(
-                    'Все события будут удалены безвозвратно.',
-                  ),
+                  title: Text(l10n.eventsClearTitle),
+                  content: Text(l10n.eventsClearWarning),
                   actions: [
                     TextButton(
-                      onPressed: () =>
-                          Navigator.pop(dialogContext, false),
-                      child: const Text('Отмена'),
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(l10n.eventsClearCancel),
                     ),
                     ElevatedButton(
-                      onPressed: () =>
-                          Navigator.pop(dialogContext, true),
+                      onPressed: () => Navigator.pop(dialogContext, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      child: const Text('Очистить'),
+                      child: Text(l10n.eventsClearConfirm),
                     ),
                   ],
                 ),
@@ -472,34 +496,33 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: [
-                      _buildCategoryChip('Все', EventCategory.all),
-                      const SizedBox(width: 4),
-                      _buildCategoryChip('Алерты', EventCategory.alerts),
-                      const SizedBox(width: 4),
-                      _buildCategoryChip(
-                        'Действия',
-                        EventCategory.actions,
+                    children: EventCategory.values
+                        .map(
+                          (category) => Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: _buildCategoryChip(
+                          _categoryLabel(category, l10n),
+                          category,
+                        ),
                       ),
-                      const SizedBox(width: 4),
-                      _buildCategoryChip('Ошибки', EventCategory.errors),
-                    ],
+                    )
+                        .toList(),
                   ),
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String?>(
                   initialValue: _selectedDeviceId,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Устройство',
-                    prefixIcon: Icon(Icons.devices),
+                  decoration: InputDecoration(
+                    labelText: l10n.eventsDeviceFilter,
+                    prefixIcon: const Icon(Icons.devices),
                     isDense: true,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                   items: [
-                    const DropdownMenuItem<String?>(
+                    DropdownMenuItem<String?>(
                       value: null,
-                      child: Text('Все устройства'),
+                      child: Text(l10n.eventsAllDevices),
                     ),
                     ...availableDevices.map(
                           (device) => DropdownMenuItem<String?>(
@@ -518,8 +541,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           const Divider(height: 1),
           Expanded(
             child: filtered.isEmpty
-                ? const Center(
-              child: Text('Нет событий по фильтру'),
+                ? Center(
+              child: Text(l10n.eventsEmptyFilter),
             )
                 : ListView.builder(
               controller: _scrollController,
@@ -575,19 +598,21 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     (deviceName?.isNotEmpty == true
                         ? deviceName!
                         : eventType == 'error'
-                        ? 'Системная ошибка'
+                        ? l10n.eventsSystemError
                         : isPresence
-                        ? 'Телефон'
+                        ? l10n.eventsPhone
                         : '');
 
+                final details = eventEntity.value?.toString();
                 final subtitle = isPresence
-                    ? _presenceLabel(eventEntity)
+                    ? _presenceLabel(eventEntity, l10n)
                     : sceneName != null
-                    ? 'Сцена выполнена'
-                    : eventType == 'error'
-                    ? '${_eventLabel(eventType)}'
-                    '${eventEntity.value != null ? '\n${eventEntity.value}' : ''}'
-                    : _eventLabel(eventType);
+                    ? l10n.eventsSceneCompleted
+                    : eventType == 'error' &&
+                    details != null &&
+                    details.isNotEmpty
+                    ? '${_eventLabel(eventType, l10n)}\n$details'
+                    : _eventLabel(eventType, l10n);
 
                 return Card(
                   child: ListTile(

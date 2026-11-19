@@ -2,6 +2,7 @@
 /// Поддерживает фильтрацию по комнатам через RoomSelector.
 /// AppBar: название слева, время + погода по центру, шестерёнка справа.
 library;
+import '../../l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -89,6 +90,7 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final allDevices = ref.watch(devicesProvider);
     _poller?.updateDevices(allDevices); // ← обновляем список устройств
 
@@ -127,14 +129,17 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
               const Divider(),
               Expanded(
                 child: devices.isEmpty
-                    ? const Center(
+                    ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.devices, size: 80, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text('Нет устройств', style: TextStyle(fontSize: 20, color: Colors.grey)),
-                    ],
+                  children: [
+                    const Icon(Icons.devices, size: 80, color: Colors.grey),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.noDevices,
+                      style: const TextStyle(fontSize: 20, color: Colors.grey),
+                    ),
+                  ],
                   ),
                 )
                     : LayoutBuilder(
@@ -186,6 +191,7 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
   }
 
   void _showAddDeviceDialog() {
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
     final deviceIdController = TextEditingController();
     final addressController = TextEditingController();
@@ -195,40 +201,44 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Добавить устройство'),
+          // 'Добавить устройство'
+          title: Text(l10n.addDeviceTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Название')),
+                // 'Название'
+                TextField(controller: nameController, decoration: InputDecoration(labelText: l10n.deviceName)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<DeviceType>(
                   initialValue: _selectedType,
-                  decoration: const InputDecoration(labelText: 'Тип устройства', prefixIcon: Icon(Icons.category)),
-                  items: const [
-                    DropdownMenuItem(value: DeviceType.outlet, child: Text('Розетка')),
-                    DropdownMenuItem(value: DeviceType.switch1, child: Text('Выключатель (1 кл.)')),
-                    DropdownMenuItem(value: DeviceType.switch2, child: Text('Выключатель (2 кл.)')),
-                    DropdownMenuItem(value: DeviceType.switch3, child: Text('Выключатель (3 кл.)')),
-                    DropdownMenuItem(value: DeviceType.sensor, child: Text('Датчик')),
-                    DropdownMenuItem(value: DeviceType.light, child: Text('Лампа')),
-                    DropdownMenuItem(value: DeviceType.curtain, child: Text('Шторы')),
-                    DropdownMenuItem(value: DeviceType.hvac, child: Text('Кондиционер')),
-                    DropdownMenuItem(value: DeviceType.compound, child: Text('Универсальное устройство')),
+                  // 'Тип устройства'
+                  decoration: InputDecoration(labelText: l10n.deviceType, prefixIcon: const Icon(Icons.category)),
+                  items: [
+                    DropdownMenuItem(value: DeviceType.outlet, child: Text(l10n.outlet),),
+                    DropdownMenuItem(value: DeviceType.switch1, child: Text(l10n.switchOne),),
+                    DropdownMenuItem(value: DeviceType.switch2, child: Text(l10n.switchTwo),),
+                    DropdownMenuItem(value: DeviceType.switch3, child: Text(l10n.switchThree),),
+                    DropdownMenuItem(value: DeviceType.sensor, child: Text(l10n.sensor),),
+                    DropdownMenuItem(value: DeviceType.light, child: Text(l10n.light),),
+                    DropdownMenuItem(value: DeviceType.curtain, child: Text(l10n.curtain),),
+                    DropdownMenuItem(value: DeviceType.hvac, child: Text(l10n.airConditioner),),
+                    DropdownMenuItem(value: DeviceType.compound, child: Text(l10n.universalDevice),),
                   ],
                   onChanged: (value) => setDialogState(() => _selectedType = value ?? DeviceType.outlet),
                 ),
                 const SizedBox(height: 8),
-                TextField(controller: deviceIdController, decoration: const InputDecoration(labelText: 'Device ID')),
+                TextField(controller: deviceIdController, decoration: InputDecoration(labelText: l10n.deviceId)),
                 const SizedBox(height: 8),
-                TextField(controller: addressController, decoration: const InputDecoration(labelText: 'IP Адрес')),
+                TextField(controller: addressController, decoration: InputDecoration(labelText: l10n.ipAddressLabel)),
                 const SizedBox(height: 8),
-                TextField(controller: localKeyController, decoration: const InputDecoration(labelText: 'Local Key')),
+                TextField(controller: localKeyController, decoration: InputDecoration(labelText: l10n.localKey)),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+            // 'Отмена'
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
             ElevatedButton(
               onPressed: () {
                 if (nameController.text.isNotEmpty && deviceIdController.text.isNotEmpty) {
@@ -249,7 +259,8 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Добавить'),
+              // 'Добавить'
+              child: Text(l10n.add),
             ),
           ],
         ),
@@ -335,10 +346,12 @@ class _TimeWeatherWidgetState extends State<_TimeWeatherWidget> {
   }
 
   void _showForecast(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('🌤️ Прогноз погоды'),
+        // '🌤️ Прогноз погоды'
+        title: Text('🌤️ ${l10n.forecastTitle}'),
         content: FutureBuilder(
           future: _fetchForecast(),
           builder: (context, snapshot) {
@@ -366,7 +379,8 @@ class _TimeWeatherWidgetState extends State<_TimeWeatherWidget> {
             );
           },
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.ok)),
+        ],
       ),
     );
   }

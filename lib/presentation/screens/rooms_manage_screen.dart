@@ -1,44 +1,79 @@
 /// Экран управления комнатами.
 /// Позволяет добавлять, переименовывать и удалять комнаты.
-/// При удалении комнаты с устройствами — они переносятся в "all".
-/// Показывает количество устройств в каждой комнате.
+/// При удалении комнаты устройства переносятся в раздел «Все устройства».
 library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../../domain/models/room.dart';
-import '../../application/state/rooms_provider.dart';
+
 import '../../application/state/devices_provider.dart';
+import '../../application/state/rooms_provider.dart';
+import '../../domain/models/room.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class RoomsManageScreen extends ConsumerWidget {
   const RoomsManageScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final rooms = ref.watch(roomsProvider);
     final devices = ref.watch(devicesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Комнаты')),
+      appBar: AppBar(
+        title: Text(l10n.roomsTitle),
+      ),
       body: rooms.isEmpty
-          ? const Center(child: Text('Нет комнат. Добавьте первую!', style: TextStyle(fontSize: 16)))
+          ? Center(
+        child: Text(
+          l10n.roomsManageEmpty,
+          style: const TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      )
           : ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: rooms.length,
         itemBuilder: (context, index) {
           final room = rooms[index];
-          final deviceCount = devices.where((d) => d.roomId == room.id).length;
+          final deviceCount =
+              devices.where((device) => device.roomId == room.id).length;
 
           return Card(
             child: ListTile(
-              leading: Text(room.icon ?? '🏠', style: const TextStyle(fontSize: 32)),
-              title: Text(room.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              subtitle: Text('Устройств: $deviceCount'),
+              leading: Text(
+                room.icon ?? '🏠',
+                style: const TextStyle(fontSize: 32),
+              ),
+              title: Text(
+                room.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              subtitle: Text(l10n.roomsDeviceCount(deviceCount)),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(icon: const Icon(Icons.edit, color: Colors.blue), onPressed: () => _showRenameDialog(context, ref, room)),
-                  IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => _showDeleteDialog(context, ref, room, deviceCount)),
+                  IconButton(
+                    tooltip: l10n.roomsEditDialogTitle,
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () =>
+                        _showRenameDialog(context, ref, room),
+                  ),
+                  IconButton(
+                    tooltip: l10n.roomsDeleteDialogTitle,
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _showDeleteDialog(
+                      context,
+                      ref,
+                      room,
+                      deviceCount,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -46,66 +81,125 @@ class RoomsManageScreen extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: l10n.roomAddDialogTitle,
         onPressed: () => _showAddRoomDialog(context, ref),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  /// Диалог добавления новой комнаты.
+  String _iconLabel(String icon, AppLocalizations l10n) {
+    switch (icon) {
+      case '🛋️':
+        return l10n.roomIconLiving;
+      case '🛏️':
+        return l10n.roomIconBedroom;
+      case '🍳':
+        return l10n.roomIconKitchen;
+      case '🚿':
+        return l10n.roomIconBathroom;
+      case '🚗':
+        return l10n.roomIconGarage;
+      case '🌳':
+        return l10n.roomIconYard;
+      case '👶':
+        return l10n.roomIconKids;
+      case '📦':
+        return l10n.roomIconStorage;
+      case '💻':
+        return l10n.roomIconOffice;
+      case '🏠':
+        return l10n.roomIconHome;
+      case '🔌':
+        return l10n.roomIconAppliances;
+      default:
+        return icon;
+    }
+  }
+
+  List<DropdownMenuItem<String>> _iconItems(AppLocalizations l10n) {
+    const icons = [
+      '🛋️',
+      '🛏️',
+      '🍳',
+      '🚿',
+      '🚗',
+      '🌳',
+      '👶',
+      '📦',
+      '💻',
+      '🏠',
+      '🔌',
+    ];
+
+    return icons
+        .map(
+          (icon) => DropdownMenuItem<String>(
+        value: icon,
+        child: Text('$icon ${_iconLabel(icon, l10n)}'),
+      ),
+    )
+        .toList();
+  }
+
   void _showAddRoomDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     String selectedIcon = '🏠';
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Добавить комнату'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(l10n.roomAddDialogTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(labelText: 'Название', hintText: 'Гостиная'),
+                decoration: InputDecoration(
+                  labelText: l10n.roomNameLabel,
+                  hintText: l10n.roomNameHint,
+                ),
                 autofocus: true,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: selectedIcon,
-                decoration: const InputDecoration(labelText: 'Иконка'),
-                items: const [
-                  DropdownMenuItem(value: '🛋️', child: Text('🛋️ Гостиная')),
-                  DropdownMenuItem(value: '🛏️', child: Text('🛏️ Спальня')),
-                  DropdownMenuItem(value: '🍳', child: Text('🍳 Кухня')),
-                  DropdownMenuItem(value: '🚿', child: Text('🚿 Ванная')),
-                  DropdownMenuItem(value: '🚗', child: Text('🚗 Гараж')),
-                  DropdownMenuItem(value: '🌳', child: Text('🌳 Двор')),
-                  DropdownMenuItem(value: '👶', child: Text('👶 Детская')),
-                  DropdownMenuItem(value: '📦', child: Text('📦 Кладовая')),
-                  DropdownMenuItem(value: '💻', child: Text('💻 Кабинет')),
-                  DropdownMenuItem(value: '🏠', child: Text('🏠 Дом')),
-                  DropdownMenuItem(value: '🔌', child: Text('🔌 Техника')),
-                ],
-                onChanged: (v) => setDialogState(() => selectedIcon = v ?? '🏠'),
+                decoration: InputDecoration(
+                  labelText: l10n.roomIconHome,
+                ),
+                items: _iconItems(l10n),
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedIcon = value ?? '🏠';
+                  });
+                },
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
             ElevatedButton(
               onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  ref.read(roomsProvider.notifier).addRoom(Room(
+                final name = controller.text.trim();
+                if (name.isEmpty) return;
+
+                ref.read(roomsProvider.notifier).addRoom(
+                  Room(
                     id: const Uuid().v4(),
-                    name: controller.text,
+                    name: name,
                     icon: selectedIcon,
                     sortOrder: ref.read(roomsProvider).length,
-                  ));
-                  Navigator.pop(ctx);
-                }
+                  ),
+                );
+
+                Navigator.pop(dialogContext);
               },
-              child: const Text('Добавить'),
+              child: Text(l10n.add),
             ),
           ],
         ),
@@ -113,58 +207,68 @@ class RoomsManageScreen extends ConsumerWidget {
     );
   }
 
-  /// Диалог переименования комнаты.
-  void _showRenameDialog(BuildContext context, WidgetRef ref, Room room) {
+  void _showRenameDialog(
+      BuildContext context,
+      WidgetRef ref,
+      Room room,
+      ) {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: room.name);
     String selectedIcon = room.icon ?? '🏠';
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Редактировать'),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(l10n.roomsEditDialogTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(labelText: 'Название'),
+                decoration: InputDecoration(
+                  labelText: l10n.roomNameLabel,
+                ),
                 autofocus: true,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: selectedIcon,
-                decoration: const InputDecoration(labelText: 'Иконка'),
-                items: const [
-                  DropdownMenuItem(value: '🛋️', child: Text('🛋️ Гостиная')),
-                  DropdownMenuItem(value: '🛏️', child: Text('🛏️ Спальня')),
-                  DropdownMenuItem(value: '🍳', child: Text('🍳 Кухня')),
-                  DropdownMenuItem(value: '🚿', child: Text('🚿 Ванная')),
-                  DropdownMenuItem(value: '🚗', child: Text('🚗 Гараж')),
-                  DropdownMenuItem(value: '🌳', child: Text('🌳 Двор')),
-                  DropdownMenuItem(value: '👶', child: Text('👶 Детская')),
-                  DropdownMenuItem(value: '📦', child: Text('📦 Кладовая')),
-                  DropdownMenuItem(value: '💻', child: Text('💻 Кабинет')),
-                  DropdownMenuItem(value: '🏠', child: Text('🏠 Дом')),
-                  DropdownMenuItem(value: '🔌', child: Text('🔌 Техника')),
-                ],
-                onChanged: (v) => setDialogState(() => selectedIcon = v ?? '🏠'),
+                decoration: InputDecoration(
+                  labelText: l10n.roomIconHome,
+                ),
+                items: _iconItems(l10n),
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedIcon = value ?? '🏠';
+                  });
+                },
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
             ElevatedButton(
               onPressed: () {
-                if (controller.text.isNotEmpty) {
-                  ref.read(roomsProvider.notifier).renameRoom(room.id, controller.text);
-                  // Обновляем иконку через update
-                  final updated = room.copyWith(name: controller.text, icon: selectedIcon);
-                  ref.read(roomsProvider.notifier).updateRoom(updated);
-                  Navigator.pop(ctx);
-                }
+                final name = controller.text.trim();
+                if (name.isEmpty) return;
+
+                ref.read(roomsProvider.notifier).renameRoom(room.id, name);
+
+                final updatedRoom = room.copyWith(
+                  name: name,
+                  icon: selectedIcon,
+                );
+                ref
+                    .read(roomsProvider.notifier)
+                    .updateRoom(updatedRoom);
+
+                Navigator.pop(dialogContext);
               },
-              child: const Text('Сохранить'),
+              child: Text(l10n.save),
             ),
           ],
         ),
@@ -172,31 +276,53 @@ class RoomsManageScreen extends ConsumerWidget {
     );
   }
 
-  /// Диалог удаления комнаты с предупреждением о переносе устройств.
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, Room room, int deviceCount) {
-    showDialog(
+  void _showDeleteDialog(
+      BuildContext context,
+      WidgetRef ref,
+      Room room,
+      int deviceCount,
+      ) {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Удалить комнату?'),
-        content: Text(deviceCount > 0
-            ? 'В комнате $deviceCount устройств. Они будут перенесены в «Все устройства». Продолжить?'
-            : 'Удалить комнату «${room.name}»?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.roomsDeleteDialogTitle),
+        content: Text(
+          deviceCount > 0
+              ? l10n.roomsDeleteWithDevices(deviceCount)
+              : l10n.roomsDeleteConfirmation(room.name),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
           ElevatedButton(
             onPressed: () {
-              // Переносим устройства в "all"
+              // Переносим устройства в раздел «Все устройства».
               final devices = ref.read(devicesProvider);
-              for (final device in devices.where((d) => d.roomId == room.id)) {
-                ref.read(devicesProvider.notifier).updateDevice(device.copyWith(roomId: 'all'));
+              for (final device
+              in devices.where((item) => item.roomId == room.id)) {
+                ref.read(devicesProvider.notifier).updateDevice(
+                  device.copyWith(roomId: 'all'),
+                );
               }
-              // Удаляем комнату
+
               ref.read(roomsProvider.notifier).deleteRoom(room.id);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Комната «${room.name}» удалена')));
+              Navigator.pop(dialogContext);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.roomsDeletedMessage(room.name)),
+                ),
+              );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: const Text('Удалить'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.roomsDeleteButton),
           ),
         ],
       ),

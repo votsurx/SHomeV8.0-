@@ -8,6 +8,7 @@ import '../../data/services/adaptive_poller.dart';
 import '../../data/services/config_service.dart';
 import 'documents/legal_documents_screen.dart';
 import 'screen_settings_screen.dart';
+import 'package:shome/presentation/widgets/language_selector_tile.dart';
 
 typedef StatsSettingReader = Future<String?> Function(String key);
 
@@ -446,6 +447,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () => UpdateService.checkForUpdates(context),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Язык приложения — пока сохраняет выбор как заглушку.
+          const LanguageSelectorTile(),
           const SizedBox(height: 12),
 
           // Информация

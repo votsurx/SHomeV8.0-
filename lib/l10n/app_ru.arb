@@ -1,0 +1,697 @@
+{
+  "@@locale": "ru",
+  "welcomeSubtitle": "Управляйте своим умным домом легко и просто",
+  "startButton": "Начать",
+  "languageTitle": "Язык приложения",
+  "languageSystem": "Как в системе",
+  "languageRussian": "Русский",
+  "languageEnglish": "English",
+  "languageSelected": "Выбран язык: {language}",
+  "@languageSelected": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Настройки",
+  "pollingInterval": "Интервал опроса",
+  "screenSettings": "Настройки экрана",
+  "screenSettingsSubtitle": "Заставка и отображение"
+
+
+
+,
+  "scanTuyaTitle": "Scan Tuya",
+  "tuyaSearchTitle": "Searching for Tuya devices",
+  "scanPortsHint": "Scanning ports 6666, 6667, 6668, and 7000 on the local network",
+  "scanProgress": "Checked: {progress} / {total}",
+  "@scanProgress": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "foundDevices": "Found: {count}",
+  "@foundDevices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deviceAddedStatus": "Added",
+  "tapToScan": "Tap “Scan”",
+  "scanning": "Scanning...",
+  "scan": "Scan",
+  "continueButton": "Продолжить",
+  "addDeviceTitle": "Add device",
+  "ipAddress": "IP: {ip}",
+  "@ipAddress": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "portNumber": "Port: {port}",
+  "@portNumber": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "defaultDeviceName": "Device {ip}",
+  "@defaultDeviceName": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceName": "Name",
+  "deviceType": "Device type",
+  "outlet": "Outlet",
+  "switchOne": "Switch (1 gang)",
+  "switchTwo": "Switch (2 gang)",
+  "switchThree": "Switch (3 gang)",
+  "sensor": "Sensor",
+  "light": "Light",
+  "curtain": "Curtain",
+  "airConditioner": "Air conditioner",
+  "universalDevice": "Universal device",
+  "deviceId": "Device ID",
+  "localKey": "Local Key",
+  "cancel": "Cancel",
+  "add": "Add",
+  "deviceAddedMessage": "{name} added!",
+  "@deviceAddedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "localNetworkNotFound": "Could not determine the local network"
+
+
+
+
+,
+  "roomsTitle": "Комнаты",
+  "roomsCreateTitle": "Создайте комнаты",
+  "roomsOrganizeHint": "Организуйте устройства по комнатам",
+  "roomsAddFirst": "Добавьте первую комнату",
+  "roomsAddButton": "Добавить комнату",
+  "onboardingFinishButton": "Готово!",
+  "roomAddDialogTitle": "Добавить комнату",
+  "roomNameLabel": "Название",
+  "roomNameHint": "Спальня"
+
+
+
+,
+  "noDevices": "Нет устройств",
+  "forecastTitle": "Прогноз погоды",
+  "ok": "OK",
+  "ipAddressLabel": "IP-адрес"
+
+
+,
+  "menuTitle": "Меню",
+  "menuDevices": "Устройства",
+  "menuEnergy": "Энергия",
+  "menuScenes": "Сцены",
+  "menuScanTuya": "Сканировать TUYA",
+  "menuZigbee": "Zigbee",
+  "menuFrigate": "Frigate",
+  "menuRooms": "Комнаты",
+  "menuStatistics": "Статистика",
+  "menuTimers": "Таймеры",
+  "menuEvents": "События",
+  "menuCloud": "Облако",
+  "menuNotifications": "Уведомления",
+  "menuPresence": "Присутствие",
+  "menuSettings": "Настройки",
+  "menuThemeSystem": "Тема: системная",
+  "menuThemeLight": "Тема: светлая",
+  "menuThemeDark": "Тема: тёмная"
+
+,
+  "backupKeyScanTitle": "Сканировать ключ",
+  "switchCameraTooltip": "Переключить камеру",
+  "flashTooltip": "Вспышка",
+  "backupKeyScanHint": "Наведите камеру на QR-код ключа SHome"
+
+
+,
+  "cloudSettingsTitle": "☁️ Облачное хранилище",
+  "cloudStatusConnected": "✅ Подключено",
+  "cloudStatusDisconnected": "⚪ Не подключено",
+  "cloudStatusLabel": "Статус",
+  "cloudLoginValue": "Логин: {login}",
+  "@cloudLoginValue": {
+    "placeholders": {
+      "login": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudConnectSection": "🔗 Подключение",
+  "cloudLogin": "Логин",
+  "cloudLoginHint": "login@mail.ru",
+  "cloudAppPassword": "Пароль приложения",
+  "cloudPasswordHelp": "💡 Как получить пароль приложения:\n1. Mail.ru → Настройки → Безопасность\n2. Пароли для приложений → Создать\n3. Назовите «SHome» → скопируйте пароль",
+  "cloudConnecting": "Подключение...",
+  "cloudConnect": "Подключить",
+  "cloudEnterCredentials": "Введите логин и пароль",
+  "cloudConnectedMessage": "✅ Подключено к облаку",
+  "cloudConnectFailed": "❌ Не удалось подключиться. Проверьте логин и пароль.",
+  "cloudConnectionError": "❌ Ошибка подключения: {error}",
+  "@cloudConnectionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudDisconnectedMessage": "🔌 Отключено от облака",
+  "cloudDisconnect": "Отключить",
+  "cloudDisconnectSubtitle": "Ключ резервного копирования останется на устройстве",
+  "cloudBackupKeyTitle": "🔐 Ключ резервного копирования",
+  "cloudKeyCreated": "Ключ создан",
+  "cloudKeyMissing": "Ключ не создан",
+  "cloudKeyReadySubtitle": "AES-256-GCM готов к работе",
+  "cloudKeyMissingSubtitle": "Создайте или импортируйте ключ",
+  "cloudGenerateNewKeyTitle": "Сгенерировать новый ключ?",
+  "cloudGenerateNewKeyWarning": "Новый ключ сделает все существующие резервные копии недоступными для восстановления.\n\nПродолжить?",
+  "cloudGenerate": "Сгенерировать",
+  "cloudKeyCreatedMessage": "✅ Ключ резервного копирования создан",
+  "cloudKeyCreateError": "❌ Ошибка создания ключа: {error}",
+  "@cloudKeyCreateError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudShowQr": "Показать QR",
+  "cloudScanQr": "Сканировать QR",
+  "cloudQrTitle": "QR-ключ резервного копирования",
+  "cloudQrHint": "Отсканируйте этот QR-код на другом устройстве SHome.",
+  "cloudClose": "Закрыть",
+  "cloudNoLoginData": "❌ Нет данных для входа в облако",
+  "cloudGenerateKeyFirst": "❌ Сначала сгенерируйте ключ резервного копирования",
+  "cloudImportKeyFirst": "❌ Сначала сгенерируйте или импортируйте ключ резервного копирования",
+  "cloudBackupUploaded": "✅ Бекап загружен в облако",
+  "cloudBackupUploadFailed": "❌ Ошибка загрузки бекапа",
+  "cloudBackupUploadError": "❌ Ошибка загрузки: {error}",
+  "@cloudBackupUploadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudBackupManagementTitle": "📋 Управление бекапами",
+  "cloudUploadBackup": "Загрузить в облако",
+  "cloudUploadBackupSubtitle": "Сохранить текущий бекап в облако",
+  "cloudDownloadBackup": "Скачать из облака",
+  "cloudDownloadBackupSubtitle": "Восстановить бекап из облака",
+  "cloudNoBackups": "ℹ️ В облаке нет бекапов",
+  "cloudChooseBackup": "Выберите бекап",
+  "cloudBackupDownloadFailed": "❌ Ошибка скачивания бекапа",
+  "cloudBackupRestoreSuccess": "✅ Бекап «{backup}» восстановлен. Перезапустите приложение.",
+  "@cloudBackupRestoreSuccess": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudBackupRestoreError": "❌ Ошибка восстановления: {error}",
+  "@cloudBackupRestoreError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLastSync": "Последняя синхронизация: {date}",
+  "@cloudLastSync": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudReplaceKeyTitle": "Заменить ключ?",
+  "cloudReplaceKeyWarning": "На устройстве уже есть ключ резервного копирования.\n\nПосле замены старые бекапы, созданные текущим ключом, станут недоступны.",
+  "cloudReplace": "Заменить",
+  "cloudKeyImported": "✅ Ключ резервного копирования импортирован",
+  "cloudKeyImportError": "❌ Ошибка импорта ключа: {error}",
+  "@cloudKeyImportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+
+,
+  "deviceNotificationsTitle": "Уведомления устройства",
+  "deviceNotFound": "Устройство не найдено",
+  "notificationSettingsSaved": "✅ Настройки сохранены",
+  "save": "Сохранить",
+  "notificationDeviceZigbee": "Zigbee-датчик",
+  "notificationDeviceFrigate": "Frigate-камера",
+  "notificationDeviceTuya": "Tuya ({type})",
+  "@notificationDeviceTuya": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationConditionSection": "⏱ Условие отправки",
+  "notificationConditionAlways": "Всегда",
+  "notificationConditionAway": "Только когда никого нет дома",
+  "notificationConditionNight": "Только ночью (22:00 – 06:00)",
+  "notificationConditionAwayOrNight": "Никого нет дома ИЛИ ночью",
+  "notificationCooldownSection": "⏱ Антидребезг",
+  "notificationInterval": "Интервал",
+  "notificationMinute": "1 минута",
+  "notificationMinutes5": "5 минут",
+  "notificationMinutes15": "15 минут",
+  "notificationMinutes30": "30 минут",
+  "notificationTypesTitle": "🔔 Типы уведомлений",
+  "notificationFrigateLabelsTitle": "🔔 Объекты для детекции",
+  "notificationWaterLeak": "Протечка",
+  "notificationSmoke": "Дым",
+  "notificationGas": "Газ",
+  "notificationMotion": "Движение",
+  "notificationContact": "Контакт",
+  "notificationLowBattery": "Низкий заряд",
+  "notificationStateChanged": "Вкл/Выкл",
+  "notificationOffline": "Offline",
+  "notificationError": "Ошибка",
+  "notificationTemperatureAbove": "Температура >",
+  "notificationTemperatureBelow": "Температура <",
+  "notificationHumidityAbove": "Влажность >",
+  "notificationHumidityBelow": "Влажность <",
+  "notificationPowerAbove": "Мощность >",
+  "notificationPerson": "Человек",
+  "notificationCar": "Автомобиль",
+  "notificationDog": "Собака",
+  "notificationCat": "Кошка",
+  "notificationBird": "Птица",
+  "notificationMotorcycle": "Мотоцикл",
+  "notificationBicycle": "Велосипед",
+  "notificationTruck": "Грузовик",
+  "notificationBus": "Автобус",
+  "notificationBoat": "Лодка",
+  "notificationThreshold": "Порог",
+  "notificationTemperatureThreshold": "Порог температуры",
+  "notificationHumidityThreshold": "Порог влажности",
+  "notificationPowerThreshold": "Порог мощности",
+  "notificationBatteryThreshold": "Порог заряда",
+  "notificationHowItWorks": "💡 Как это работает",
+  "notificationAlwaysExplanation": "Уведомления отправляются всегда при срабатывании.",
+  "notificationConditionExplanation": "Уведомления отправляются только при выполнении условия «{condition}».",
+  "@notificationConditionExplanation": {
+    "placeholders": {
+      "condition": {
+        "type": "String"
+      }
+    }
+  }
+
+,
+  "eventsTitle": "События",
+  "eventsRefresh": "Обновить",
+  "eventsClearAll": "Очистить всё",
+  "eventsClearTitle": "Очистить события?",
+  "eventsClearWarning": "Все события будут удалены безвозвратно.",
+  "eventsClearCancel": "Отмена",
+  "eventsClearConfirm": "Очистить",
+  "eventsFilterAll": "Все",
+  "eventsFilterAlerts": "Алерты",
+  "eventsFilterActions": "Действия",
+  "eventsFilterErrors": "Ошибки",
+  "eventsDeviceFilter": "Устройство",
+  "eventsAllDevices": "Все устройства",
+  "eventsEmptyFilter": "Нет событий по фильтру",
+  "eventsSystemError": "Системная ошибка",
+  "eventsPhone": "Телефон",
+  "eventsPresence": "Присутствие",
+  "eventsPresenceAway": "Ушёл",
+  "eventsPresenceHomeCloud": "Дома (облако)",
+  "eventsPresenceHomeWifi": "Дома (Wi-Fi)",
+  "eventsPresenceHome": "Дома",
+  "eventsPresenceUnknown": "Неизвестно",
+  "eventsSceneCompleted": "Сцена выполнена",
+  "eventsTurnedOn": "Включено",
+  "eventsTurnedOff": "Выключено",
+  "eventsScene": "Сцена",
+  "eventsRoomAdded": "Комната добавлена",
+  "eventsRoomRemoved": "Комната удалена",
+  "eventsTimer": "Таймер",
+  "eventsDeviceAdded": "Устройство добавлено",
+  "eventsDeviceRemoved": "Устройство удалено",
+  "eventsSceneCreated": "Сцена создана",
+  "eventsSceneDeleted": "Сцена удалена",
+  "eventsOnline": "В сети",
+  "eventsOffline": "Не в сети",
+  "eventsError": "Ошибка",
+  "eventsAlarmWaterLeak": "💧 Протечка",
+  "eventsAlarmSmoke": "🔥 Дым",
+  "eventsAlarmGas": "💨 Газ",
+  "eventsAlarmMotion": "🏃 Движение",
+  "eventsAlarmContactOpen": "🚪 Открыто",
+  "eventsAlarmContactClosed": "🚪 Закрыто",
+  "eventsAlarmTemperatureAbove": "🌡️ Температура >",
+  "eventsAlarmTemperatureBelow": "🌡️ Температура <",
+  "eventsAlarmHumidityAbove": "💧 Влажность >",
+  "eventsAlarmHumidityBelow": "💧 Влажность <",
+  "eventsFrigatePerson": "🎥 Человек",
+  "eventsFrigateCar": "🎥 Автомобиль",
+  "eventsFrigateDog": "🎥 Собака",
+  "eventsFrigateCat": "🎥 Кошка",
+  "eventsFrigateBird": "🎥 Птица",
+  "eventsFrigateOther": "🎥 Обнаружение"
+
+
+,
+  "frigateSettingsTooltip": "Настройки Frigate",
+  "frigateRefreshTooltip": "Обновить",
+  "frigateSHomeCameras": "🎥 Камеры в SHome",
+  "frigateAvailableCameras": "📍 Доступные в Frigate",
+  "frigateNoCameras": "Нет доступных камер.\nПроверьте настройки Frigate.",
+  "frigateAllCamerasAdded": "✅ Все камеры добавлены",
+  "frigateStatistics": "📊 Статистика",
+  "frigateStatCameras": "Камеры",
+  "frigateStatDetectors": "Детекторы",
+  "frigateStatCpu": "CPU",
+  "frigateStatRam": "RAM",
+  "frigateRoomPrefix": "Комната: {room}",
+  "@frigateRoomPrefix": {
+    "placeholders": {
+      "room": {
+        "type": "String"
+      }
+    }
+  },
+  "frigateCameraSettingsTooltip": "Настройки",
+  "frigateRemoveFromSHomeTooltip": "Удалить из SHome",
+  "frigateAddToSHomeTooltip": "Добавить в SHome",
+  "frigateCameraAlreadyAdded": "⚠️ Камера «{name}» уже добавлена",
+  "@frigateCameraAlreadyAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "frigateCameraAdded": "✅ Камера «{name}» добавлена",
+  "@frigateCameraAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "frigateDeleteCameraTitle": "Удалить камеру?",
+  "frigateDeleteCameraMessage": "Камера «{name}» будет удалена из SHome.",
+  "@frigateDeleteCameraMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "frigateCancel": "Отмена",
+  "frigateDelete": "Удалить",
+  "frigateCameraRemoved": "🗑️ Камера «{name}» удалена",
+  "@frigateCameraRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "frigateRoomOther": "🔌 Техника",
+  "frigateRoomLiving": "🛋️ Гостиная",
+  "frigateRoomBedroom": "🛏️ Спальня",
+  "frigateRoomKitchen": "🍳 Кухня"
+
+
+,
+  "frigateSettingsTitle": "Настройки Frigate",
+  "frigateConnectionSection": "Подключение",
+  "frigateHostLabel": "Host (IP)",
+  "frigateHostHint": "192.168.43.16",
+  "frigatePortLabel": "Port",
+  "frigatePortHint": "5000",
+  "frigateRtspPasswordLabel": "RTSP-пароль",
+  "frigateTestConnection": "Проверить",
+  "frigateConnectionSuccess": "Подключение успешно",
+  "frigateConnectionFailed": "Не удалось подключиться",
+  "frigateSettingsSection": "Настройки",
+  "frigateStatsIntervalLabel": "Интервал статистики (сек)",
+  "frigateNotifyFor": "Уведомления для:",
+  "frigateLabelPerson": "Человек",
+  "frigateLabelCar": "Автомобиль",
+  "frigateLabelDog": "Собака",
+  "frigateLabelCat": "Кошка",
+  "frigateLabelMotion": "Движение",
+  "frigateSaving": "Сохранение...",
+  "frigateSave": "Сохранить",
+  "frigateSettingsSaved": "✅ Настройки сохранены"
+
+
+,
+  "mqttSettingsTitle": "Настройки MQTT",
+  "mqttBrokerTitle": "Брокер MQTT",
+  "mqttUsageHint": "Используется для Zigbee2MQTT и Frigate",
+  "mqttHostLabel": "Адрес (IP или hostname)",
+  "mqttHostHint": "192.168.43.16",
+  "mqttPortLabel": "Порт",
+  "mqttUsernameLabel": "Логин (необязательно)",
+  "mqttPasswordLabel": "Пароль (необязательно)",
+  "mqttHostRequired": "Укажите адрес брокера",
+  "mqttConnectionFailed": "Не удалось подключиться к брокеру",
+  "mqttConnectionError": "Ошибка: {error}",
+  "@mqttConnectionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mqttConnectionSuccess": "Подключение успешно",
+  "mqttConnectionFailureStatus": "Не удалось подключиться",
+  "mqttConnecting": "Подключение...",
+  "mqttSaveAndConnect": "Сохранить и подключиться"
+
+,
+  "notificationChannelsTitle": "Уведомления",
+  "notificationVkSubtitle": "Уведомления в VK",
+  "notificationSmsSubtitle": "Уведомления по SMS"
+
+
+,
+  "presenceTitle": "Присутствие",
+  "presenceTrackingEnable": "Включить отслеживание",
+  "presenceTrackingSubtitle": "Определять, кто дома",
+  "presencePhones": "Телефоны",
+  "presenceNoPhones": "Нет добавленных телефонов",
+  "presenceHomeZone": "Домашняя зона",
+  "presenceNotConfigured": "Не настроено",
+  "presenceRadius": "Радиус",
+  "presenceAwayTimeout": "Таймаут «ушёл»",
+  "presenceHomeWifi": "Дома (Wi-Fi)",
+  "presenceHeartbeatActive": "Heartbeat активен",
+  "presenceHomeCloud": "Дома (облако)",
+  "presenceWifiInactiveGpsUnavailable": "Wi-Fi не активен · GPS недоступен",
+  "presenceWifiInactiveDistance": "Wi-Fi не активен · {distance} от дома",
+  "@presenceWifiInactiveDistance": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "presenceAway": "Ушёл",
+  "presenceDistanceFromHome": "Расстояние: {distance} от дома",
+  "@presenceDistanceFromHome": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "presenceUnknown": "Неизвестно",
+  "presenceEditPhone": "Редактировать телефон",
+  "presenceAddPhone": "Добавить телефон",
+  "presenceName": "Название",
+  "presenceNameHint": "Мой телефон",
+  "presencePhoneId": "Phone ID",
+  "presencePhoneIdHint": "89533309330",
+  "presenceDelete": "Удалить",
+  "presenceCancel": "Отмена",
+  "presenceSave": "Сохранить",
+  "presenceAdd": "Добавить",
+  "presenceLatitude": "Широта",
+  "presenceLongitude": "Долгота",
+  "presenceGetCurrentCoordinates": "Определить мои координаты",
+  "presenceGpsDisabled": "❌ GPS выключен в системе. Включите его в настройках.",
+  "presencePermissionTitle": "Нет разрешения",
+  "presencePermissionMessage": "Разрешение на GPS отклонено навсегда.\nОткройте настройки и разрешите его вручную.",
+  "presenceOpenSettings": "Открыть настройки",
+  "presencePermissionNotGranted": "❌ Разрешение на GPS не выдано",
+  "presenceGettingGps": "Получаем GPS…\nЭто может занять до 60 секунд",
+  "presenceCoordinatesReceived": "✅ Координаты получены:\n{latitude}, {longitude}",
+  "@presenceCoordinatesReceived": {
+    "placeholders": {
+      "latitude": {
+        "type": "String"
+      },
+      "longitude": {
+        "type": "String"
+      }
+    }
+  },
+  "presenceGpsFailed": "❌ Не удалось получить GPS.\nПопробуйте выйти на открытое место.",
+  "presenceMeters": "Метры",
+  "presenceRadiusHint": "100",
+  "presenceMinutes": "Минуты",
+  "presenceTimeoutHint": "5"
+
+
+,
+  "roomsManageEmpty": "Нет комнат. Добавьте первую!",
+  "roomsDeviceCount": "Устройств: {count}",
+  "@roomsDeviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "roomsEditDialogTitle": "Редактировать комнату",
+  "roomsDeleteDialogTitle": "Удалить комнату?",
+  "roomsDeleteWithDevices": "В комнате {count} устройств. Они будут перенесены в «Все устройства». Продолжить?",
+  "@roomsDeleteWithDevices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "roomsDeleteConfirmation": "Удалить комнату «{name}»?",
+  "@roomsDeleteConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roomsAllDevices": "Все устройства",
+  "roomsDeletedMessage": "Комната «{name}» удалена",
+  "@roomsDeletedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roomIconLiving": "Гостиная",
+  "roomIconBedroom": "Спальня",
+  "roomIconKitchen": "Кухня",
+  "roomIconBathroom": "Ванная",
+  "roomIconGarage": "Гараж",
+  "roomIconYard": "Двор",
+  "roomIconKids": "Детская",
+  "roomIconStorage": "Кладовая",
+  "roomIconOffice": "Кабинет",
+  "roomIconHome": "Дом",
+  "roomIconAppliances": "Техника",
+  "roomsDeleteButton": "Удалить"
+
+
+,
+  "scenesTitle": "Сцены",
+  "scenesEmpty": "Нет сцен. Создайте первую!",
+  "scenesManual": "Вручную",
+  "scenesAutoTriggerMessage": "⏰ Сцена «{name}» запускается автоматически по триггеру",
+  "@scenesAutoTriggerMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scenesActionCount": "{count} устр.",
+  "@scenesActionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scenesTimeTemperature": "Темп. {operator} {threshold}°C",
+  "@scenesTimeTemperature": {
+    "placeholders": {
+      "operator": {
+        "type": "String"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "scenesHumidity": "Влаж. {operator} {threshold}%",
+  "@scenesHumidity": {
+    "placeholders": {
+      "operator": {
+        "type": "String"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "scenesWaterLeak": "💧 Протечка",
+  "scenesMotion": "🏃 Движение",
+  "scenesContactOpen": "🚪 Открыто",
+  "scenesContactClosed": "🚪 Закрыто",
+  "scenesSmoke": "🔥 Дым",
+  "scenesGas": "💨 Газ",
+  "scenesPresence": "Присутствие",
+  "scenesSomeoneArrived": "Кто-то пришёл",
+  "scenesNobodyHome": "Никого нет",
+  "scenesEveryoneHome": "Все дома",
+  "scenesPhoneArrived": "Телефон пришёл",
+  "scenesPhoneLeft": "Телефон ушёл",
+  "scenesPhoneUnknown": "Телефон потерян",
+  "scenesEveryDay": "Каждый день",
+  "scenesWeekdays": "По дням недели",
+  "scenesInterval": "Интервал",
+  "scenesMondayShort": "Пн",
+  "scenesTuesdayShort": "Вт",
+  "scenesWednesdayShort": "Ср",
+  "scenesThursdayShort": "Чт",
+  "scenesFridayShort": "Пт",
+  "scenesSaturdayShort": "Сб",
+  "scenesSundayShort": "Вс",
+  "scenesActionOn": "ВКЛ",
+  "scenesActionOff": "ВЫКЛ",
+  "scenesActionBrightness": "ЯРК",
+  "scenesEdit": "Редактировать",
+  "scenesDelete": "Удалить"
+}

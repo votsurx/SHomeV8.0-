@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talker/talker.dart';
-import '../../di/injection.dart';
+
 import '../../data/local/secure_storage/encrypted_keys.dart';
 import '../../data/services/mqtt_service_impl.dart';
+import '../../di/injection.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class MqttBrokerSettingsScreen extends StatefulWidget {
   const MqttBrokerSettingsScreen({super.key});
 
   @override
-  State<MqttBrokerSettingsScreen> createState() => _MqttBrokerSettingsScreenState();
+  State<MqttBrokerSettingsScreen> createState() =>
+      _MqttBrokerSettingsScreenState();
 }
 
-class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
-  final _hostController = TextEditingController();
-  final _portController = TextEditingController(text: '1883');
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+class _MqttBrokerSettingsScreenState
+    extends State<MqttBrokerSettingsScreen> {
+  final TextEditingController _hostController = TextEditingController();
+  final TextEditingController _portController =
+  TextEditingController(text: '1883');
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = true;
   bool _isConnecting = false;
@@ -44,9 +49,7 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
 
     final host = prefs.getString('mqtt_host') ?? '';
 
-    // ═══════════════════════════════════════════════════════════
-    // УНИВЕРСАЛЬНОЕ ЧТЕНИЕ ПОРТА (может быть int или String)
-    // ═══════════════════════════════════════════════════════════
+    // Порт может храниться как int или String.
     final portRaw = prefs.get('mqtt_port');
     final port = portRaw is int
         ? portRaw
@@ -56,6 +59,7 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
     final password = await keys.getMqttPassword() ?? '';
 
     if (!mounted) return;
+
     setState(() {
       _hostController.text = host;
       _portController.text = port.toString();
@@ -66,11 +70,12 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
   }
 
   Future<void> _saveAndConnect() async {
+    final l10n = AppLocalizations.of(context);
     final host = _hostController.text.trim();
     final port = int.tryParse(_portController.text.trim()) ?? 1883;
 
     if (host.isEmpty) {
-      setState(() => _errorMessage = 'Укажите адрес брокера');
+      setState(() => _errorMessage = l10n.mqttHostRequired);
       return;
     }
 
@@ -81,7 +86,6 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
     });
 
     try {
-      // Сохраняем настройки
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('mqtt_host', host);
       await prefs.setInt('mqtt_port', port);
@@ -90,32 +94,42 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
       await keys.saveMqttUsername(_usernameController.text.trim());
       await keys.saveMqttPassword(_passwordController.text);
 
-      // Пробуем подключиться
       final service = MqttServiceImpl(getIt<Talker>());
       await service.connect(host, port: port);
 
-      if (!mounted) return;
+      if (!mounted) {
+        await service.disconnect();
+        return;
+      }
+
+      final connected = service.isConnected;
+
       setState(() {
-        _isConnecting = false;
-        _isConnected = service.isConnected;
-        if (!service.isConnected) {
-          _errorMessage = 'Не удалось подключиться к брокеру';
+        _isConnected = connected;
+        if (!connected) {
+          _errorMessage = l10n.mqttConnectionFailed;
         }
       });
 
       await service.disconnect();
-    } catch (e) {
+    } catch (error) {
       if (!mounted) return;
+
       setState(() {
-        _isConnecting = false;
         _isConnected = false;
-        _errorMessage = 'Ошибка: $e';
+        _errorMessage = l10n.mqttConnectionError(error.toString());
       });
+    } finally {
+      if (mounted) {
+        setState(() => _isConnecting = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -123,7 +137,9 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройки MQTT')),
+      appBar: AppBar(
+        title: Text(l10n.mqttSettingsTitle),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -133,61 +149,62 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Брокер MQTT',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.mqttBrokerTitle,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Используется для Zigbee2MQTT и Frigate',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  Text(
+                    l10n.mqttUsageHint,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 16),
-
                   TextField(
                     controller: _hostController,
-                    decoration: const InputDecoration(
-                      labelText: 'Адрес (IP или hostname)',
-                      hintText: '192.168.43.16',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.dns),
+                    decoration: InputDecoration(
+                      labelText: l10n.mqttHostLabel,
+                      hintText: l10n.mqttHostHint,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.dns),
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   TextField(
                     controller: _portController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Порт',
+                    decoration: InputDecoration(
+                      labelText: l10n.mqttPortLabel,
                       hintText: '1883',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.numbers),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.numbers),
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   TextField(
                     controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Логин (опционально)',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
+                    decoration: InputDecoration(
+                      labelText: l10n.mqttUsernameLabel,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person),
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Пароль (опционально)',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
+                    decoration: InputDecoration(
+                      labelText: l10n.mqttPasswordLabel,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock),
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -210,7 +227,6 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
                     ),
                     const SizedBox(height: 12),
                   ],
-
                   if (_isConnected != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -223,17 +239,25 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            _isConnected! ? Icons.check_circle : Icons.cancel,
-                            color: _isConnected! ? Colors.green : Colors.red,
+                            _isConnected!
+                                ? Icons.check_circle
+                                : Icons.cancel,
+                            color: _isConnected!
+                                ? Colors.green
+                                : Colors.red,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            _isConnected!
-                                ? 'Подключение успешно'
-                                : 'Не удалось подключиться',
-                            style: TextStyle(
-                              color: _isConnected! ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              _isConnected!
+                                  ? l10n.mqttConnectionSuccess
+                                  : l10n.mqttConnectionFailureStatus,
+                              style: TextStyle(
+                                color: _isConnected!
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -241,7 +265,6 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
                     ),
                     const SizedBox(height: 12),
                   ],
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -250,13 +273,15 @@ class _MqttBrokerSettingsScreenState extends State<MqttBrokerSettingsScreen> {
                           ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
                       )
                           : const Icon(Icons.wifi),
                       label: Text(
                         _isConnecting
-                            ? 'Подключение...'
-                            : 'Сохранить и подключиться',
+                            ? l10n.mqttConnecting
+                            : l10n.mqttSaveAndConnect,
                       ),
                     ),
                   ),

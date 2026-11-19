@@ -1,0 +1,700 @@
+{
+  "@@locale": "en",
+  "welcomeSubtitle": "Control your smart home easily",
+  "startButton": "Get started",
+  "languageTitle": "App language",
+  "languageSystem": "Use device language",
+  "languageRussian": "Русский",
+  "languageEnglish": "English",
+  "languageSelected": "Selected language: {language}",
+  "@languageSelected": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Settings",
+  "pollingInterval": "Polling interval",
+  "screenSettings": "Screen settings",
+  "screenSettingsSubtitle": "Screensaver and display"
+
+
+
+
+  ,
+    "scanTuyaTitle": "Scan Tuya",
+    "tuyaSearchTitle": "Searching for Tuya devices",
+    "scanPortsHint": "Scanning ports 6666, 6667, 6668, and 7000 on the local network",
+    "scanProgress": "Checked: {progress} / {total}",
+    "@scanProgress": {
+      "placeholders": {
+        "progress": {
+          "type": "int"
+        },
+        "total": {
+          "type": "int"
+        }
+      }
+    },
+    "foundDevices": "Found: {count}",
+    "@foundDevices": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "deviceAddedStatus": "Added",
+    "tapToScan": "Tap “Scan”",
+    "scanning": "Scanning...",
+    "scan": "Scan",
+    "continueButton": "Continue",
+    "addDeviceTitle": "Add device",
+    "ipAddress": "IP: {ip}",
+    "@ipAddress": {
+      "placeholders": {
+        "ip": {
+          "type": "String"
+        }
+      }
+    },
+    "portNumber": "Port: {port}",
+    "@portNumber": {
+      "placeholders": {
+        "port": {
+          "type": "int"
+        }
+      }
+    },
+    "defaultDeviceName": "Device {ip}",
+    "@defaultDeviceName": {
+      "placeholders": {
+        "ip": {
+          "type": "String"
+        }
+      }
+    },
+    "deviceName": "Name",
+    "deviceType": "Device type",
+    "outlet": "Outlet",
+    "switchOne": "Switch (1 gang)",
+    "switchTwo": "Switch (2 gang)",
+    "switchThree": "Switch (3 gang)",
+    "sensor": "Sensor",
+    "light": "Light",
+    "curtain": "Curtain",
+    "airConditioner": "Air conditioner",
+    "universalDevice": "Universal device",
+    "deviceId": "Device ID",
+    "localKey": "Local Key",
+    "cancel": "Cancel",
+    "add": "Add",
+    "deviceAddedMessage": "{name} added!",
+    "@deviceAddedMessage": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "localNetworkNotFound": "Could not determine the local network"
+
+
+,
+    "roomsTitle": "Rooms",
+    "roomsCreateTitle": "Create rooms",
+    "roomsOrganizeHint": "Organize devices by room",
+    "roomsAddFirst": "Add your first room",
+    "roomsAddButton": "Add room",
+    "onboardingFinishButton": "Done!",
+    "roomAddDialogTitle": "Add room",
+    "roomNameLabel": "Name",
+    "roomNameHint": "Bedroom"
+
+
+,
+    "noDevices": "No devices",
+    "forecastTitle": "Weather forecast",
+    "ok": "OK",
+    "ipAddressLabel": "IP address"
+
+
+,
+    "menuTitle": "Menu",
+    "menuDevices": "Devices",
+    "menuEnergy": "Energy",
+    "menuScenes": "Scenes",
+    "menuScanTuya": "Scan TUYA",
+    "menuZigbee": "Zigbee",
+    "menuFrigate": "Frigate",
+    "menuRooms": "Rooms",
+    "menuStatistics": "Statistics",
+    "menuTimers": "Timers",
+    "menuEvents": "Events",
+    "menuCloud": "Cloud",
+    "menuNotifications": "Notifications",
+    "menuPresence": "Presence",
+    "menuSettings": "Settings",
+    "menuThemeSystem": "Theme: system",
+    "menuThemeLight": "Theme: light",
+    "menuThemeDark": "Theme: dark"
+
+,
+    "backupKeyScanTitle": "Scan backup key",
+    "switchCameraTooltip": "Switch camera",
+    "flashTooltip": "Flashlight",
+    "backupKeyScanHint": "Point the camera at the SHome key QR code"
+
+
+
+,
+    "cloudSettingsTitle": "☁️ Cloud storage",
+    "cloudStatusConnected": "✅ Connected",
+    "cloudStatusDisconnected": "⚪ Not connected",
+    "cloudStatusLabel": "Status",
+    "cloudLoginValue": "Login: {login}",
+    "@cloudLoginValue": {
+      "placeholders": {
+        "login": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudConnectSection": "🔗 Connection",
+    "cloudLogin": "Login",
+    "cloudLoginHint": "login@mail.ru",
+    "cloudAppPassword": "App password",
+    "cloudPasswordHelp": "💡 How to get an app password:\n1. Mail.ru → Settings → Security\n2. App passwords → Create\n3. Name it “SHome” and copy the password",
+    "cloudConnecting": "Connecting...",
+    "cloudConnect": "Connect",
+    "cloudEnterCredentials": "Enter your login and password",
+    "cloudConnectedMessage": "✅ Connected to cloud",
+    "cloudConnectFailed": "❌ Could not connect. Check your login and password.",
+    "cloudConnectionError": "❌ Connection error: {error}",
+    "@cloudConnectionError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudDisconnectedMessage": "🔌 Disconnected from cloud",
+    "cloudDisconnect": "Disconnect",
+    "cloudDisconnectSubtitle": "The backup key will remain on this device",
+    "cloudBackupKeyTitle": "🔐 Backup encryption key",
+    "cloudKeyCreated": "Key created",
+    "cloudKeyMissing": "Key not created",
+    "cloudKeyReadySubtitle": "AES-256-GCM is ready",
+    "cloudKeyMissingSubtitle": "Create or import a key",
+    "cloudGenerateNewKeyTitle": "Generate a new key?",
+    "cloudGenerateNewKeyWarning": "A new key will make all existing backups impossible to restore.\n\nContinue?",
+    "cloudGenerate": "Generate",
+    "cloudKeyCreatedMessage": "✅ Backup key created",
+    "cloudKeyCreateError": "❌ Error creating key: {error}",
+    "@cloudKeyCreateError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudShowQr": "Show QR code",
+    "cloudScanQr": "Scan QR code",
+    "cloudQrTitle": "Backup key QR code",
+    "cloudQrHint": "Scan this QR code with another SHome device.",
+    "cloudClose": "Close",
+    "cloudNoLoginData": "❌ Cloud sign-in details are missing",
+    "cloudGenerateKeyFirst": "❌ Generate a backup key first",
+    "cloudImportKeyFirst": "❌ Generate or import a backup key first",
+    "cloudBackupUploaded": "✅ Backup uploaded to cloud",
+    "cloudBackupUploadFailed": "❌ Backup upload failed",
+    "cloudBackupUploadError": "❌ Upload error: {error}",
+    "@cloudBackupUploadError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudBackupManagementTitle": "📋 Backup management",
+    "cloudUploadBackup": "Upload to cloud",
+    "cloudUploadBackupSubtitle": "Save the current backup to cloud",
+    "cloudDownloadBackup": "Download from cloud",
+    "cloudDownloadBackupSubtitle": "Restore a backup from cloud",
+    "cloudNoBackups": "ℹ️ No backups in the cloud",
+    "cloudChooseBackup": "Select a backup",
+    "cloudBackupDownloadFailed": "❌ Backup download failed",
+    "cloudBackupRestoreSuccess": "✅ Backup “{backup}” restored. Restart the app.",
+    "@cloudBackupRestoreSuccess": {
+      "placeholders": {
+        "backup": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudBackupRestoreError": "❌ Restore error: {error}",
+    "@cloudBackupRestoreError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudLastSync": "Last sync: {date}",
+    "@cloudLastSync": {
+      "placeholders": {
+        "date": {
+          "type": "String"
+        }
+      }
+    },
+    "cloudReplaceKeyTitle": "Replace the key?",
+    "cloudReplaceKeyWarning": "A backup key already exists on this device.\n\nAfter replacing it, backups created with the current key will no longer be accessible.",
+    "cloudReplace": "Replace",
+    "cloudKeyImported": "✅ Backup key imported",
+    "cloudKeyImportError": "❌ Error importing key: {error}",
+    "@cloudKeyImportError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    }
+
+
+,
+    "deviceNotificationsTitle": "Device notifications",
+    "deviceNotFound": "Device not found",
+    "notificationSettingsSaved": "✅ Settings saved",
+    "save": "Save",
+    "notificationDeviceZigbee": "Zigbee sensor",
+    "notificationDeviceFrigate": "Frigate camera",
+    "notificationDeviceTuya": "Tuya ({type})",
+    "@notificationDeviceTuya": {
+      "placeholders": {
+        "type": {
+          "type": "String"
+        }
+      }
+    },
+    "notificationConditionSection": "⏱ Notification condition",
+    "notificationConditionAlways": "Always",
+    "notificationConditionAway": "Only when nobody is home",
+    "notificationConditionNight": "Only at night (10:00 PM – 6:00 AM)",
+    "notificationConditionAwayOrNight": "Nobody is home OR it is night",
+    "notificationCooldownSection": "⏱ Cooldown",
+    "notificationInterval": "Interval",
+    "notificationMinute": "1 minute",
+    "notificationMinutes5": "5 minutes",
+    "notificationMinutes15": "15 minutes",
+    "notificationMinutes30": "30 minutes",
+    "notificationTypesTitle": "🔔 Notification types",
+    "notificationFrigateLabelsTitle": "🔔 Detection objects",
+    "notificationWaterLeak": "Water leak",
+    "notificationSmoke": "Smoke",
+    "notificationGas": "Gas",
+    "notificationMotion": "Motion",
+    "notificationContact": "Contact",
+    "notificationLowBattery": "Low battery",
+    "notificationStateChanged": "On/Off",
+    "notificationOffline": "Offline",
+    "notificationError": "Error",
+    "notificationTemperatureAbove": "Temperature >",
+    "notificationTemperatureBelow": "Temperature <",
+    "notificationHumidityAbove": "Humidity >",
+    "notificationHumidityBelow": "Humidity <",
+    "notificationPowerAbove": "Power >",
+    "notificationPerson": "Person",
+    "notificationCar": "Car",
+    "notificationDog": "Dog",
+    "notificationCat": "Cat",
+    "notificationBird": "Bird",
+    "notificationMotorcycle": "Motorcycle",
+    "notificationBicycle": "Bicycle",
+    "notificationTruck": "Truck",
+    "notificationBus": "Bus",
+    "notificationBoat": "Boat",
+    "notificationThreshold": "Threshold",
+    "notificationTemperatureThreshold": "Temperature threshold",
+    "notificationHumidityThreshold": "Humidity threshold",
+    "notificationPowerThreshold": "Power threshold",
+    "notificationBatteryThreshold": "Battery threshold",
+    "notificationHowItWorks": "💡 How it works",
+    "notificationAlwaysExplanation": "Notifications are sent whenever the event occurs.",
+    "notificationConditionExplanation": "Notifications are sent only when this condition is met: “{condition}”.",
+    "@notificationConditionExplanation": {
+      "placeholders": {
+        "condition": {
+          "type": "String"
+        }
+      }
+    }
+
+,
+    "eventsTitle": "Events",
+    "eventsRefresh": "Refresh",
+    "eventsClearAll": "Clear all",
+    "eventsClearTitle": "Clear events?",
+    "eventsClearWarning": "All events will be permanently deleted.",
+    "eventsClearCancel": "Cancel",
+    "eventsClearConfirm": "Clear",
+    "eventsFilterAll": "All",
+    "eventsFilterAlerts": "Alerts",
+    "eventsFilterActions": "Actions",
+    "eventsFilterErrors": "Errors",
+    "eventsDeviceFilter": "Device",
+    "eventsAllDevices": "All devices",
+    "eventsEmptyFilter": "No events match this filter",
+    "eventsSystemError": "System error",
+    "eventsPhone": "Phone",
+    "eventsPresence": "Presence",
+    "eventsPresenceAway": "Away",
+    "eventsPresenceHomeCloud": "Home (cloud)",
+    "eventsPresenceHomeWifi": "Home (Wi-Fi)",
+    "eventsPresenceHome": "Home",
+    "eventsPresenceUnknown": "Unknown",
+    "eventsSceneCompleted": "Scene completed",
+    "eventsTurnedOn": "Turned on",
+    "eventsTurnedOff": "Turned off",
+    "eventsScene": "Scene",
+    "eventsRoomAdded": "Room added",
+    "eventsRoomRemoved": "Room removed",
+    "eventsTimer": "Timer",
+    "eventsDeviceAdded": "Device added",
+    "eventsDeviceRemoved": "Device removed",
+    "eventsSceneCreated": "Scene created",
+    "eventsSceneDeleted": "Scene deleted",
+    "eventsOnline": "Online",
+    "eventsOffline": "Offline",
+    "eventsError": "Error",
+    "eventsAlarmWaterLeak": "💧 Water leak",
+    "eventsAlarmSmoke": "🔥 Smoke",
+    "eventsAlarmGas": "💨 Gas",
+    "eventsAlarmMotion": "🏃 Motion",
+    "eventsAlarmContactOpen": "🚪 Open",
+    "eventsAlarmContactClosed": "🚪 Closed",
+    "eventsAlarmTemperatureAbove": "🌡️ Temperature >",
+    "eventsAlarmTemperatureBelow": "🌡️ Temperature <",
+    "eventsAlarmHumidityAbove": "💧 Humidity >",
+    "eventsAlarmHumidityBelow": "💧 Humidity <",
+    "eventsFrigatePerson": "🎥 Person",
+    "eventsFrigateCar": "🎥 Car",
+    "eventsFrigateDog": "🎥 Dog",
+    "eventsFrigateCat": "🎥 Cat",
+    "eventsFrigateBird": "🎥 Bird",
+    "eventsFrigateOther": "🎥 Detection"
+
+
+,
+    "frigateSettingsTooltip": "Frigate settings",
+    "frigateRefreshTooltip": "Refresh",
+    "frigateSHomeCameras": "🎥 Cameras in SHome",
+    "frigateAvailableCameras": "📍 Available in Frigate",
+    "frigateNoCameras": "No cameras available.\nCheck Frigate settings.",
+    "frigateAllCamerasAdded": "✅ All cameras have been added",
+    "frigateStatistics": "📊 Statistics",
+    "frigateStatCameras": "Cameras",
+    "frigateStatDetectors": "Detectors",
+    "frigateStatCpu": "CPU",
+    "frigateStatRam": "RAM",
+    "frigateRoomPrefix": "Room: {room}",
+    "@frigateRoomPrefix": {
+      "placeholders": {
+        "room": {
+          "type": "String"
+        }
+      }
+    },
+    "frigateCameraSettingsTooltip": "Settings",
+    "frigateRemoveFromSHomeTooltip": "Remove from SHome",
+    "frigateAddToSHomeTooltip": "Add to SHome",
+    "frigateCameraAlreadyAdded": "⚠️ Camera “{name}” has already been added",
+    "@frigateCameraAlreadyAdded": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "frigateCameraAdded": "✅ Camera “{name}” added",
+    "@frigateCameraAdded": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "frigateDeleteCameraTitle": "Delete camera?",
+    "frigateDeleteCameraMessage": "Camera “{name}” will be removed from SHome.",
+    "@frigateDeleteCameraMessage": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "frigateCancel": "Cancel",
+    "frigateDelete": "Delete",
+    "frigateCameraRemoved": "🗑️ Camera “{name}” removed",
+    "@frigateCameraRemoved": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "frigateRoomOther": "🔌 Other devices",
+    "frigateRoomLiving": "🛋️ Living room",
+    "frigateRoomBedroom": "🛏️ Bedroom",
+    "frigateRoomKitchen": "🍳 Kitchen"
+
+
+,
+    "frigateSettingsTitle": "Frigate settings",
+    "frigateConnectionSection": "Connection",
+    "frigateHostLabel": "Host (IP)",
+    "frigateHostHint": "192.168.43.16",
+    "frigatePortLabel": "Port",
+    "frigatePortHint": "5000",
+    "frigateRtspPasswordLabel": "RTSP password",
+    "frigateTestConnection": "Test connection",
+    "frigateConnectionSuccess": "Connection successful",
+    "frigateConnectionFailed": "Connection failed",
+    "frigateSettingsSection": "Settings",
+    "frigateStatsIntervalLabel": "Statistics interval (sec)",
+    "frigateNotifyFor": "Send notifications for:",
+    "frigateLabelPerson": "Person",
+    "frigateLabelCar": "Car",
+    "frigateLabelDog": "Dog",
+    "frigateLabelCat": "Cat",
+    "frigateLabelMotion": "Motion",
+    "frigateSaving": "Saving...",
+    "frigateSave": "Save",
+    "frigateSettingsSaved": "✅ Settings saved"
+
+
+
+,
+    "mqttSettingsTitle": "MQTT settings",
+    "mqttBrokerTitle": "MQTT broker",
+    "mqttUsageHint": "Used for Zigbee2MQTT and Frigate",
+    "mqttHostLabel": "Address (IP or hostname)",
+    "mqttHostHint": "192.168.43.16",
+    "mqttPortLabel": "Port",
+    "mqttUsernameLabel": "Username (optional)",
+    "mqttPasswordLabel": "Password (optional)",
+    "mqttHostRequired": "Enter the broker address",
+    "mqttConnectionFailed": "Could not connect to the broker",
+    "mqttConnectionError": "Error: {error}",
+    "@mqttConnectionError": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "mqttConnectionSuccess": "Connection successful",
+    "mqttConnectionFailureStatus": "Could not connect",
+    "mqttConnecting": "Connecting...",
+    "mqttSaveAndConnect": "Save and connect"
+
+
+,
+    "notificationChannelsTitle": "Notifications",
+    "notificationVkSubtitle": "VK notifications",
+    "notificationSmsSubtitle": "SMS notifications"
+
+
+,
+    "presenceTitle": "Presence",
+    "presenceTrackingEnable": "Enable presence tracking",
+    "presenceTrackingSubtitle": "Determine who is at home",
+    "presencePhones": "Phones",
+    "presenceNoPhones": "No phones added",
+    "presenceHomeZone": "Home zone",
+    "presenceNotConfigured": "Not configured",
+    "presenceRadius": "Radius",
+    "presenceAwayTimeout": "Away timeout",
+    "presenceHomeWifi": "Home (Wi-Fi)",
+    "presenceHeartbeatActive": "Heartbeat active",
+    "presenceHomeCloud": "Home (cloud)",
+    "presenceWifiInactiveGpsUnavailable": "Wi-Fi inactive · GPS unavailable",
+    "presenceWifiInactiveDistance": "Wi-Fi inactive · {distance} from home",
+    "@presenceWifiInactiveDistance": {
+      "placeholders": {
+        "distance": {
+          "type": "String"
+        }
+      }
+    },
+    "presenceAway": "Away",
+    "presenceDistanceFromHome": "Distance: {distance} from home",
+    "@presenceDistanceFromHome": {
+      "placeholders": {
+        "distance": {
+          "type": "String"
+        }
+      }
+    },
+    "presenceUnknown": "Unknown",
+    "presenceEditPhone": "Edit phone",
+    "presenceAddPhone": "Add phone",
+    "presenceName": "Name",
+    "presenceNameHint": "My phone",
+    "presencePhoneId": "Phone ID",
+    "presencePhoneIdHint": "89533309330",
+    "presenceDelete": "Delete",
+    "presenceCancel": "Cancel",
+    "presenceSave": "Save",
+    "presenceAdd": "Add",
+    "presenceLatitude": "Latitude",
+    "presenceLongitude": "Longitude",
+    "presenceGetCurrentCoordinates": "Get my coordinates",
+    "presenceGpsDisabled": "❌ GPS is disabled. Enable it in system settings.",
+    "presencePermissionTitle": "Permission required",
+    "presencePermissionMessage": "GPS permission was permanently denied.\nOpen settings and grant it manually.",
+    "presenceOpenSettings": "Open settings",
+    "presencePermissionNotGranted": "❌ GPS permission was not granted",
+    "presenceGettingGps": "Getting GPS…\nThis may take up to 60 seconds",
+    "presenceCoordinatesReceived": "✅ Coordinates received:\n{latitude}, {longitude}",
+    "@presenceCoordinatesReceived": {
+      "placeholders": {
+        "latitude": {
+          "type": "String"
+        },
+        "longitude": {
+          "type": "String"
+        }
+      }
+    },
+    "presenceGpsFailed": "❌ Could not get GPS.\nTry moving to an open area.",
+    "presenceMeters": "Meters",
+    "presenceRadiusHint": "100",
+    "presenceMinutes": "Minutes",
+    "presenceTimeoutHint": "5"
+
+
+,
+    "roomsManageEmpty": "No rooms. Add your first room!",
+    "roomsDeviceCount": "Devices: {count}",
+    "@roomsDeviceCount": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "roomsEditDialogTitle": "Edit room",
+    "roomsDeleteDialogTitle": "Delete room?",
+    "roomsDeleteWithDevices": "This room has {count} devices. They will be moved to “All devices”. Continue?",
+    "@roomsDeleteWithDevices": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "roomsDeleteConfirmation": "Delete room “{name}”?",
+    "@roomsDeleteConfirmation": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "roomsAllDevices": "All devices",
+    "roomsDeletedMessage": "Room “{name}” deleted",
+    "@roomsDeletedMessage": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "roomIconLiving": "Living room",
+    "roomIconBedroom": "Bedroom",
+    "roomIconKitchen": "Kitchen",
+    "roomIconBathroom": "Bathroom",
+    "roomIconGarage": "Garage",
+    "roomIconYard": "Yard",
+    "roomIconKids": "Kids' room",
+    "roomIconStorage": "Storage",
+    "roomIconOffice": "Office",
+    "roomIconHome": "Home",
+    "roomIconAppliances": "Appliances",
+    "roomsDeleteButton": "Delete"
+
+
+
+,
+    "scenesTitle": "Scenes",
+    "scenesEmpty": "No scenes. Create your first one!",
+    "scenesManual": "Manual",
+    "scenesAutoTriggerMessage": "⏰ “{name}” starts automatically when its trigger fires",
+    "@scenesAutoTriggerMessage": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "scenesActionCount": "{count} devices",
+    "@scenesActionCount": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "scenesTimeTemperature": "Temp. {operator} {threshold}°C",
+    "@scenesTimeTemperature": {
+      "placeholders": {
+        "operator": {
+          "type": "String"
+        },
+        "threshold": {
+          "type": "String"
+        }
+      }
+    },
+    "scenesHumidity": "Humidity {operator} {threshold}%",
+    "@scenesHumidity": {
+      "placeholders": {
+        "operator": {
+          "type": "String"
+        },
+        "threshold": {
+          "type": "String"
+        }
+      }
+    },
+    "scenesWaterLeak": "💧 Water leak",
+    "scenesMotion": "🏃 Motion",
+    "scenesContactOpen": "🚪 Open",
+    "scenesContactClosed": "🚪 Closed",
+    "scenesSmoke": "🔥 Smoke",
+    "scenesGas": "💨 Gas",
+    "scenesPresence": "Presence",
+    "scenesSomeoneArrived": "Someone arrived",
+    "scenesNobodyHome": "Nobody is home",
+    "scenesEveryoneHome": "Everyone is home",
+    "scenesPhoneArrived": "Phone arrived",
+    "scenesPhoneLeft": "Phone left",
+    "scenesPhoneUnknown": "Phone status unknown",
+    "scenesEveryDay": "Every day",
+    "scenesWeekdays": "Days of the week",
+    "scenesInterval": "Interval",
+    "scenesMondayShort": "Mon",
+    "scenesTuesdayShort": "Tue",
+    "scenesWednesdayShort": "Wed",
+    "scenesThursdayShort": "Thu",
+    "scenesFridayShort": "Fri",
+    "scenesSaturdayShort": "Sat",
+    "scenesSundayShort": "Sun",
+    "scenesActionOn": "ON",
+    "scenesActionOff": "OFF",
+    "scenesActionBrightness": "BRIGHT",
+    "scenesEdit": "Edit",
+    "scenesDelete": "Delete"
+}

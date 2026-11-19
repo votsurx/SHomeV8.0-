@@ -12,12 +12,14 @@ import '../../domain/models/presence_conditions.dart';
 import '../../application/state/scenes_provider.dart';
 import '../../application/state/devices_provider.dart';
 import '../../application/state/presence_provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ScenesScreen extends ConsumerWidget {
   const ScenesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final scenes = ref.watch(scenesProvider);
     final devices = ref.watch(devicesProvider);
 
@@ -30,9 +32,9 @@ class ScenesScreen extends ConsumerWidget {
     final scale = (tileWidth / 160).clamp(0.9, 1.8);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Сцены')),
+      appBar: AppBar(title: Text(l10n.scenesTitle)),
       body: scenes.isEmpty
-          ? const Center(child: Text('Нет сцен. Создайте первую!'))
+          ? Center(child: Text(l10n.scenesEmpty))
           : GridView.builder(
         padding: EdgeInsets.all(8 * scale),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -52,10 +54,7 @@ class ScenesScreen extends ConsumerWidget {
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        '⏰ Сцена "${scene.name}" запускается автоматически по триггеру',
-                        style: TextStyle(fontSize: 12 * scale),
-                      ),
+                      content: Text(l10n.scenesAutoTriggerMessage(scene.name), style: TextStyle(fontSize: 12 * scale)),
                       duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
                     ),

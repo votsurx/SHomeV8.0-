@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-
-import '../../data/local/secure_storage/encrypted_keys.dart';
-import '../../data/services/config_service.dart';
-import '../../data/services/mailru_cloud_service.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../data/local/secure_storage/encrypted_keys.dart';
 import '../../data/services/backup_key_qr_service.dart';
+import '../../data/services/config_service.dart';
+import '../../data/services/mailru_cloud_service.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'backup_key_scanner_screen.dart';
 
 class CloudSettingsScreen extends StatefulWidget {
@@ -64,11 +64,12 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Future<void> _connect() async {
+    final l10n = AppLocalizations.of(context);
     final login = _loginController.text.trim();
     final password = _passwordController.text.trim();
 
     if (login.isEmpty || password.isEmpty) {
-      _showSnack('Введите логин и пароль');
+      _showSnack(l10n.cloudEnterCredentials);
       return;
     }
 
@@ -98,15 +99,13 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
         _loginController.clear();
         _passwordController.clear();
 
-        _showSnack('✅ Подключено к облаку');
+        _showSnack(l10n.cloudConnectedMessage);
       } else {
-        _showSnack(
-          '❌ Не удалось подключиться. Проверьте логин и пароль.',
-        );
+        _showSnack(l10n.cloudConnectFailed);
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted) {
-        _showSnack('❌ Ошибка подключения: $e');
+        _showSnack(l10n.cloudConnectionError(error.toString()));
       }
     } finally {
       if (mounted) {
@@ -116,6 +115,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Future<void> _disconnect() async {
+    final l10n = AppLocalizations.of(context);
+
     await _keys.deleteCloudLogin();
     await _keys.deleteCloudPassword();
     await _keys.deleteCloudLastSync();
@@ -128,10 +129,11 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       _lastSync = null;
     });
 
-    _showSnack('🔌 Отключено от облака');
+    _showSnack(l10n.cloudDisconnectedMessage);
   }
 
   Future<void> _generateBackupKey() async {
+    final l10n = AppLocalizations.of(context);
     final alreadyExists = await ConfigService.hasBackupKey();
 
     if (!mounted) return;
@@ -139,21 +141,17 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
     if (alreadyExists) {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Сгенерировать новый ключ?'),
-          content: const Text(
-            'Новый ключ сделает все существующие резервные копии '
-                'недоступными для восстановления.\n\n'
-                'Продолжить?',
-          ),
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.cloudGenerateNewKeyTitle),
+          content: Text(l10n.cloudGenerateNewKeyWarning),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Отмена'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Сгенерировать'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.cloudGenerate),
             ),
           ],
         ),
@@ -170,10 +168,10 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       if (!mounted) return;
 
       setState(() => _hasBackupKey = true);
-      _showSnack('✅ Ключ резервного копирования создан');
-    } catch (e) {
+      _showSnack(l10n.cloudKeyCreatedMessage);
+    } catch (error) {
       if (mounted) {
-        _showSnack('❌ Ошибка создания ключа: $e');
+        _showSnack(l10n.cloudKeyCreateError(error.toString()));
       }
     } finally {
       if (mounted) {
@@ -185,6 +183,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   Future<void> _uploadBackup() async {
     if (_isUploading) return;
 
+    final l10n = AppLocalizations.of(context);
     setState(() => _isUploading = true);
 
     try {
@@ -195,16 +194,14 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
           login.isEmpty ||
           password == null ||
           password.isEmpty) {
-        _showSnack('❌ Нет данных для входа в облако');
+        _showSnack(l10n.cloudNoLoginData);
         return;
       }
 
       final hasBackupKey = await ConfigService.hasBackupKey();
 
       if (!hasBackupKey) {
-        _showSnack(
-          '❌ Сначала сгенерируйте ключ резервного копирования',
-        );
+        _showSnack(l10n.cloudGenerateKeyFirst);
         return;
       }
 
@@ -233,13 +230,13 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
         if (!mounted) return;
 
         setState(() => _lastSync = dateStr);
-        _showSnack('✅ Бекап загружен в облако');
+        _showSnack(l10n.cloudBackupUploaded);
       } else {
-        _showSnack('❌ Ошибка загрузки бекапа');
+        _showSnack(l10n.cloudBackupUploadFailed);
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted) {
-        _showSnack('❌ Ошибка загрузки: $e');
+        _showSnack(l10n.cloudBackupUploadError(error.toString()));
       }
     } finally {
       if (mounted) {
@@ -251,6 +248,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   Future<void> _downloadBackup() async {
     if (_isDownloading) return;
 
+    final l10n = AppLocalizations.of(context);
     setState(() => _isDownloading = true);
 
     try {
@@ -261,17 +259,14 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
           login.isEmpty ||
           password == null ||
           password.isEmpty) {
-        _showSnack('❌ Нет данных для входа в облако');
+        _showSnack(l10n.cloudNoLoginData);
         return;
       }
 
       final hasBackupKey = await ConfigService.hasBackupKey();
 
       if (!hasBackupKey) {
-        _showSnack(
-          '❌ Сначала сгенерируйте или импортируйте ключ '
-              'резервного копирования',
-        );
+        _showSnack(l10n.cloudImportKeyFirst);
         return;
       }
 
@@ -285,18 +280,19 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       if (!mounted) return;
 
       if (backups.isEmpty) {
-        _showSnack('ℹ️ В облаке нет бекапов');
+        _showSnack(l10n.cloudNoBackups);
         return;
       }
 
       final selected = await showDialog<String>(
         context: context,
-        builder: (ctx) => SimpleDialog(
-          title: const Text('Выберите бекап'),
+        builder: (dialogContext) => SimpleDialog(
+          title: Text(l10n.cloudChooseBackup),
           children: backups
               .map(
                 (backup) => SimpleDialogOption(
-              onPressed: () => Navigator.of(ctx).pop(backup),
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(backup),
               child: Text(backup),
             ),
           )
@@ -311,23 +307,19 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       if (!mounted) return;
 
       if (encrypted == null || encrypted.isEmpty) {
-        _showSnack('❌ Ошибка скачивания бекапа');
+        _showSnack(l10n.cloudBackupDownloadFailed);
         return;
       }
 
       final json = await ConfigService.decryptBackup(encrypted);
-
       await ConfigService.restoreFromJson(json);
 
       if (!mounted) return;
 
-      _showSnack(
-        '✅ Бекап "$selected" восстановлен. '
-            'Перезапустите приложение.',
-      );
-    } catch (e) {
+      _showSnack(l10n.cloudBackupRestoreSuccess(selected));
+    } catch (error) {
       if (mounted) {
-        _showSnack('❌ Ошибка восстановления: $e');
+        _showSnack(l10n.cloudBackupRestoreError(error.toString()));
       }
     } finally {
       if (mounted) {
@@ -337,14 +329,13 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Future<void> _showBackupKeyQr() async {
+    final l10n = AppLocalizations.of(context);
     final key = await ConfigService.getBackupKey();
 
     if (!mounted) return;
 
     if (key == null || key.isEmpty) {
-      _showSnack(
-        '❌ Сначала сгенерируйте ключ резервного копирования',
-      );
+      _showSnack(l10n.cloudGenerateKeyFirst);
       return;
     }
 
@@ -352,8 +343,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
 
     await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('QR-ключ резервного копирования'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.cloudQrTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -365,16 +356,16 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               backgroundColor: Colors.white,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Отсканируйте этот QR-код на другом устройстве SHome.',
+            Text(
+              l10n.cloudQrHint,
               textAlign: TextAlign.center,
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Закрыть'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l10n.cloudClose),
           ),
         ],
       ),
@@ -382,8 +373,10 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Future<void> _scanBackupKeyQr() async {
+    final l10n = AppLocalizations.of(context);
+
     final scannedValue = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
+      MaterialPageRoute<String>(
         builder: (_) => const BackupKeyScannerScreen(),
       ),
     );
@@ -392,7 +385,6 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
 
     try {
       final normalizedKey = _backupKeyQr.decode(scannedValue);
-
       final hasExistingKey = await ConfigService.hasBackupKey();
 
       if (!mounted) return;
@@ -400,21 +392,19 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       if (hasExistingKey) {
         final confirmed = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Заменить ключ?'),
-            content: const Text(
-              'На устройстве уже есть ключ резервного копирования.\n\n'
-                  'После замены старые бекапы, созданные текущим ключом, '
-                  'станут недоступны.',
-            ),
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.cloudReplaceKeyTitle),
+            content: Text(l10n.cloudReplaceKeyWarning),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Отмена'),
+                onPressed: () =>
+                    Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Заменить'),
+                onPressed: () =>
+                    Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.cloudReplace),
               ),
             ],
           ),
@@ -428,12 +418,11 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
       if (!mounted) return;
 
       setState(() => _hasBackupKey = true);
-
-      _showSnack('✅ Ключ резервного копирования импортирован');
-    } on BackupKeyQrException catch (e) {
-      _showSnack('❌ ${e.message}');
-    } catch (e) {
-      _showSnack('❌ Ошибка импорта ключа: $e');
+      _showSnack(l10n.cloudKeyImported);
+    } on BackupKeyQrException catch (error) {
+      _showSnack(l10n.cloudKeyImportError(error.message));
+    } catch (error) {
+      _showSnack(l10n.cloudKeyImportError(error.toString()));
     }
   }
 
@@ -449,9 +438,11 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('☁️ Облачное хранилище'),
+        title: Text(l10n.cloudSettingsTitle),
         centerTitle: true,
       ),
       body: ListView(
@@ -469,6 +460,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Widget _buildCloudStatusCard() {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -485,8 +478,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Статус: '
-                        '${_isConnected ? "✅ Подключено" : "⚪ Не подключено"}',
+                    '${l10n.cloudStatusLabel}: '
+                        '${_isConnected ? l10n.cloudStatusConnected : l10n.cloudStatusDisconnected}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -494,7 +487,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
             ),
             if (_isConnected && _login != null) ...[
               const SizedBox(height: 8),
-              Text('Логин: $_login'),
+              Text(l10n.cloudLoginValue(_login!)),
             ],
           ],
         ),
@@ -503,6 +496,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Widget _buildLoginForm() {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -510,16 +505,16 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '🔗 Подключение',
+              l10n.cloudConnectSection,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const Divider(),
             TextField(
               controller: _loginController,
-              decoration: const InputDecoration(
-                labelText: 'Логин',
-                hintText: 'login@mail.ru',
-                prefixIcon: Icon(Icons.person),
+              decoration: InputDecoration(
+                labelText: l10n.cloudLogin,
+                hintText: l10n.cloudLoginHint,
+                prefixIcon: const Icon(Icons.person),
               ),
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
@@ -527,9 +522,9 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Пароль приложения',
-                prefixIcon: Icon(Icons.lock),
+              decoration: InputDecoration(
+                labelText: l10n.cloudAppPassword,
+                prefixIcon: const Icon(Icons.lock),
               ),
               obscureText: true,
               onSubmitted: (_) {
@@ -545,12 +540,9 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                 color: Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                '💡 Как получить пароль приложения:\n'
-                    '1. Mail.ru → Настройки → Безопасность\n'
-                    '2. Пароли для приложений → Создать\n'
-                    '3. Назовите «SHome» → скопируйте пароль',
-                style: TextStyle(fontSize: 13),
+              child: Text(
+                l10n.cloudPasswordHelp,
+                style: const TextStyle(fontSize: 13),
               ),
             ),
             const SizedBox(height: 16),
@@ -568,7 +560,9 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                 )
                     : const Icon(Icons.link),
                 label: Text(
-                  _isConnecting ? 'Подключение...' : 'Подключить',
+                  _isConnecting
+                      ? l10n.cloudConnecting
+                      : l10n.cloudConnect,
                 ),
               ),
             ),
@@ -579,6 +573,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Widget _buildConnectedControls() {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       children: [
         _buildBackupKeyCard(),
@@ -591,10 +587,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               Icons.link_off,
               color: Colors.red,
             ),
-            title: const Text('Отключить'),
-            subtitle: const Text(
-              'Ключ резервного копирования останется на устройстве',
-            ),
+            title: Text(l10n.cloudDisconnect),
+            subtitle: Text(l10n.cloudDisconnectSubtitle),
             onTap: _disconnect,
           ),
         ),
@@ -603,6 +597,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Widget _buildBackupKeyCard() {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -610,7 +606,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '🔐 Ключ резервного копирования',
+              l10n.cloudBackupKeyTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const Divider(),
@@ -621,12 +617,14 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                 color: _hasBackupKey ? Colors.green : Colors.orange,
               ),
               title: Text(
-                _hasBackupKey ? 'Ключ создан' : 'Ключ не создан',
+                _hasBackupKey
+                    ? l10n.cloudKeyCreated
+                    : l10n.cloudKeyMissing,
               ),
               subtitle: Text(
                 _hasBackupKey
-                    ? 'AES-256-GCM готов к работе'
-                    : 'Создайте или импортируйте ключ',
+                    ? l10n.cloudKeyReadySubtitle
+                    : l10n.cloudKeyMissingSubtitle,
               ),
               trailing: _isGeneratingBackupKey
                   ? const SizedBox(
@@ -647,7 +645,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               child: OutlinedButton.icon(
                 onPressed: _hasBackupKey ? _showBackupKeyQr : null,
                 icon: const Icon(Icons.qr_code),
-                label: const Text('Показать QR'),
+                label: Text(l10n.cloudShowQr),
               ),
             ),
             const SizedBox(height: 8),
@@ -656,7 +654,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               child: OutlinedButton.icon(
                 onPressed: _scanBackupKeyQr,
                 icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('Сканировать QR'),
+                label: Text(l10n.cloudScanQr),
               ),
             ),
           ],
@@ -666,6 +664,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   }
 
   Widget _buildBackupManagementCard() {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -673,7 +673,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '📋 Управление бекапами',
+              l10n.cloudBackupManagementTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const Divider(),
@@ -683,11 +683,11 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                 Icons.upload,
                 color: Colors.blue,
               ),
-              title: const Text('Загрузить в облако'),
+              title: Text(l10n.cloudUploadBackup),
               subtitle: Text(
                 _hasBackupKey
-                    ? 'Сохранить текущий бекап в облако'
-                    : 'Сначала создайте ключ резервного копирования',
+                    ? l10n.cloudUploadBackupSubtitle
+                    : l10n.cloudGenerateKeyFirst,
               ),
               trailing: _isUploading
                   ? const SizedBox(
@@ -706,11 +706,11 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                 Icons.download,
                 color: Colors.green,
               ),
-              title: const Text('Скачать из облака'),
+              title: Text(l10n.cloudDownloadBackup),
               subtitle: Text(
                 _hasBackupKey
-                    ? 'Восстановить бекап из облака'
-                    : 'Сначала создайте ключ резервного копирования',
+                    ? l10n.cloudDownloadBackupSubtitle
+                    : l10n.cloudImportKeyFirst,
               ),
               trailing: _isDownloading
                   ? const SizedBox(
@@ -726,7 +726,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
             if (_lastSync != null) ...[
               const Divider(),
               Text(
-                'Последняя синхронизация: $_lastSync',
+                l10n.cloudLastSync(_lastSync!),
                 style: const TextStyle(
                   color: Colors.grey,
                   fontSize: 13,

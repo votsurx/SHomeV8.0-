@@ -1,9 +1,12 @@
-/// Экран меню с адаптивной сеткой плиток.
+/// Главный экран меню с адаптивной сеткой плиток.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../application/state/theme_provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class MenuScreen extends ConsumerStatefulWidget {
   const MenuScreen({super.key});
@@ -15,19 +18,27 @@ class MenuScreen extends ConsumerStatefulWidget {
 class _MenuScreenState extends ConsumerState<MenuScreen> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final themeNotifier = ref.watch(themeProvider.notifier);
     final themeMode = ref.watch(themeProvider);
     final isDark = themeMode == ThemeMode.dark;
 
+    final themeLabel = switch (themeMode) {
+      ThemeMode.system => l10n.menuThemeSystem,
+      ThemeMode.light => l10n.menuThemeLight,
+      ThemeMode.dark => l10n.menuThemeDark,
+    };
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Меню'),
+        title: Text(l10n.menuTitle),
         centerTitle: true,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final crossAxisCount = width > 600 ? 4 : (width > 400 ? 3 : 2);
+          final crossAxisCount =
+          width > 600 ? 4 : (width > 400 ? 3 : 2);
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -37,128 +48,93 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
               crossAxisSpacing: 12,
               childAspectRatio: 1.0,
               children: [
-                // ============================================================
-                // 📱 ОСНОВНЫЕ
-                // ============================================================
                 _buildTile(
                   icon: Icons.devices,
-                  label: 'Устройства',
+                  label: l10n.menuDevices,
                   color: Colors.blue,
                   onTap: () => context.go('/'),
                 ),
                 _buildTile(
                   icon: Icons.bolt,
-                  label: 'Энергия',
+                  label: l10n.menuEnergy,
                   color: Colors.amber,
                   onTap: () => context.push('/energy'),
                 ),
                 _buildTile(
                   icon: Icons.movie,
-                  label: 'Сцены',
+                  label: l10n.menuScenes,
                   color: Colors.purple,
                   onTap: () => context.push('/scenes'),
                 ),
-
-                // ============================================================
-                // 🔍 СКАНЕР
-                // ============================================================
                 _buildTile(
                   icon: Icons.search,
-                  label: 'Сканировать TUYA',
+                  label: l10n.menuScanTuya,
                   color: Colors.teal,
                   onTap: () => context.push('/scan'),
                 ),
-                // 🆕 ZIGBEE
                 _buildTile(
                   icon: Icons.hub,
-                  label: 'Zigbee',
+                  label: l10n.menuZigbee,
                   color: Colors.purple,
                   onTap: () => context.push('/zigbee_scan'),
                 ),
-
-                // 🎥 FRIGATE
                 _buildTile(
                   icon: Icons.videocam,
-                  label: 'Frigate',
+                  label: l10n.menuFrigate,
                   color: Colors.red,
                   onTap: () => context.push('/frigate'),
                 ),
-
-                // ============================================================
-                // 🎨 ТЕМА
-                // ============================================================
                 _buildTile(
                   icon: themeNotifier.themeIcon,
-                  label: 'Тема: ${themeNotifier.themeName}',
+                  label: themeLabel,
                   color: isDark ? Colors.indigo : Colors.orange,
                   onTap: () => themeNotifier.toggle(),
                 ),
-
-                // ============================================================
-                // 🏠 УПРАВЛЕНИЕ
-                // ============================================================
                 _buildTile(
                   icon: Icons.meeting_room,
-                  label: 'Комнаты',
+                  label: l10n.menuRooms,
                   color: Colors.brown,
                   onTap: () => context.push('/rooms'),
                 ),
                 _buildTile(
                   icon: Icons.bar_chart,
-                  label: 'Статистика',
+                  label: l10n.menuStatistics,
                   color: Colors.green,
                   onTap: () => context.push('/statistics'),
                 ),
                 _buildTile(
                   icon: Icons.timer,
-                  label: 'Таймеры',
+                  label: l10n.menuTimers,
                   color: Colors.deepOrange,
                   onTap: () => context.push('/timers'),
                 ),
                 _buildTile(
                   icon: Icons.notifications,
-                  label: 'События',
+                  label: l10n.menuEvents,
                   color: Colors.red,
                   onTap: () => context.push('/events'),
                 ),
-
-
-                // ============================================================
-                // ☁️ ОБЛАКО
-                // ============================================================
                 _buildTile(
                   icon: Icons.cloud,
-                  label: 'Облако',
+                  label: l10n.menuCloud,
                   color: Colors.lightBlue,
                   onTap: () => context.push('/cloud'),
                 ),
-
-                // ============================================================
-                // ☁️ Уведомления
-                // ============================================================
                 _buildTile(
                   icon: Icons.notifications_active,
-                  label: 'Уведомления',
+                  label: l10n.menuNotifications,
                   color: Colors.orange,
                   onTap: () => context.push('/notifications'),
                 ),
-
-                // ============================================================
-                // 🔍 Присутствие
-                // ============================================================
                 _buildTile(
                   icon: Icons.location_on,
-                  label: 'Присутствие',
+                  label: l10n.menuPresence,
                   color: Colors.cyan,
                   onTap: () => context.push('/presence'),
                 ),
-
-                // ============================================================
-                // ⚙️ НАСТРОЙКИ
-                // ============================================================
                 _buildTile(
                   icon: Icons.settings,
-                  label: 'Настройки',
+                  label: l10n.menuSettings,
                   color: Colors.grey,
                   onTap: () => context.push('/settings'),
                 ),
@@ -178,7 +154,9 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
   }) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -192,7 +170,11 @@ class _MenuScreenState extends ConsumerState<MenuScreen> {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ],
           ),

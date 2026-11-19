@@ -1,45 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../application/models/presence_settings.dart';
-import '../../application/state/presence_provider.dart';
-import '../../application/state/presence_detector_provider.dart';
-import '../../data/services/presence_detector.dart';
 import 'package:geolocator/geolocator.dart';
+
+import '../../application/models/presence_settings.dart';
+import '../../application/state/presence_detector_provider.dart';
+import '../../application/state/presence_provider.dart';
+import '../../data/services/presence_detector.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class PresenceSettingsScreen extends ConsumerWidget {
   const PresenceSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final settings = ref.watch(presenceSettingsProvider);
     final notifier = ref.read(presenceSettingsProvider.notifier);
     final detector = ref.watch(presenceDetectorProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Присутствие')),
+      appBar: AppBar(title: Text(l10n.presenceTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ─── Включение ───
           SwitchListTile(
-            title: const Text('Включить отслеживание'),
-            subtitle: const Text('Определять, кто дома'),
+            title: Text(l10n.presenceTrackingEnable),
+            subtitle: Text(l10n.presenceTrackingSubtitle),
             value: settings.enabled,
-            onChanged: (val) async {
-              await notifier.update(settings.copyWith(enabled: val));
+            onChanged: (value) async {
+              await notifier.update(settings.copyWith(enabled: value));
             },
           ),
           const Divider(height: 32),
 
-          // ─── Телефоны ───
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 16),
+              Padding(
+                padding: const EdgeInsets.only(left: 16),
                 child: Text(
-                  'Телефоны',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  l10n.presencePhones,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               IconButton(
@@ -48,46 +52,53 @@ class PresenceSettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
+
           if (settings.phones.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Нет добавленных телефонов'),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.presenceNoPhones),
             )
           else
             ...settings.phones.map((phone) {
               final presence = detector.phones[phone.phoneId];
-              return _buildPhoneCard(context, ref, notifier, phone, presence);
+              return _buildPhoneCard(
+                context,
+                ref,
+                notifier,
+                phone,
+                presence,
+                l10n,
+              );
             }),
+
           const Divider(height: 32),
 
-          // ─── Домашняя зона ───
           _buildCard(
             context: context,
             icon: Icons.my_location,
             color: Colors.blue,
-            title: 'Домашняя зона',
+            title: l10n.presenceHomeZone,
             subtitle: settings.homeLat == 0 && settings.homeLng == 0
-                ? 'Не настроено'
-                : '${settings.homeLat.toStringAsFixed(4)}, ${settings.homeLng.toStringAsFixed(4)}',
+                ? l10n.presenceNotConfigured
+                : '${settings.homeLat.toStringAsFixed(4)}, '
+                '${settings.homeLng.toStringAsFixed(4)}',
             onTap: () => _showHomeZoneDialog(context, ref, settings),
           ),
 
-          // ─── Радиус ───
           _buildCard(
             context: context,
             icon: Icons.circle_outlined,
             color: Colors.orange,
-            title: 'Радиус',
+            title: l10n.presenceRadius,
             subtitle: '${settings.homeRadius} м',
             onTap: () => _showRadiusDialog(context, ref, settings),
           ),
 
-          // ─── Таймаут "ушёл" ───
           _buildCard(
             context: context,
             icon: Icons.timer,
             color: Colors.red,
-            title: 'Таймаут "ушёл"',
+            title: l10n.presenceAwayTimeout,
             subtitle: '${settings.awayTimeoutMin} мин',
             onTap: () => _showTimeoutDialog(context, ref, settings),
           ),
@@ -98,16 +109,13 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-// КАРТОЧКА ТЕЛЕФОНА
-// ═══════════════════════════════════════════════════════════════
-
   Widget _buildPhoneCard(
       BuildContext context,
       WidgetRef ref,
       PresenceSettingsNotifier notifier,
       PresencePhone phone,
       PhonePresence? presence,
+      AppLocalizations l10n,
       ) {
     final status = presence?.status ?? PhonePresenceStatus.unknown;
     final source = presence?.source ?? PresenceSource.unknown;
@@ -119,25 +127,25 @@ class PresenceSettingsScreen extends ConsumerWidget {
 
     if (status == PhonePresenceStatus.home) {
       if (source == PresenceSource.heartbeat) {
-        // Дома по локальному Wi-Fi heartbeat.
         icon = Icons.wifi;
         color = Colors.green;
-        statusText = 'Дома (Wi-Fi)';
-        subtitle = 'Heartbeat активен';
+        statusText = l10n.presenceHomeWifi;
+        subtitle = l10n.presenceHeartbeatActive;
       } else if (source == PresenceSource.cloud) {
-        // Дома по облаку; показываем GPS-расстояние, если оно известно.
         icon = Icons.cloud_done;
         color = Colors.lightGreen;
-        statusText = 'Дома (облако)';
+        statusText = l10n.presenceHomeCloud;
 
         final distance = presence?.distanceFromHome;
         subtitle = distance == null
-            ? 'Wi-Fi не активен · GPS недоступен'
-            : 'Wi-Fi не активен · ${_formatDistance(distance)} от дома';
+            ? l10n.presenceWifiInactiveGpsUnavailable
+            : l10n.presenceWifiInactiveDistance(
+          _formatDistance(distance, l10n),
+        );
       } else {
         icon = Icons.home;
         color = Colors.green;
-        statusText = 'Дома';
+        statusText = l10n.presenceHomeWifi;
         subtitle = null;
       }
     } else if (status == PhonePresenceStatus.away) {
@@ -145,19 +153,21 @@ class PresenceSettingsScreen extends ConsumerWidget {
 
       icon = Icons.directions_walk;
       color = Colors.orange;
-      statusText = 'Ушёл';
+      statusText = l10n.presenceAway;
       subtitle = distance == null
           ? null
-          : 'Расстояние: ${_formatDistance(distance)} от дома';
+          : l10n.presenceDistanceFromHome(
+        _formatDistance(distance, l10n),
+      );
     } else {
       icon = Icons.help_outline;
       color = Colors.grey;
-      statusText = 'Неизвестно';
+      statusText = l10n.presenceUnknown;
       subtitle = null;
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _showPhoneDialog(context, ref, phone),
@@ -242,10 +252,6 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-// ═══════════════════════════════════════════════════════════════
-// КАРТОЧКА НАСТРОЙКИ
-// ═══════════════════════════════════════════════════════════════
-
   Widget _buildCard({
     required BuildContext context,
     required IconData icon,
@@ -269,50 +275,42 @@ class PresenceSettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _formatDistance(double meters) {
-    if (meters < 1000) {
-      return '${meters.round()} м';
-    }
-
-    return '${(meters / 1000).toStringAsFixed(1)} км';
-  }
-  // ═══════════════════════════════════════════════════════════════
-  // ДИАЛОГИ
-  // ═══════════════════════════════════════════════════════════════
-
   void _showPhoneDialog(
       BuildContext context,
       WidgetRef ref,
       PresencePhone? existingPhone,
       ) {
+    final l10n = AppLocalizations.of(context);
     final isEditing = existingPhone != null;
     final nameController =
     TextEditingController(text: existingPhone?.phoneName ?? '');
     final idController =
     TextEditingController(text: existingPhone?.phoneId ?? '');
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isEditing ? 'Редактировать телефон' : 'Добавить телефон'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          isEditing ? l10n.presenceEditPhone : l10n.presenceAddPhone,
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Название',
-                  hintText: 'Мой телефон',
+                decoration: InputDecoration(
+                  labelText: l10n.presenceName,
+                  hintText: l10n.presenceNameHint,
                 ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: idController,
                 enabled: !isEditing,
-                decoration: const InputDecoration(
-                  labelText: 'Phone ID',
-                  hintText: '89533309330',
+                decoration: InputDecoration(
+                  labelText: l10n.presencePhoneId,
+                  hintText: l10n.presencePhoneIdHint,
                 ),
               ),
             ],
@@ -325,20 +323,21 @@ class PresenceSettingsScreen extends ConsumerWidget {
                 ref
                     .read(presenceSettingsProvider.notifier)
                     .removePhone(existingPhone.phoneId);
-                Navigator.pop(ctx);
+                Navigator.pop(dialogContext);
               },
-              child: const Text(
-                'Удалить',
-                style: TextStyle(color: Colors.red),
+              child: Text(
+                l10n.presenceDelete,
+                style: const TextStyle(color: Colors.red),
               ),
             ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.presenceCancel),
           ),
           ElevatedButton(
             onPressed: () {
-              if (nameController.text.isEmpty || idController.text.isEmpty) {
+              if (nameController.text.isEmpty ||
+                  idController.text.isEmpty) {
                 return;
               }
 
@@ -358,57 +357,64 @@ class PresenceSettingsScreen extends ConsumerWidget {
                     .read(presenceSettingsProvider.notifier)
                     .addPhone(newPhone);
               }
-              Navigator.pop(ctx);
+
+              Navigator.pop(dialogContext);
             },
-            child: Text(isEditing ? 'Сохранить' : 'Добавить'),
+            child: Text(
+              isEditing ? l10n.presenceSave : l10n.presenceAdd,
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // ДОМАШНЯЯ ЗОНА — с исправленным GPS
-  // ═══════════════════════════════════════════════════════════════
-
   void _showHomeZoneDialog(
       BuildContext context,
       WidgetRef ref,
       PresenceSettings settings,
       ) {
+    final l10n = AppLocalizations.of(context);
+
     final latController = TextEditingController(
-      text: settings.homeLat == 0 ? '' : settings.homeLat.toStringAsFixed(6),
+      text: settings.homeLat == 0
+          ? ''
+          : settings.homeLat.toStringAsFixed(6),
     );
     final lngController = TextEditingController(
-      text: settings.homeLng == 0 ? '' : settings.homeLng.toStringAsFixed(6),
+      text: settings.homeLng == 0
+          ? ''
+          : settings.homeLng.toStringAsFixed(6),
     );
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Домашняя зона'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.presenceHomeZone),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: latController,
-                decoration: const InputDecoration(
-                  labelText: 'Широта',
+                decoration: InputDecoration(
+                  labelText: l10n.presenceLatitude,
                   hintText: '55.7558',
                 ),
-                keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: lngController,
-                decoration: const InputDecoration(
-                  labelText: 'Долгота',
+                decoration: InputDecoration(
+                  labelText: l10n.presenceLongitude,
                   hintText: '37.6173',
                 ),
-                keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
@@ -418,7 +424,7 @@ class PresenceSettingsScreen extends ConsumerWidget {
                   lngController,
                 ),
                 icon: const Icon(Icons.my_location),
-                label: const Text('Определить мои координаты'),
+                label: Text(l10n.presenceGetCurrentCoordinates),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 44),
                 ),
@@ -428,101 +434,100 @@ class PresenceSettingsScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.presenceCancel),
           ),
           ElevatedButton(
             onPressed: () {
-              final lat = double.tryParse(latController.text);
-              final lng = double.tryParse(lngController.text);
-              if (lat != null && lng != null) {
+              final latitude = double.tryParse(latController.text);
+              final longitude = double.tryParse(lngController.text);
+
+              if (latitude != null && longitude != null) {
                 ref.read(presenceSettingsProvider.notifier).update(
-                  settings.copyWith(homeLat: lat, homeLng: lng),
+                  settings.copyWith(
+                    homeLat: latitude,
+                    homeLng: longitude,
+                  ),
                 );
               }
-              Navigator.pop(ctx);
+
+              Navigator.pop(dialogContext);
             },
-            child: const Text('Сохранить'),
+            child: Text(l10n.presenceSave),
           ),
         ],
       ),
     );
   }
 
-  /// Получает GPS с увеличенным timeout + fallback.
   Future<void> _getCurrentLocation(
       BuildContext context,
       TextEditingController latController,
       TextEditingController lngController,
       ) async {
-    // 1. Проверяем сервис GPS
+    final l10n = AppLocalizations.of(context);
+
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ GPS выключен в системе. Включите в настройках.'),
-        ),
+        SnackBar(content: Text(l10n.presenceGpsDisabled)),
       );
       return;
     }
 
-    // 2. Проверяем/запрашиваем разрешение
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
+
     if (permission == LocationPermission.deniedForever) {
       if (!context.mounted) return;
-      // Предлагаем открыть настройки
-      final open = await showDialog<bool>(
+
+      final openSettings = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Нет разрешения'),
-          content: const Text(
-            'Разрешение на GPS отклонено навсегда.\n'
-                'Откройте настройки и разрешите вручную.',
-          ),
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.presencePermissionTitle),
+          content: Text(l10n.presencePermissionMessage),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Отмена'),
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.presenceCancel),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Открыть настройки'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.presenceOpenSettings),
             ),
           ],
         ),
       );
-      if (open == true) {
+
+      if (openSettings == true) {
         await Geolocator.openAppSettings();
       }
       return;
     }
+
     if (permission == LocationPermission.denied) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Разрешение на GPS не выдано')),
+        SnackBar(content: Text(l10n.presencePermissionNotGranted)),
       );
       return;
     }
 
-    // 3. Показываем диалог «Получаем GPS...»
     if (!context.mounted) return;
-    showDialog(
+
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
+            const CircularProgressIndicator(),
+            const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                'Получаем GPS...\n'
-                    'Может занять до 60 секунд',
-              ),
+              child: Text(l10n.presenceGettingGps),
             ),
           ],
         ),
@@ -531,105 +536,99 @@ class PresenceSettingsScreen extends ConsumerWidget {
 
     Position? position;
 
-    // 4. Пытаемся получить свежие координаты (timeout 60 сек)
     try {
       position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 60),   // ← 60 сек!
+          timeLimit: Duration(seconds: 60),
         ),
       );
-    } catch (e) {
-      debugPrint('⚠️ Fresh GPS timeout: $e');
+    } catch (error) {
+      debugPrint('⚠️ Fresh GPS timeout: $error');
     }
 
-    // 5. Fallback на последнюю известную позицию
     if (position == null) {
       try {
         position = await Geolocator.getLastKnownPosition();
         if (position != null) {
-          debugPrint('📍 Используем last known: '
-              '${position.latitude}, ${position.longitude}');
+          debugPrint(
+            '📍 Используем last known: '
+                '${position.latitude}, ${position.longitude}',
+          );
         }
-      } catch (e) {
-        debugPrint('❌ Last known error: $e');
+      } catch (error) {
+        debugPrint('❌ Last known error: $error');
       }
     }
 
-    // 6. Закрываем прогресс-диалог
-    if (context.mounted) Navigator.pop(context);
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
 
-    // 7. Обновляем контроллеры
     if (position != null) {
-      latController.text = position.latitude.toStringAsFixed(6);
-      lngController.text = position.longitude.toStringAsFixed(6);
+      final latitude = position.latitude.toStringAsFixed(6);
+      final longitude = position.longitude.toStringAsFixed(6);
+
+      latController.text = latitude;
+      lngController.text = longitude;
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '✅ Координаты получены:\n'
-                  '${position.latitude.toStringAsFixed(6)}, '
-                  '${position.longitude.toStringAsFixed(6)}',
+              l10n.presenceCoordinatesReceived(latitude, longitude),
             ),
             backgroundColor: Colors.green,
           ),
         );
       }
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              '❌ Не удалось получить GPS.\n'
-                  'Попробуйте выйти на открытое место.',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.presenceGpsFailed),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // РАДИУС И ТАЙМАУТ
-  // ═══════════════════════════════════════════════════════════════
 
   void _showRadiusDialog(
       BuildContext context,
       WidgetRef ref,
       PresenceSettings settings,
       ) {
-    final ctrl = TextEditingController(text: settings.homeRadius.toString());
+    final l10n = AppLocalizations.of(context);
+    final controller =
+    TextEditingController(text: settings.homeRadius.toString());
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Радиус'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.presenceRadius),
         content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(
-            labelText: 'Метры',
-            hintText: '100',
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: l10n.presenceMeters,
+            hintText: l10n.presenceRadiusHint,
           ),
           keyboardType: TextInputType.number,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.presenceCancel),
           ),
           ElevatedButton(
             onPressed: () {
-              final r = int.tryParse(ctrl.text);
-              if (r != null && r > 0) {
+              final radius = int.tryParse(controller.text);
+              if (radius != null && radius > 0) {
                 ref.read(presenceSettingsProvider.notifier).update(
-                  settings.copyWith(homeRadius: r),
+                  settings.copyWith(homeRadius: radius),
                 );
               }
-              Navigator.pop(ctx);
+              Navigator.pop(dialogContext);
             },
-            child: const Text('Сохранить'),
+            child: Text(l10n.presenceSave),
           ),
         ],
       ),
@@ -641,40 +640,49 @@ class PresenceSettingsScreen extends ConsumerWidget {
       WidgetRef ref,
       PresenceSettings settings,
       ) {
-    final ctrl =
+    final l10n = AppLocalizations.of(context);
+    final controller =
     TextEditingController(text: settings.awayTimeoutMin.toString());
 
-    showDialog(
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Таймаут "ушёл"'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.presenceAwayTimeout),
         content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(
-            labelText: 'Минуты',
-            hintText: '5',
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: l10n.presenceMinutes,
+            hintText: l10n.presenceTimeoutHint,
           ),
           keyboardType: TextInputType.number,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.presenceCancel),
           ),
           ElevatedButton(
             onPressed: () {
-              final t = int.tryParse(ctrl.text);
-              if (t != null && t > 0) {
+              final timeout = int.tryParse(controller.text);
+              if (timeout != null && timeout > 0) {
                 ref.read(presenceSettingsProvider.notifier).update(
-                  settings.copyWith(awayTimeoutMin: t),
+                  settings.copyWith(awayTimeoutMin: timeout),
                 );
               }
-              Navigator.pop(ctx);
+              Navigator.pop(dialogContext);
             },
-            child: const Text('Сохранить'),
+            child: Text(l10n.presenceSave),
           ),
         ],
       ),
     );
+  }
+
+  String _formatDistance(double meters, AppLocalizations l10n) {
+    if (meters < 1000) {
+      return '${meters.round()} м';
+    }
+
+    return '${(meters / 1000).toStringAsFixed(1)} км';
   }
 }

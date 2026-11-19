@@ -9,6 +9,7 @@ import '../../domain/models/device.dart';
 import '../../application/state/devices_provider.dart';
 import '../../di/injection.dart';
 import '../../data/services/port_scanner.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class ScanDevicesScreen extends ConsumerStatefulWidget {
   final bool isOnboarding;
@@ -28,11 +29,13 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final existingDevices = ref.watch(devicesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🔍 Сканировать Tuya'),
+        // сканировать
+        title: Text('🔍 ${l10n.scanTuyaTitle}'),
         leading: widget.isOnboarding
             ? null
             : IconButton(
@@ -47,13 +50,15 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  const Text(
-                    'Поиск устройств Tuya',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  // 'Поиск устройств Tuya'
+                  Text(
+                    l10n.tuyaSearchTitle,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
+                  // 'Сканируем порты 6666-6668-7000 в локальной сети',
                   Text(
-                    'Сканируем порты 6666-6668-7000 в локальной сети',
+                    l10n.scanPortsHint,
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                   ),
                   const SizedBox(height: 24),
@@ -63,14 +68,19 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                       value: _total > 0 ? _progress / _total : 0,
                     ),
                     const SizedBox(height: 8),
-                    Text('Проверено: $_progress / $_total'),
+                    // 'Проверено:
+                    Text(l10n.scanProgress(_progress, _total)),
                     const SizedBox(height: 16),
                   ],
 
                   if (_foundDevices.isNotEmpty) ...[
+                    // 'Найдено:
                     Text(
-                      'Найдено: ${_foundDevices.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      l10n.foundDevices(_foundDevices.length),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ..._foundDevices.map((device) {
@@ -92,7 +102,8 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                               device.ip,
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
-                            subtitle: const Text('Добавлено'),
+                            // 'Добавлено'
+                            subtitle: Text(l10n.deviceAddedStatus),
                           ),
                         );
                       }
@@ -116,7 +127,8 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                             device.ip,
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
-                          subtitle: Text('Порт: ${device.port}'),
+                          // 'Порт:
+                          subtitle: Text(l10n.portNumber(device.port)),
                           trailing: IconButton(
                             icon: Container(
                               width: 36,
@@ -140,9 +152,10 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                         children: [
                           Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
                           const SizedBox(height: 16),
-                          const Text(
-                            'Нажмите "Сканировать"',
-                            style: TextStyle(fontSize: 16),
+                          // 'Нажмите "Сканировать"'
+                          Text(
+                            l10n.tapToScan,
+                            style: const TextStyle(fontSize: 16),
                           ),
                         ],
                       ),
@@ -160,8 +173,9 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
               child: ElevatedButton.icon(
                 onPressed: _scanning ? null : _startScan,
                 icon: const Icon(Icons.search),
+                // 'Сканирование...' : 'Сканировать'
                 label: Text(
-                  _scanning ? 'Сканирование...' : 'Сканировать',
+                  _scanning ? l10n.scanning : l10n.scan,
                   style: const TextStyle(fontSize: 18),
                 ),
               ),
@@ -176,7 +190,11 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () => context.push('/onboarding/rooms'),
-                  child: const Text('Продолжить', style: TextStyle(fontSize: 18)),
+                  // 'Продолжить'
+                  child: Text(
+                    l10n.continueButton,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
               ),
             ),
@@ -190,7 +208,9 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
   // ============================================================
 
   void _showAddDialog(DiscoveredDevice device) {
-    final nameController = TextEditingController(text: 'Устройство ${device.ip}');
+    final l10n = AppLocalizations.of(context);
+    // Устройство
+    final nameController = TextEditingController(text: l10n.defaultDeviceName(device.ip),);
     final localKeyController = TextEditingController();
     final deviceIdController = TextEditingController();
 
@@ -198,7 +218,8 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Добавить устройство'),
+          // 'Добавить устройство'
+          title: Text(l10n.addDeviceTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -213,13 +234,15 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // IP:
                       Text(
-                        '📍 IP: ${device.ip}',
+                        '📍 ${l10n.ipAddress(device.ip)}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                       const SizedBox(height: 4),
+                      // 🔌 Порт:
                       Text(
-                        '🔌 Порт: ${device.port}',
+                        '🔌 ${l10n.portNumber(device.port)}',
                         style: const TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
@@ -228,25 +251,53 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Название'),
-                ),
+                  // 'Название'
+                  decoration: InputDecoration(labelText: l10n.deviceName) ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<DeviceType>(
                   initialValue: _selectedType,
-                  decoration: const InputDecoration(
-                    labelText: 'Тип устройства',
-                    prefixIcon: Icon(Icons.category),
+                  // 'Тип устройства'
+                  decoration: InputDecoration(
+                    labelText: l10n.deviceType,
+                    prefixIcon: const Icon(Icons.category),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: DeviceType.outlet, child: Text('Розетка')),
-                    DropdownMenuItem(value: DeviceType.switch1, child: Text('Выключатель (1 кл.)')),
-                    DropdownMenuItem(value: DeviceType.switch2, child: Text('Выключатель (2 кл.)')),
-                    DropdownMenuItem(value: DeviceType.switch3, child: Text('Выключатель (3 кл.)')),
-                    DropdownMenuItem(value: DeviceType.sensor, child: Text('Датчик')),
-                    DropdownMenuItem(value: DeviceType.light, child: Text('Лампа')),
-                    DropdownMenuItem(value: DeviceType.curtain, child: Text('Шторы')),
-                    DropdownMenuItem(value: DeviceType.hvac, child: Text('❄️ Кондиционер')),
-                    DropdownMenuItem(value: DeviceType.compound, child: Text('🦾 Универсальное устройство')),
+                  items: [
+                    DropdownMenuItem(
+                      value: DeviceType.outlet,
+                      child: Text(l10n.outlet),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.switch1,
+                      child: Text(l10n.switchOne),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.switch2,
+                      child: Text(l10n.switchTwo),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.switch3,
+                      child: Text(l10n.switchThree),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.sensor,
+                      child: Text(l10n.sensor),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.light,
+                      child: Text(l10n.light),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.curtain,
+                      child: Text(l10n.curtain),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.hvac,
+                      child: Text('❄️ ${l10n.airConditioner}'),
+                    ),
+                    DropdownMenuItem(
+                      value: DeviceType.compound,
+                      child: Text('🦾 ${l10n.universalDevice}'),
+                    ),
                   ],
                   onChanged: (value) =>
                       setDialogState(() => _selectedType = value ?? DeviceType.outlet),
@@ -254,12 +305,14 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: deviceIdController,
-                  decoration: const InputDecoration(labelText: 'Device ID'),
+                  // 'Device ID'
+                  decoration: InputDecoration(labelText: l10n.deviceId),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: localKeyController,
-                  decoration: const InputDecoration(labelText: 'Local Key'),
+                  // 'Local Key'
+                  decoration: InputDecoration(labelText: l10n.localKey),
                 ),
               ],
             ),
@@ -267,7 +320,8 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена'),
+              // 'Отмена'
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () {
@@ -291,11 +345,14 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
                   setState(() => _addedIps.add(device.ip));
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${nameController.text} добавлено!')),
+                    // добавлено!'
+                    SnackBar(content: Text(l10n.deviceAddedMessage(nameController.text)),
+                    ),
                   );
                 }
               },
-              child: const Text('Добавить'),
+              //'Добавить'
+              child: Text(l10n.add),
             ),
           ],
         ),
@@ -320,7 +377,10 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
       setState(() => _scanning = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось определить локальную сеть')),
+          // 'Не удалось определить локальную сеть'
+          SnackBar(
+            content: Text(AppLocalizations.of(context).localNetworkNotFound),
+          ),
         );
       }
       return;
@@ -329,13 +389,17 @@ class _ScanDevicesScreenState extends ConsumerState<ScanDevicesScreen> {
     final scanner = PortScanner(
       getIt<Talker>(),
           (device) {
-        if (mounted) setState(() => _foundDevices.add(device));
+        if (mounted) {
+          setState(() => _foundDevices.add(device));
+        }
       },
           (progress, total) {
-        if (mounted) setState(() {
-          _progress = progress;
-          _total = total;
-        });
+        if (mounted) {
+          setState(() {
+            _progress = progress;
+            _total = total;
+          });
+        }
       },
     );
 
