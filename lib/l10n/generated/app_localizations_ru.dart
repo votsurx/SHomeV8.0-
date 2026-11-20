@@ -419,6 +419,12 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get cloudPasswordShow => 'Показать пароль';
+
+  @override
+  String get cloudPasswordHide => 'Скрыть пароль';
+
+  @override
   String cloudBackupRestoreError(String error) {
     return '❌ Ошибка восстановления: $error';
   }
@@ -762,6 +768,42 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get eventsFrigateOther => '🎥 Обнаружение';
+
+  @override
+  String get eventsFilterPresence => 'Присутствие';
+
+  @override
+  String get eventsFilterDate => 'Период';
+
+  @override
+  String get eventsFilterDateAll => 'Весь период';
+
+  @override
+  String get eventsFilterDateToday => 'Сегодня';
+
+  @override
+  String get eventsFilterDateYesterday => 'Вчера';
+
+  @override
+  String get eventsFilterDate7Days => 'Последние 7 дней';
+
+  @override
+  String get eventsFilterDate30Days => 'Последние 30 дней';
+
+  @override
+  String get eventsFilterDateCustom => 'Свой диапазон';
+
+  @override
+  String get eventsFilterDateFrom => 'С';
+
+  @override
+  String get eventsFilterDateTo => 'По';
+
+  @override
+  String get eventsFilterDateApply => 'Применить';
+
+  @override
+  String get eventsFilterDateReset => 'Сбросить';
 
   @override
   String get frigateSettingsTooltip => 'Настройки Frigate';

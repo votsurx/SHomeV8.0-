@@ -9,7 +9,7 @@ class LegalDocuments {
   static const String developer = 'ArchitectCO';
   static const String owner = 'votsurX';
   static const String contactEmail = 'votsurx@gmail.com';
-  static const String appVersion = '8.4.1';
+  static const String appVersion = '8.4.2';
   static const String buildNumber = '1';
   static const String lastUpdated = '07 Сентября 2026';
   static const String lastUpdatedEn = 'September 7, 2026';

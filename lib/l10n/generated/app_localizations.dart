@@ -854,6 +854,18 @@ abstract class AppLocalizations {
   /// **'✅ Бекап «{backup}» восстановлен. Перезапустите приложение.'**
   String cloudBackupRestoreSuccess(String backup);
 
+  /// No description provided for @cloudPasswordShow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать пароль'**
+  String get cloudPasswordShow;
+
+  /// No description provided for @cloudPasswordHide.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скрыть пароль'**
+  String get cloudPasswordHide;
+
   /// No description provided for @cloudBackupRestoreError.
   ///
   /// In ru, this message translates to:
@@ -1519,6 +1531,78 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'🎥 Обнаружение'**
   String get eventsFrigateOther;
+
+  /// No description provided for @eventsFilterPresence.
+  ///
+  /// In ru, this message translates to:
+  /// **'Присутствие'**
+  String get eventsFilterPresence;
+
+  /// No description provided for @eventsFilterDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Период'**
+  String get eventsFilterDate;
+
+  /// No description provided for @eventsFilterDateAll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Весь период'**
+  String get eventsFilterDateAll;
+
+  /// No description provided for @eventsFilterDateToday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня'**
+  String get eventsFilterDateToday;
+
+  /// No description provided for @eventsFilterDateYesterday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вчера'**
+  String get eventsFilterDateYesterday;
+
+  /// No description provided for @eventsFilterDate7Days.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последние 7 дней'**
+  String get eventsFilterDate7Days;
+
+  /// No description provided for @eventsFilterDate30Days.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последние 30 дней'**
+  String get eventsFilterDate30Days;
+
+  /// No description provided for @eventsFilterDateCustom.
+  ///
+  /// In ru, this message translates to:
+  /// **'Свой диапазон'**
+  String get eventsFilterDateCustom;
+
+  /// No description provided for @eventsFilterDateFrom.
+  ///
+  /// In ru, this message translates to:
+  /// **'С'**
+  String get eventsFilterDateFrom;
+
+  /// No description provided for @eventsFilterDateTo.
+  ///
+  /// In ru, this message translates to:
+  /// **'По'**
+  String get eventsFilterDateTo;
+
+  /// No description provided for @eventsFilterDateApply.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применить'**
+  String get eventsFilterDateApply;
+
+  /// No description provided for @eventsFilterDateReset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить'**
+  String get eventsFilterDateReset;
 
   /// No description provided for @frigateSettingsTooltip.
   ///

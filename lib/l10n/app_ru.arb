@@ -227,6 +227,8 @@
   "cloudChooseBackup": "Выберите бекап",
   "cloudBackupDownloadFailed": "❌ Ошибка скачивания бекапа",
   "cloudBackupRestoreSuccess": "✅ Бекап «{backup}» восстановлен. Перезапустите приложение.",
+  "cloudPasswordShow": "Показать пароль",
+  "cloudPasswordHide": "Скрыть пароль",
   "@cloudBackupRestoreSuccess": {
     "placeholders": {
       "backup": {
@@ -383,7 +385,19 @@
   "eventsFrigateDog": "🎥 Собака",
   "eventsFrigateCat": "🎥 Кошка",
   "eventsFrigateBird": "🎥 Птица",
-  "eventsFrigateOther": "🎥 Обнаружение"
+  "eventsFrigateOther": "🎥 Обнаружение",
+  "eventsFilterPresence": "Присутствие",
+  "eventsFilterDate": "Период",
+    "eventsFilterDateAll": "Весь период",
+    "eventsFilterDateToday": "Сегодня",
+    "eventsFilterDateYesterday": "Вчера",
+    "eventsFilterDate7Days": "Последние 7 дней",
+    "eventsFilterDate30Days": "Последние 30 дней",
+    "eventsFilterDateCustom": "Свой диапазон",
+    "eventsFilterDateFrom": "С",
+    "eventsFilterDateTo": "По",
+    "eventsFilterDateApply": "Применить",
+    "eventsFilterDateReset": "Сбросить"
 
 
 ,

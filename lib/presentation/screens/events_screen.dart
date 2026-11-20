@@ -1,5 +1,7 @@
 /// Экран журнала событий.
 /// Читает из StatsCache (последние 200) + БД (старые, пагинация).
+/// Фильтры: категория (Все/Алерты/Действия/Ошибки/Присутствие),
+/// устройство, период (пресеты + свой диапазон с датой и временем).
 library;
 
 import 'package:flutter/material.dart';
@@ -10,7 +12,7 @@ import '../../data/local/database.dart';
 import '../../data/services/stats_cache.dart';
 import '../../l10n/generated/app_localizations.dart';
 
-enum EventCategory { all, alerts, actions, errors }
+enum EventCategory { all, alerts, actions, errors, presence }
 
 enum _PresenceVisualState {
   away,
@@ -18,6 +20,16 @@ enum _PresenceVisualState {
   homeWifi,
   home,
   unknown,
+}
+
+/// Пресеты периода для фильтра по дате.
+enum _DatePreset {
+  all,
+  today,
+  yesterday,
+  last7Days,
+  last30Days,
+  custom,
 }
 
 class EventsScreen extends ConsumerStatefulWidget {
@@ -40,6 +52,13 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   EventCategory _category = EventCategory.all;
   String? _selectedDeviceId;
+
+  // ─── Фильтр по периоду ───
+  _DatePreset _datePreset = _DatePreset.all;
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
+
+  bool get _hasDateFilter => _dateFrom != null || _dateTo != null;
 
   final ScrollController _scrollController = ScrollController();
 
@@ -167,7 +186,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             'sceneDeleted',
           };
 
-          if (!actionEvents.contains(event) && !_isPresenceEvent(event)) {
+          if (!actionEvents.contains(event)) {
             return false;
           }
           break;
@@ -178,18 +197,72 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           }
           break;
 
+        case EventCategory.presence:
+          if (!_isPresenceEvent(event)) {
+            return false;
+          }
+          break;
+
         case EventCategory.all:
           break;
       }
 
+      // ─── Фильтр по устройству ───
       if (_selectedDeviceId != null &&
           eventEntity.deviceId != _selectedDeviceId) {
         return false;
       }
 
+      // ─── Фильтр по периоду ───
+      if (_hasDateFilter) {
+        final ts = DateTime.tryParse(
+          eventEntity.timestamp?.toString() ?? '',
+        );
+        if (ts != null) {
+          if (_dateFrom != null && ts.isBefore(_dateFrom!)) {
+            return false;
+          }
+          if (_dateTo != null && ts.isAfter(_dateTo!)) {
+            return false;
+          }
+        }
+      }
+
       return true;
     }).toList();
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ПЕРИОД: ПРЕСЕТЫ И СВОЙ ДИАПАЗОН
+  // ═══════════════════════════════════════════════════════════════
+
+  Future<void> _showDateFilterSheet() async {
+    final l10n = AppLocalizations.of(context);
+
+    final result = await showModalBottomSheet<_DateFilterResult>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => _DateFilterSheet(
+        initialPreset: _datePreset,
+        initialFrom: _dateFrom,
+        initialTo: _dateTo,
+        l10n: l10n,
+      ),
+    );
+
+    if (result == null) return;
+
+    setState(() {
+      _datePreset = result.preset;
+      _dateFrom = result.from;
+      _dateTo = result.to;
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ПРИСУТСТВИЕ
+  // ═══════════════════════════════════════════════════════════════
 
   String _presenceCurrentRaw(dynamic eventEntity) {
     final value = eventEntity.value?.toString().trim();
@@ -425,6 +498,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
         return l10n.eventsFilterActions;
       case EventCategory.errors:
         return l10n.eventsFilterErrors;
+      case EventCategory.presence:
+        return l10n.eventsFilterPresence;
     }
   }
 
@@ -446,6 +521,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       appBar: AppBar(
         title: Text(l10n.eventsTitle),
         actions: [
+          // 📅 Фильтр по периоду
+          IconButton(
+            tooltip: l10n.eventsFilterDate,
+            onPressed: _showDateFilterSheet,
+            icon: Badge(
+              isLabelVisible: _hasDateFilter,
+              child: const Icon(Icons.date_range),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: l10n.eventsRefresh,
@@ -674,6 +758,303 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       label: Text(label),
       selected: _category == category,
       onSelected: (_) => setState(() => _category = category),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOTTOM SHEET: ФИЛЬТР ПО ПЕРИОДУ
+// ═══════════════════════════════════════════════════════════════
+
+class _DateFilterResult {
+  final _DatePreset preset;
+  final DateTime? from;
+  final DateTime? to;
+  const _DateFilterResult({
+    required this.preset,
+    required this.from,
+    required this.to,
+  });
+}
+
+class _DateFilterSheet extends StatefulWidget {
+  const _DateFilterSheet({
+    required this.initialPreset,
+    required this.initialFrom,
+    required this.initialTo,
+    required this.l10n,
+  });
+
+  final _DatePreset initialPreset;
+  final DateTime? initialFrom;
+  final DateTime? initialTo;
+  final AppLocalizations l10n;
+
+  @override
+  State<_DateFilterSheet> createState() => _DateFilterSheetState();
+}
+
+class _DateFilterSheetState extends State<_DateFilterSheet> {
+  late _DatePreset _preset;
+  DateTime? _from;
+  DateTime? _to;
+
+  @override
+  void initState() {
+    super.initState();
+    _preset = widget.initialPreset;
+    _from = widget.initialFrom;
+    _to = widget.initialTo;
+  }
+
+  DateTime _startOfDay(DateTime d) =>
+      DateTime(d.year, d.month, d.day);
+
+  DateTime _endOfDay(DateTime d) =>
+      DateTime(d.year, d.month, d.day, 23, 59, 59, 999);
+
+  void _selectPreset(_DatePreset preset) {
+    final now = DateTime.now();
+
+    setState(() {
+      _preset = preset;
+      switch (preset) {
+        case _DatePreset.all:
+          _from = null;
+          _to = null;
+          break;
+        case _DatePreset.today:
+          _from = _startOfDay(now);
+          _to = _endOfDay(now);
+          break;
+        case _DatePreset.yesterday:
+          final y = now.subtract(const Duration(days: 1));
+          _from = _startOfDay(y);
+          _to = _endOfDay(y);
+          break;
+        case _DatePreset.last7Days:
+          _from = _startOfDay(now.subtract(const Duration(days: 6)));
+          _to = _endOfDay(now);
+          break;
+        case _DatePreset.last30Days:
+          _from = _startOfDay(now.subtract(const Duration(days: 29)));
+          _to = _endOfDay(now);
+          break;
+        case _DatePreset.custom:
+        // Оставляем текущие _from/_to, пользователь задаст вручную.
+          if (_from == null && _to == null) {
+            _from = _startOfDay(now);
+            _to = _endOfDay(now);
+          }
+          break;
+      }
+    });
+  }
+
+  Future<void> _pickFromDate() async {
+    final l10n = widget.l10n;
+    final initial = _from ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: l10n.eventsFilterDateFrom,
+    );
+    if (picked == null) return;
+    if (!mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_from ?? DateTime.now()),
+      helpText: l10n.eventsFilterDateFrom,
+    );
+    if (time == null) return;
+
+    setState(() {
+      _from = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        time.hour,
+        time.minute,
+      );
+      _preset = _DatePreset.custom;
+    });
+  }
+
+  Future<void> _pickToDate() async {
+    final l10n = widget.l10n;
+    final initial = _to ?? DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      helpText: l10n.eventsFilterDateTo,
+    );
+    if (picked == null) return;
+    if (!mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_to ?? DateTime.now()),
+      helpText: l10n.eventsFilterDateTo,
+    );
+    if (time == null) return;
+
+    setState(() {
+      _to = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        time.hour,
+        time.minute,
+        59,
+        999,
+      );
+      _preset = _DatePreset.custom;
+    });
+  }
+
+  void _reset() {
+    setState(() {
+      _preset = _DatePreset.all;
+      _from = null;
+      _to = null;
+    });
+  }
+
+  void _apply() {
+    Navigator.pop(
+      context,
+      _DateFilterResult(preset: _preset, from: _from, to: _to),
+    );
+  }
+
+  String _formatDateTime(DateTime? d) {
+    if (d == null) return '—';
+    return '${d.day.toString().padLeft(2, '0')}.'
+        '${d.month.toString().padLeft(2, '0')}.'
+        '${d.year} '
+        '${d.hour.toString().padLeft(2, '0')}:'
+        '${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    final theme = Theme.of(context);
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.eventsFilterDate,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _presetTile(_DatePreset.all, l10n.eventsFilterDateAll),
+                    _presetTile(_DatePreset.today, l10n.eventsFilterDateToday),
+                    _presetTile(
+                        _DatePreset.yesterday, l10n.eventsFilterDateYesterday),
+                    _presetTile(
+                        _DatePreset.last7Days, l10n.eventsFilterDate7Days),
+                    _presetTile(
+                        _DatePreset.last30Days, l10n.eventsFilterDate30Days),
+                    _presetTile(
+                        _DatePreset.custom, l10n.eventsFilterDateCustom),
+                    if (_preset == _DatePreset.custom) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pickFromDate,
+                              icon: const Icon(Icons.event),
+                              label: Text(
+                                '${l10n.eventsFilterDateFrom}: '
+                                    '${_formatDateTime(_from)}',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pickToDate,
+                              icon: const Icon(Icons.event),
+                              label: Text(
+                                '${l10n.eventsFilterDateTo}: '
+                                    '${_formatDateTime(_to)}',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _reset,
+                    child: Text(l10n.eventsFilterDateReset),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _apply,
+                    child: Text(l10n.eventsFilterDateApply),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _presetTile(_DatePreset preset, String label) {
+    return RadioListTile<_DatePreset>(
+      value: preset,
+      groupValue: _preset,
+      onChanged: (v) {
+        if (v != null) _selectPreset(v);
+      },
+      title: Text(label),
+      dense: true,
+      contentPadding: EdgeInsets.zero,
     );
   }
 }

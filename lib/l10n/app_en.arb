@@ -226,6 +226,8 @@
     "cloudChooseBackup": "Select a backup",
     "cloudBackupDownloadFailed": "❌ Backup download failed",
     "cloudBackupRestoreSuccess": "✅ Backup “{backup}” restored. Restart the app.",
+    "cloudPasswordShow": "Show password",
+    "cloudPasswordHide": "Hide password",
     "@cloudBackupRestoreSuccess": {
       "placeholders": {
         "backup": {
@@ -383,7 +385,19 @@
     "eventsFrigateDog": "🎥 Dog",
     "eventsFrigateCat": "🎥 Cat",
     "eventsFrigateBird": "🎥 Bird",
-    "eventsFrigateOther": "🎥 Detection"
+    "eventsFrigateOther": "🎥 Detection",
+    "eventsFilterPresence": "Presence",
+      "eventsFilterDate": "Period",
+      "eventsFilterDateAll": "All time",
+      "eventsFilterDateToday": "Today",
+      "eventsFilterDateYesterday": "Yesterday",
+      "eventsFilterDate7Days": "Last 7 days",
+      "eventsFilterDate30Days": "Last 30 days",
+      "eventsFilterDateCustom": "Custom range",
+      "eventsFilterDateFrom": "From",
+      "eventsFilterDateTo": "To",
+      "eventsFilterDateApply": "Apply",
+      "eventsFilterDateReset": "Reset"
 
 
 ,

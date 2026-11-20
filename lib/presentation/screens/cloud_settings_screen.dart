@@ -27,6 +27,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
   bool _isDownloading = false;
   bool _isGeneratingBackupKey = false;
   bool _hasBackupKey = false;
+  bool _obscurePassword = true;
 
   String? _login;
   String? _lastSync;
@@ -509,6 +510,8 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const Divider(),
+
+            // Единственное поле логина
             TextField(
               controller: _loginController,
               decoration: InputDecoration(
@@ -520,13 +523,31 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
+
+            // Единственное поле пароля; глазик встроен в его декорацию
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(
                 labelText: l10n.cloudAppPassword,
                 prefixIcon: const Icon(Icons.lock),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                  ),
+                  tooltip: _obscurePassword
+                      ? l10n.cloudPasswordShow
+                      : l10n.cloudPasswordHide,
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
+              obscureText: _obscurePassword,
+              keyboardType: TextInputType.visiblePassword,
               onSubmitted: (_) {
                 if (!_isConnecting) {
                   _connect();
@@ -534,6 +555,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               },
             ),
             const SizedBox(height: 8),
+
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -546,6 +568,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -554,9 +577,7 @@ class _CloudSettingsScreenState extends State<CloudSettingsScreen> {
                     ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 )
                     : const Icon(Icons.link),
                 label: Text(
