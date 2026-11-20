@@ -2783,4 +2783,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateDownloadCancelled => 'Скачивание отменено';
+
+  @override
+  String get presenceWarningTitle => 'Внимание!!!';
+
+  @override
+  String get presenceWarningMessage =>
+      'Запускается сценарий «Никого нет дома». Телефоны ниже имеют статус «Неизвестно»:';
 }

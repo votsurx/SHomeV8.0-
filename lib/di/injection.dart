@@ -1,40 +1,46 @@
-/// Контейнер внедрения зависимостей (Dependency Injection) на базе GetIt.
-library;
-
 import 'package:get_it/get_it.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import '../domain/repositories/device_repository.dart';
-import '../domain/repositories/room_repository.dart';
-import '../domain/repositories/scene_repository.dart';
-import '../data/local/secure_storage/encrypted_keys.dart';
+
+import '../application/services/presence_warning_controller.dart';
 import '../data/protocols/tuya_protocol.dart';
+import '../data/protocols/zigbee_protocol.dart';
 import '../data/repositories/device_repository_impl.dart';
 import '../data/repositories/room_repository_impl.dart';
 import '../data/repositories/scene_repository_impl.dart';
 import '../data/services/automation_engine.dart';
+import '../data/services/frigate_bridge.dart';
+import '../data/services/frigate_service.dart';
+import '../data/services/mqtt_connection_manager.dart';
+import '../data/services/mqtt_service_impl.dart';
 import '../data/services/presence_detector.dart';
 import '../data/services/timer_engine.dart';
 import '../data/services/zigbee_bridge.dart';
-import '../data/protocols/zigbee_protocol.dart';
+import '../data/local/secure_storage/encrypted_keys.dart';
+import '../domain/repositories/device_repository.dart';
+import '../domain/repositories/room_repository.dart';
+import '../domain/repositories/scene_repository.dart';
 import '../domain/services/mqtt_service_interface.dart';
-import '../data/services/mqtt_service_impl.dart';
-import '../data/services/frigate_service.dart';
-import '../data/services/frigate_bridge.dart';
-import '../data/services/mqtt_connection_manager.dart';
 
 final getIt = GetIt.instance;
 
 void configureDependencies() {
   // ============================================================
-  // 📝 ЛОГГЕР
+  // ЛОГГЕР
   // ============================================================
 
   final talker = TalkerFlutter.init();
   getIt.registerLazySingleton<Talker>(() => talker);
 
+  // ============================================================
+  // ОБЩИЙ КОНТРОЛЛЕР ПРЕДУПРЕЖДЕНИЯ О ПРИСУТСТВИИ
+  // ============================================================
+
+  getIt.registerLazySingleton<PresenceWarningController>(
+    PresenceWarningController.new,
+  );
 
   // ============================================================
-  // 📡 MQTT
+  // MQTT
   // ============================================================
 
   getIt.registerLazySingleton<MqttService>(
@@ -49,7 +55,7 @@ void configureDependencies() {
   );
 
   // ============================================================
-  // 🐝 ZIGBEE
+  // ZIGBEE
   // ============================================================
 
   getIt.registerLazySingleton<ZigbeeBridge>(
@@ -60,11 +66,14 @@ void configureDependencies() {
   );
 
   getIt.registerLazySingleton<ZigbeeProtocol>(
-        () => ZigbeeProtocol(getIt<MqttService>(), getIt<Talker>()),
+        () => ZigbeeProtocol(
+      getIt<MqttService>(),
+      getIt<Talker>(),
+    ),
   );
 
   // ============================================================
-  // 🎥 FRIGATE
+  // FRIGATE
   // ============================================================
 
   getIt.registerLazySingleton<FrigateService>(
@@ -79,15 +88,16 @@ void configureDependencies() {
   );
 
   // ============================================================
-  // 🔐 СИНГЛТОНЫ
+  // СИНГЛТОНЫ
   // ============================================================
 
-  // EncryptedKeys регистрируется ПЕРВЫМ — его использует
-  // DeviceRepositoryImpl для безопасного хранения localKey Tuya.
-  getIt.registerLazySingleton<EncryptedKeys>(() => EncryptedKeys());
+  // EncryptedKeys используется репозиториями и сервисами хранения секретов.
+  getIt.registerLazySingleton<EncryptedKeys>(
+        () => EncryptedKeys(),
+  );
 
   // ============================================================
-  // 🔌 ПРОТОКОЛЫ
+  // ПРОТОКОЛЫ
   // ============================================================
 
   getIt.registerLazySingleton<TuyaProtocol>(
@@ -95,7 +105,7 @@ void configureDependencies() {
   );
 
   // ============================================================
-  // 📦 РЕПОЗИТОРИИ
+  // РЕПОЗИТОРИИ
   // ============================================================
 
   getIt.registerLazySingleton<DeviceRepository>(
@@ -114,7 +124,7 @@ void configureDependencies() {
   );
 
   // ============================================================
-  // 📍 ДЕТЕКТОР ПРИСУТСТВИЯ
+  // ДЕТЕКТОР ПРИСУТСТВИЯ
   // ============================================================
 
   getIt.registerLazySingleton<PresenceDetector>(
@@ -122,11 +132,14 @@ void configureDependencies() {
   );
 
   // ============================================================
-  // ⚙️ ДВИЖКИ
+  // ДВИЖКИ
   // ============================================================
 
   getIt.registerLazySingleton<TimerEngine>(
-        () => TimerEngine(getIt<DeviceRepository>(), getIt<Talker>()),
+        () => TimerEngine(
+      getIt<DeviceRepository>(),
+      getIt<Talker>(),
+    ),
   );
 
   getIt.registerLazySingleton<AutomationEngine>(
@@ -134,6 +147,7 @@ void configureDependencies() {
       getIt<SceneRepository>(),
       getIt<Talker>(),
       presenceDetector: getIt<PresenceDetector>(),
+      warningController: getIt<PresenceWarningController>(),
     ),
   );
 }

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:shome/data/protocols/tuya_protocol.dart';
+import 'package:shome/di/injection.dart';
 import 'package:shome/domain/models/device.dart';
 import 'package:shome/domain/models/room.dart';
 import 'package:shome/domain/repositories/device_repository.dart';
 import 'package:shome/domain/repositories/room_repository.dart';
-import 'package:shome/data/protocols/tuya_protocol.dart';
+import 'package:shome/l10n/generated/app_localizations.dart';
 import 'package:shome/presentation/widgets/device_settings.dart';
-import 'package:shome/di/injection.dart';
 
-// ═══════════════════════════════════════════════════════════════════
-// МОКИ
-// ═══════════════════════════════════════════════════════════════════
+// ─── Моки ──────────────────────────────────────────────────────────
 
 class MockRoomRepository implements RoomRepository {
   @override
@@ -61,7 +62,8 @@ class MockDeviceRepository implements DeviceRepository {
   Future<bool> pingDevice(String id) async => true;
 
   @override
-  Future<bool> setSwitchChannel(String id, int channel, bool state) async => true;
+  Future<bool> setSwitchChannel(String id, int channel, bool state) async =>
+      true;
 
   @override
   Future<bool> setCurtainPosition(String id, int position) async => true;
@@ -94,24 +96,29 @@ class MockTuyaProtocol implements TuyaProtocol {
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// ТЕСТЫ
-// ═══════════════════════════════════════════════════════════════════
+// ─── Тесты ─────────────────────────────────────────────────────────
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('DeviceSettings', () {
     setUpAll(() {
-      // Регистрируем всё, что нужно DevicesNotifier и RoomsNotifier
       if (!getIt.isRegistered<RoomRepository>()) {
-        getIt.registerLazySingleton<RoomRepository>(() => MockRoomRepository());
+        getIt.registerLazySingleton<RoomRepository>(
+              () => MockRoomRepository(),
+        );
       }
+
       if (!getIt.isRegistered<DeviceRepository>()) {
         getIt.registerLazySingleton<DeviceRepository>(
               () => MockDeviceRepository(),
         );
       }
+
       if (!getIt.isRegistered<TuyaProtocol>()) {
-        getIt.registerLazySingleton<TuyaProtocol>(() => MockTuyaProtocol());
+        getIt.registerLazySingleton<TuyaProtocol>(
+              () => MockTuyaProtocol(),
+        );
       }
     });
 
@@ -120,7 +127,6 @@ void main() {
     });
 
     setUp(() {
-      // DevicesNotifier._restoreOrder() дёргает SharedPreferences
       SharedPreferences.setMockInitialValues({});
     });
 
@@ -132,17 +138,30 @@ void main() {
         roomId: 'other',
         isOnline: true,
         state: DeviceState.online,
-        properties: {'cameraType': 'device', 'cameraLens': 0},
+        properties: {
+          'cameraType': 'device',
+          'cameraLens': 0,
+        },
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            locale: const Locale('ru'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: Consumer(
                 builder: (context, ref, _) {
                   return ElevatedButton(
-                    onPressed: () => DeviceSettings.show(context, ref, device),
+                    onPressed: () {
+                      DeviceSettings.show(context, ref, device);
+                    },
                     child: const Text('Open'),
                   );
                 },
@@ -155,17 +174,17 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      // Поля, которые должны быть для камеры
+      // Поля, которые должны быть для камеры.
       expect(find.text('Название'), findsOneWidget);
       expect(find.text('Комната'), findsOneWidget);
 
-      // Tuya-поля скрыты для камеры
+      // Поля Tuya скрыты для камеры.
       expect(find.text('Device ID'), findsNothing);
       expect(find.text('IP Адрес'), findsNothing);
       expect(find.text('Local Key'), findsNothing);
       expect(find.text('DPS Индекс'), findsNothing);
 
-      // RTSP URL тоже скрыт, потому что cameraType != 'rtsp'
+      // RTSP URL скрыт, потому что cameraType != 'rtsp'.
       expect(find.text('RTSP URL'), findsNothing);
     });
   });

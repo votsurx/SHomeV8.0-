@@ -5209,6 +5209,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Скачивание отменено'**
   String get updateDownloadCancelled;
+
+  /// No description provided for @presenceWarningTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Внимание!!!'**
+  String get presenceWarningTitle;
+
+  /// No description provided for @presenceWarningMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запускается сценарий «Никого нет дома». Телефоны ниже имеют статус «Неизвестно»:'**
+  String get presenceWarningMessage;
 }
 
 class _AppLocalizationsDelegate

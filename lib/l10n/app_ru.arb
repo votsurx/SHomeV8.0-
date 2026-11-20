@@ -1617,4 +1617,9 @@
       "updateCancel": "Отмена",
       "updateCancelling": "Отмена...",
       "updateDownloadCancelled": "Скачивание отменено"
+
+
+,
+    "presenceWarningTitle": "Внимание!!!",
+    "presenceWarningMessage": "Запускается сценарий «Никого нет дома». Телефоны ниже имеют статус «Неизвестно»:"
 }

@@ -8,6 +8,8 @@ import 'package:shome/data/services/adaptive_poller.dart';
 import 'package:shome/presentation/screens/documents/legal_documents_screen.dart';
 import 'package:shome/presentation/screens/screen_settings_screen.dart';
 import 'package:shome/presentation/screens/settings_screen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shome/l10n/generated/app_localizations.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,14 @@ void main() {
   Future<void> pumpSettings(WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('ru'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: SettingsScreen(
           statsSettingReader: (key) async {
             if (key == 'events_retention_days') return '30';
@@ -62,19 +72,13 @@ void main() {
     testWidgets('отображает заголовок и интервал опроса', (tester) async {
       await pumpSettings(tester);
 
-      expect(find.text('Настройки'), findsOneWidget);
-      expect(find.text('Интервал опроса'), findsOneWidget);
-      expect(
-        find.text(AdaptivePoller.formatIntervalMs(5000)),
-        findsOneWidget,
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(SettingsScreen)),
       );
-    });
 
-    testWidgets('отображает настройки экрана', (tester) async {
-      await pumpSettings(tester);
-
-      expect(find.text('Настройки экрана'), findsOneWidget);
-      expect(find.text('Заставка и отображение'), findsOneWidget);
+      expect(find.text(l10n.settingsTitle), findsOneWidget);
+      expect(find.text(l10n.settingsPollInterval), findsOneWidget);
+      expect(find.text(l10n.settingsIntervalSeconds(5)), findsOneWidget);
     });
 
     testWidgets('основные пункты настроек доступны при прокрутке',
@@ -122,27 +126,45 @@ void main() {
       },
     );
 
-    testWidgets('интервал опроса показывает актуальные варианты',
-            (tester) async {
-          await pumpSettings(tester);
+    testWidgets('интервал опроса показывает актуальные варианты', (tester) async {
+      await pumpSettings(tester);
 
-          await tester.tap(find.text('Интервал опроса'));
-          await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(SettingsScreen)),
+      );
 
-          final dialog = find.byType(SimpleDialog);
-          expect(dialog, findsOneWidget);
+      await tester.tap(find.text(l10n.settingsPollInterval));
+      await tester.pumpAndSettle();
 
-          for (final label in AdaptivePoller.intervalOptions.values) {
-            expect(
-              find.descendant(
-                of: dialog,
-                matching: find.text(label),
-              ),
-              findsOneWidget,
-              reason: 'В диалоге должен быть вариант "$label"',
-            );
-          }
-        });
+      final dialog = find.byType(SimpleDialog);
+      expect(dialog, findsOneWidget);
+
+      final expectedCounts = <String, int>{};
+
+      for (final milliseconds in AdaptivePoller.intervalOptions.keys) {
+        final label = milliseconds >= 60000 && milliseconds % 60000 == 0
+            ? l10n.settingsIntervalMinutes(milliseconds ~/ 60000)
+            : l10n.settingsIntervalSeconds((milliseconds / 1000).round());
+
+        expectedCounts.update(
+          label,
+              (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+
+      for (final entry in expectedCounts.entries) {
+        expect(
+          find.descendant(
+            of: dialog,
+            matching: find.text(entry.key),
+          ),
+          findsNWidgets(entry.value),
+          reason:
+          'В диалоге должно быть ${entry.value} пункт(а) с подписью "${entry.key}"',
+        );
+      }
+    });
 
     testWidgets('Информация открывает экран юридических документов',
             (tester) async {

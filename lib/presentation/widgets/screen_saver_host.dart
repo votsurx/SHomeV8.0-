@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-/// Показывает заставку после периода бездействия.
+/// Показывает самописную заставку после периода бездействия.
 ///
 /// Если включён motionWakeEnabled, фронтальная камера работает только
 /// пока заставка видна и приложение находится на переднем плане.
@@ -16,6 +16,7 @@ class ScreenSaverHost extends StatefulWidget {
     required this.child,
     required this.screenSaverBuilder,
     this.enabled = true,
+    this.suppressScreenSaver = false,
     this.motionWakeEnabled = false,
     this.motionSensitivity = 50,
     this.idleTimeout = const Duration(minutes: 2),
@@ -28,7 +29,13 @@ class ScreenSaverHost extends StatefulWidget {
   final Widget child;
   final WidgetBuilder screenSaverBuilder;
 
+  /// Пользовательская настройка: разрешено ли показывать заставку.
   final bool enabled;
+
+  /// Временное подавление заставки, например пока отображается
+  /// критичное предупреждение. Настройку [enabled] не меняет.
+  final bool suppressScreenSaver;
+
   final bool motionWakeEnabled;
 
   /// Диапазон 0–100: чем выше значение, тем чувствительнее детекция.
@@ -38,7 +45,7 @@ class ScreenSaverHost extends StatefulWidget {
   final double iconSize;
   final Color backgroundColor;
 
-  /// Вызывается, когда заставка показывается на переднем плане или скрывается.
+  /// Вызывается, когда заставка показывается или скрывается.
   final ValueChanged<bool>? onScreenSaverActiveChanged;
 
   @override
@@ -66,7 +73,7 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
   bool _showingScreenSaver = false;
   bool _appResumed = true;
 
-  // Положение иконки как доли доступной ширины и высоты.
+  // Положение иконки — доли доступной ширины и высоты.
   double _x = 0.5;
   double _y = 0.5;
 
@@ -81,13 +88,16 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
   void didUpdateWidget(covariant ScreenSaverHost oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (!widget.enabled) {
+    if (!widget.enabled || widget.suppressScreenSaver) {
       _idleTimer?.cancel();
-      _hideScreenSaver();
+      _idleTimer = null;
+      _hideScreenSaver(scheduleIdleTimer: false);
       return;
     }
 
-    if (!oldWidget.enabled ||
+    if (oldWidget.suppressScreenSaver && !widget.suppressScreenSaver) {
+      _scheduleIdleTimer();
+    } else if (!oldWidget.enabled ||
         oldWidget.idleTimeout != widget.idleTimeout) {
       _scheduleIdleTimer();
     }
@@ -95,7 +105,8 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
     if (oldWidget.motionWakeEnabled != widget.motionWakeEnabled) {
       if (widget.motionWakeEnabled &&
           _showingScreenSaver &&
-          _appResumed) {
+          _appResumed &&
+          !widget.suppressScreenSaver) {
         unawaited(_startMotionCamera());
       } else {
         unawaited(_stopMotionCamera());
@@ -109,9 +120,22 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
 
     if (!_appResumed) {
       _idleTimer?.cancel();
+      _idleTimer = null;
       _movementTimer?.cancel();
       unawaited(_stopMotionCamera());
       _notifyScreenSaverState();
+      return;
+    }
+
+    if (widget.suppressScreenSaver || !widget.enabled) {
+      _idleTimer?.cancel();
+      _idleTimer = null;
+      _movementTimer?.cancel();
+      unawaited(_stopMotionCamera());
+
+      if (_showingScreenSaver) {
+        _hideScreenSaver(scheduleIdleTimer: false);
+      }
       return;
     }
 
@@ -129,8 +153,12 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
 
   void _scheduleIdleTimer() {
     _idleTimer?.cancel();
+    _idleTimer = null;
 
-    if (!widget.enabled || !_appResumed || _showingScreenSaver) {
+    if (!widget.enabled ||
+        widget.suppressScreenSaver ||
+        !_appResumed ||
+        _showingScreenSaver) {
       return;
     }
 
@@ -138,7 +166,10 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
   }
 
   void _showScreenSaver() {
-    if (!mounted || !widget.enabled || !_appResumed) {
+    if (!mounted ||
+        !widget.enabled ||
+        widget.suppressScreenSaver ||
+        !_appResumed) {
       return;
     }
 
@@ -157,12 +188,20 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
     }
   }
 
-  void _hideScreenSaver() {
+  void _hideScreenSaver({
+    bool scheduleIdleTimer = true,
+  }) {
     _idleTimer?.cancel();
+    _idleTimer = null;
     _movementTimer?.cancel();
     unawaited(_stopMotionCamera());
 
     if (!_showingScreenSaver || !mounted) {
+      if (scheduleIdleTimer &&
+          widget.enabled &&
+          !widget.suppressScreenSaver) {
+        _scheduleIdleTimer();
+      }
       return;
     }
 
@@ -172,10 +211,17 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
 
     _motionTriggered = false;
     _notifyScreenSaverState();
-    _scheduleIdleTimer();
+
+    if (scheduleIdleTimer &&
+        widget.enabled &&
+        !widget.suppressScreenSaver) {
+      _scheduleIdleTimer();
+    }
   }
 
   void _onPointerDown(PointerDownEvent event) {
+    if (widget.suppressScreenSaver) return;
+
     if (_showingScreenSaver) {
       _hideScreenSaver();
     } else {
@@ -186,14 +232,19 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
   void _startMovementTimer() {
     _movementTimer?.cancel();
 
-    if (!_showingScreenSaver || !_appResumed) {
+    if (!_showingScreenSaver ||
+        !_appResumed ||
+        widget.suppressScreenSaver) {
       return;
     }
 
     _movementTimer = Timer.periodic(
       const Duration(seconds: 8),
           (_) {
-        if (!mounted || !_showingScreenSaver || !_appResumed) {
+        if (!mounted ||
+            !_showingScreenSaver ||
+            !_appResumed ||
+            widget.suppressScreenSaver) {
           return;
         }
 
@@ -226,9 +277,8 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
             (camera) => camera.lensDirection == CameraLensDirection.front,
       );
 
-      final camera = frontCameras.isNotEmpty
-          ? frontCameras.first
-          : cameras.first;
+      final camera =
+      frontCameras.isNotEmpty ? frontCameras.first : cameras.first;
 
       controller = CameraController(
         camera,
@@ -249,8 +299,6 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
       _consecutiveMotionFrames = 0;
 
       // Даём камере время стабилизировать экспозицию и баланс белого.
-      // Во время этого периода кадры только обновляют опорное изображение,
-      // а движение не считается.
       _ignoreMotionUntil = DateTime.now().add(_cameraWarmupDuration);
 
       await controller.startImageStream(_onCameraImage);
@@ -283,6 +331,7 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
           _showingScreenSaver &&
           _appResumed &&
           widget.enabled &&
+          !widget.suppressScreenSaver &&
           widget.motionWakeEnabled &&
           !_motionTriggered;
 
@@ -294,7 +343,7 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
     }
 
     // Первая плоскость YUV420 содержит яркостный канал.
-    // Учитываем stride, чтобы корректно выбирать пиксели по строкам.
+    // Учитываем stride для корректного чтения пикселей.
     final plane = image.planes.first;
     final bytes = plane.bytes;
     final pixelStride = plane.bytesPerPixel ?? 1;
@@ -313,20 +362,15 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
 
     for (var y = 0; y < image.height; y += _sampleStep) {
       for (var x = 0; x < image.width; x += _sampleStep) {
-        final byteIndex =
-            y * plane.bytesPerRow + x * pixelStride;
+        final byteIndex = y * plane.bytesPerRow + x * pixelStride;
 
-        if (byteIndex >= bytes.length) {
-          continue;
-        }
+        if (byteIndex >= bytes.length) continue;
 
         samples[sampleIndex++] = bytes[byteIndex];
       }
     }
 
-    if (sampleIndex == 0) {
-      return;
-    }
+    if (sampleIndex == 0) return;
 
     final currentSamples = sampleIndex == samples.length
         ? samples
@@ -335,9 +379,8 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
     final previous = _previousSamples;
     _previousSamples = currentSamples;
 
-    // После запуска камеры кадры используются только для обновления
-    // опорного изображения, чтобы исключить ложное срабатывание
-    // из-за автоэкспозиции и настройки камеры.
+    // Первые секунды кадры обновляют опорное изображение,
+    // движение в это время не определяется.
     final ignoreUntil = _ignoreMotionUntil;
     if (ignoreUntil != null && DateTime.now().isBefore(ignoreUntil)) {
       _consecutiveMotionFrames = 0;
@@ -349,17 +392,13 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
     }
 
     final sensitivity = widget.motionSensitivity.clamp(0, 100);
-
-    // При высокой чувствительности меньшие изменения яркости считаются
-    // движением, а доля кадра, которая должна измениться, уменьшается.
     final pixelDeltaThreshold = (40 - sensitivity * 0.28).round();
     final changedRatioThreshold = 0.35 - sensitivity * 0.0029;
 
     var changedSamples = 0;
 
     for (var i = 0; i < currentSamples.length; i++) {
-      final difference =
-      (currentSamples[i] - previous[i]).abs();
+      final difference = (currentSamples[i] - previous[i]).abs();
 
       if (difference >= pixelDeltaThreshold) {
         changedSamples++;
@@ -368,8 +407,7 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
 
     final changedRatio = changedSamples / currentSamples.length;
 
-    // Требуем три последовательных кадра с движением, чтобы не будить
-    // заставку от единичного шумового скачка.
+    // Три последовательных кадра уменьшают ложные срабатывания от шума.
     if (changedRatio >= changedRatioThreshold) {
       _consecutiveMotionFrames++;
     } else {
@@ -390,16 +428,14 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
     _consecutiveMotionFrames = 0;
     _ignoreMotionUntil = null;
 
-    if (controller == null) {
-      return;
-    }
+    if (controller == null) return;
 
     try {
       if (controller.value.isStreamingImages) {
         await controller.stopImageStream();
       }
     } catch (_) {
-      // Поток мог уже остановиться при смене состояния приложения.
+      // Поток мог остановиться при смене состояния приложения.
     }
 
     try {
@@ -411,7 +447,9 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
 
   void _notifyScreenSaverState() {
     widget.onScreenSaverActiveChanged?.call(
-      _showingScreenSaver && _appResumed,
+      _showingScreenSaver &&
+          _appResumed &&
+          !widget.suppressScreenSaver,
     );
   }
 
@@ -424,7 +462,9 @@ class _ScreenSaverHostState extends State<ScreenSaverHost>
         fit: StackFit.expand,
         children: [
           widget.child,
-          if (_showingScreenSaver)
+          if (_showingScreenSaver &&
+              widget.enabled &&
+              !widget.suppressScreenSaver)
             Positioned.fill(
               child: LayoutBuilder(
                 builder: (context, constraints) {

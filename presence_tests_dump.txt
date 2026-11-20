@@ -1,0 +1,232 @@
+===== .\test\services\presence_detector_test.dart =====
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shome/data/services/presence_detector.dart';
+
+void main() {
+  group('PresenceDetector', () {
+    late PresenceDetector detector;
+
+    setUp(() {
+      detector = PresenceDetector();
+    });
+
+    // ─── distance (haversine) ───
+
+    test('distance: 0 между одинаковыми точками', () {
+      final d = detector.distance(55.7558, 37.6173, 55.7558, 37.6173);
+      expect(d, closeTo(0, 0.01));
+    });
+
+    test('distance: ~111 км между 1° широты', () {
+      // 1° широты ≈ 111 195 м
+      final d = detector.distance(55.0, 37.0, 56.0, 37.0);
+      expect(d, closeTo(111195, 1000));
+    });
+
+    test('distance: Москва–Питер ≈ 635 км', () {
+      final d = detector.distance(55.7558, 37.6173, 59.9343, 30.3351);
+      expect(d, closeTo(635000, 20000));
+    });
+
+    // ─── isAnyoneHome / isNobodyHome ───
+
+    test('isAnyoneHome: пустой список → false', () {
+      expect(detector.isAnyoneHome, false);
+    });
+
+    test('isNobodyHome: пустой список → false', () {
+      expect(detector.isNobodyHome, false);
+    });
+
+    // ─── phones map ───
+
+    test('phones: изначально пустой', () {
+      expect(detector.phones, isEmpty);
+    });
+
+    test('stop без start не падает', () {
+      detector.stop();
+      expect(true, true);
+    });
+  });
+}
+===== .\test\services\automation_engine_test.dart =====
+import 'package:flutter_test/flutter_test.dart';
+import 'package:talker/talker.dart';
+import 'package:shome/data/services/automation_engine.dart';
+import 'package:shome/domain/models/scene.dart';
+import '../helpers/test_helpers.dart';
+
+void main() {
+  group('AutomationEngine', () {
+    late MockSceneRepository repo;
+    late Talker talker;
+    late AutomationEngine engine;
+
+    setUp(() {
+      repo = MockSceneRepository();
+      talker = Talker(settings: TalkerSettings(enabled: false));
+      engine = AutomationEngine(repo, talker);
+    });
+
+    tearDown(() {
+      engine.stop();
+    });
+
+    // ─── time triggers ───
+
+    test('time trigger: сцена с текущим временем выполняется', () async {
+      final now = DateTime.now();
+      final currentTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+      final scene = createTestScene(
+        trigger: SceneTrigger(
+          type: TriggerType.time,
+          time: currentTime,
+          repeat: RepeatType.daily,
+        ),
+      );
+      await repo.saveScene(scene);
+
+      await engine.checkTimeTriggers();
+
+      expect(repo.executedSceneIds, contains('scene_1'));
+    });
+
+    test('time trigger: сцена с другим временем НЕ выполняется', () async {
+      final now = DateTime.now();
+      final other = now.add(const Duration(hours: 1));
+      final otherTime =
+          '${other.hour.toString().padLeft(2, '0')}:${other.minute.toString().padLeft(2, '0')}';
+
+      final scene = createTestScene(
+        trigger: SceneTrigger(
+          type: TriggerType.time,
+          time: otherTime,
+          repeat: RepeatType.daily,
+        ),
+      );
+      await repo.saveScene(scene);
+
+      await engine.checkTimeTriggers();
+
+      expect(repo.executedSceneIds, isEmpty);
+    });
+
+    test('time trigger: повторный вызов в ту же минуту НЕ выполняется',
+            () async {
+          final now = DateTime.now();
+          final currentTime =
+              '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+          final scene = createTestScene(
+            trigger: SceneTrigger(
+              type: TriggerType.time,
+              time: currentTime,
+              repeat: RepeatType.daily,
+            ),
+          );
+          await repo.saveScene(scene);
+
+          await engine.checkTimeTriggers();
+          expect(repo.executedSceneIds.length, 1);
+
+          // Второй раз в ту же минуту — защита _isSameMinute
+          await engine.checkTimeTriggers();
+          expect(repo.executedSceneIds.length, 1);
+        });
+
+    test('time trigger: сцена без trigger не выполняется', () async {
+      final scene = createTestScene(trigger: null);
+      await repo.saveScene(scene);
+
+      await engine.checkTimeTriggers();
+
+      expect(repo.executedSceneIds, isEmpty);
+    });
+
+    test('time trigger: сцена с TriggerType.presence не выполняется по времени',
+            () async {
+          final now = DateTime.now();
+          final currentTime =
+              '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+          final scene = createTestScene(
+            trigger: SceneTrigger(
+              type: TriggerType.presence,
+              time: currentTime,
+              presenceEvent: PresenceEvent.someoneHome,
+            ),
+          );
+          await repo.saveScene(scene);
+
+          await engine.checkTimeTriggers();
+
+          expect(repo.executedSceneIds, isEmpty);
+        });
+
+    // ─── start/stop ───
+
+    test('start/stop не падают', () {
+      engine.start();
+      engine.stop();
+      expect(true, true);
+    });
+
+    test('stop идемпотентен — повторный вызов не падает', () {
+      engine.start();
+      engine.stop();
+      engine.stop();
+      expect(true, true);
+    });
+  });
+}
+===== .\test\data\services\mailru_cloud_service_test.dart =====
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shome/data/services/mailru_cloud_service.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+  group('MailruCloudService', () {
+    late MailruCloudService service;
+
+    setUp(() {
+      service = MailruCloudService(
+        login: 'test@mail.ru',
+        password: 'test_password',
+      );
+    });
+
+    test('создаётся с правильными параметрами', () {
+      expect(service.login, 'test@mail.ru');
+      expect(service.password, 'test_password');
+    });
+
+    test('testConnection возвращает false при неверных данных', () async {
+      final result = await service.testConnection();
+      // Без реального WebDAV должно вернуть false
+      expect(result, false);
+    });
+
+    test('listBackups возвращает пустой список при ошибке', () async {
+      final backups = await service.listBackups();
+      // Без подключения к облаку — пустой список
+      expect(backups, isEmpty);
+    });
+
+    test('downloadBackup возвращает null при ошибке', () async {
+      final result = await service.downloadBackup('nonexistent.json');
+      expect(result, isNull);
+    });
+
+    test('uploadBackup возвращает false при ошибке', () async {
+      final result = await service.uploadBackup('{"test": true}');
+      expect(result, false);
+    });
+  });
+}

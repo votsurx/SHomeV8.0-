@@ -2781,4 +2781,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateDownloadCancelled => 'Download cancelled';
+
+  @override
+  String get presenceWarningTitle => 'Attention!!!';
+
+  @override
+  String get presenceWarningMessage =>
+      'The “Nobody is home” scene is about to run. The phones below have an “Unknown” status:';
 }

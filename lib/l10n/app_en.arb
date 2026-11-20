@@ -1626,4 +1626,8 @@
       "updateCancel": "Cancel",
       "updateCancelling": "Cancelling...",
       "updateDownloadCancelled": "Download cancelled"
+
+,
+    "presenceWarningTitle": "Attention!!!",
+    "presenceWarningMessage": "The “Nobody is home” scene is about to run. The phones below have an “Unknown” status:"
 }
