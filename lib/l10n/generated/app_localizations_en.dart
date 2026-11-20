@@ -2710,4 +2710,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsResetOrderConfirm => 'Reset';
+
+  @override
+  String get updateJournalSource => 'Update';
+
+  @override
+  String get updateCheckFailed => 'Couldn\'t check for updates';
+
+  @override
+  String updateCheckError(String error) {
+    return 'Update check failed: $error';
+  }
+
+  @override
+  String get updateNoUpdatesTitle => 'No updates';
+
+  @override
+  String get updateNoUpdatesMessage =>
+      'You have the latest version of SHome installed.';
+
+  @override
+  String get updateOk => 'OK';
+
+  @override
+  String updateDialogTitle(String version) {
+    return 'Update $version';
+  }
+
+  @override
+  String get updateWhatsNew => 'What\'s new:';
+
+  @override
+  String get updateAvailable => 'A new version of the app is available.';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get updateDownloading => 'Downloading update...';
+
+  @override
+  String get updateButton => 'Update';
+
+  @override
+  String get updateDownloadFailed => 'Download failed';
+
+  @override
+  String updateDownloadError(String version) {
+    return 'Couldn\'t download the APK for version $version';
+  }
+
+  @override
+  String updateInstallFailed(String error) {
+    return 'Installation error: $error';
+  }
+
+  @override
+  String updateInstallError(String version, String error) {
+    return 'Couldn\'t open the installer for version $version: $error';
+  }
+
+  @override
+  String get updateInstalledHint => 'After installation, open SHome manually';
+
+  @override
+  String get updateCancel => 'Cancel';
+
+  @override
+  String get updateCancelling => 'Cancelling...';
+
+  @override
+  String get updateDownloadCancelled => 'Download cancelled';
 }

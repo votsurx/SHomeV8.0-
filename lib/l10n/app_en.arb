@@ -1565,4 +1565,65 @@
       "settingsResetOrderTitle": "Reset order",
       "settingsResetOrderBody": "Rows will return to their default order.",
       "settingsResetOrderConfirm": "Reset"
+
+
+,
+      "updateJournalSource": "Update",
+      "updateCheckFailed": "Couldn't check for updates",
+      "updateCheckError": "Update check failed: {error}",
+      "@updateCheckError": {
+        "placeholders": {
+          "error": {
+            "type": "String"
+          }
+        }
+      },
+      "updateNoUpdatesTitle": "No updates",
+      "updateNoUpdatesMessage": "You have the latest version of SHome installed.",
+      "updateOk": "OK",
+      "updateDialogTitle": "Update {version}",
+      "@updateDialogTitle": {
+        "placeholders": {
+          "version": {
+            "type": "String"
+          }
+        }
+      },
+      "updateWhatsNew": "What's new:",
+      "updateAvailable": "A new version of the app is available.",
+      "updateLater": "Later",
+      "updateDownloading": "Downloading update...",
+      "updateButton": "Update",
+      "updateDownloadFailed": "Download failed",
+      "updateDownloadError": "Couldn't download the APK for version {version}",
+      "@updateDownloadError": {
+        "placeholders": {
+          "version": {
+            "type": "String"
+          }
+        }
+      },
+      "updateInstallFailed": "Installation error: {error}",
+      "@updateInstallFailed": {
+        "placeholders": {
+          "error": {
+            "type": "String"
+          }
+        }
+      },
+      "updateInstallError": "Couldn't open the installer for version {version}: {error}",
+      "@updateInstallError": {
+        "placeholders": {
+          "version": {
+            "type": "String"
+          },
+          "error": {
+            "type": "String"
+          }
+        }
+      },
+      "updateInstalledHint": "After installation, open SHome manually",
+      "updateCancel": "Cancel",
+      "updateCancelling": "Cancelling...",
+      "updateDownloadCancelled": "Download cancelled"
 }

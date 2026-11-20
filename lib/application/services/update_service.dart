@@ -1,35 +1,64 @@
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:github_release_apk_updater/github_release_apk_updater.dart';
-import 'package:open_filex/open_filex.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+
+import '../../data/services/event_logger.dart';
+import '../../l10n/generated/app_localizations.dart';
+import 'dart:async';
 
 class UpdateService {
   static final _updater = GithubReleaseApkUpdater();
   static final _apiService = GithubApiService();
 
+  static Future<void> _logUpdateError(
+      AppLocalizations l10n,
+      String message,
+      ) async {
+    try {
+      await EventLogger.log(
+        event: 'error',
+        deviceName: l10n.updateJournalSource,
+        value: message,
+      );
+    } catch (error) {
+      debugPrint('Failed to write update error to event log: $error');
+    }
+  }
+
   static Future<String?> _getReleaseNotes(String version) async {
     try {
       final response = await http.get(
-        Uri.parse('https://api.github.com/repos/votsurx/SHome-Releases/releases/tags/v$version'),
+        Uri.parse(
+          'https://api.github.com/repos/'
+              'votsurx/SHome-Releases/releases/tags/v$version',
+        ),
       );
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
         return data['body'] as String?;
       }
-    } catch (e) {
-      debugPrint('❌ Ошибка получения release notes: $e');
+    } catch (error) {
+      debugPrint('Failed to get release notes: $error');
     }
+
     return null;
   }
 
   static Future<void> checkForUpdates(BuildContext context) async {
-    try {
-      if (!context.mounted) return;
+    if (!context.mounted) return;
 
-      final supportedAbis = await _updater.getSupportedAbis() ?? ['arm64-v8a'];
+    final l10n = AppLocalizations.of(context);
+
+    try {
+      final supportedAbis =
+          await _updater.getSupportedAbis() ?? ['arm64-v8a'];
+
       final release = await _apiService.getLatestGithubAPKRelease(
         ownerGithub: 'votsurx',
         repositoryGithub: 'SHome-Releases',
@@ -38,46 +67,72 @@ class UpdateService {
       );
 
       if (release == null) {
+        await _logUpdateError(l10n, l10n.updateCheckFailed);
+
         if (!context.mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Не удалось проверить обновления')),
+          SnackBar(content: Text(l10n.updateCheckFailed)),
         );
         return;
       }
 
       final currentVersion = await _updater.getCurrentAppVersion();
-      final isNewer = VersionComparator().isNewerVersion(release.version, currentVersion);
+      final isNewer = VersionComparator().isNewerVersion(
+        release.version,
+        currentVersion,
+      );
 
       if (!context.mounted) return;
 
       if (isNewer) {
-        _showUpdateDialog(context, release);
+        await _showUpdateDialog(context, release, l10n);
       } else {
-        showDialog(
+        await showDialog<void>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Обновлений нет'),
-            content: const Text('У вас установлена последняя версия SHome.'),
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.updateNoUpdatesTitle),
+            content: Text(l10n.updateNoUpdatesMessage),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.updateOk),
+              ),
             ],
           ),
         );
       }
-    } catch (e) {
-      debugPrint('❌ Ошибка проверки обновлений: $e');
+    } catch (error) {
+      debugPrint('Update check failed: $error');
+      await _logUpdateError(
+        l10n,
+        l10n.updateCheckError(error.toString()),
+      );
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.updateCheckError(error.toString())),
+        ),
+      );
     }
   }
 
-  /// Прямое скачивание APK с GitHub Releases
+  /// Скачивает APK напрямую из GitHub Releases.
   static Future<String?> _downloadApkDirect(
       String version,
       String abi,
-      void Function(double progress) onProgress,
-      ) async {
+      void Function(double progress) onProgress, {
+        required Future<void> abortTrigger,
+      }) async {
+    http.Client? client;
+    IOSink? sink;
+    File? file;
+
     try {
-      // Определяем имя файла по ABI
-      String fileName;
+      final String fileName;
+
       if (abi.contains('arm64')) {
         fileName = 'app-arm64-v8a-release.apk';
       } else if (abi.contains('armeabi')) {
@@ -88,172 +143,390 @@ class UpdateService {
         fileName = 'app-arm64-v8a-release.apk';
       }
 
-      // Прямой URL
       final url = Uri.parse(
-        'https://github.com/votsurx/SHome-Releases/releases/download/v$version/$fileName',
+        'https://github.com/votsurx/SHome-Releases/'
+            'releases/download/v$version/$fileName',
       );
 
-      debugPrint('📥 Прямое скачивание: $url');
+      debugPrint('Скачивание обновления: $url');
 
-      final dir = await getApplicationDocumentsDirectory();
-      final filePath = '${dir.path}/SHome_update.apk';
-      final file = File(filePath);
+      final directory = await getApplicationDocumentsDirectory();
+      file = File('${directory.path}/SHome_update.apk');
+
       if (await file.exists()) {
         await file.delete();
       }
 
-      final client = http.Client();
-      final request = http.Request('GET', url);
-      final response = await client.send(request);
+      client = http.Client();
 
-      if (response.statusCode != 200) {
-        debugPrint('❌ Ошибка скачивания: ${response.statusCode}');
-        client.close();
+      final request = http.AbortableRequest(
+        'GET',
+        url,
+        abortTrigger: abortTrigger,
+      );
+
+      // Если сервер не отвечает, прерываем ожидание.
+      final response = await client
+          .send(request)
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode != HttpStatus.ok) {
+        debugPrint(
+          'Не удалось скачать APK: HTTP ${response.statusCode}',
+        );
         return null;
       }
 
-      final total = response.contentLength ?? 0;
-      int received = 0;
-      final sink = file.openWrite();
+      final totalBytes = response.contentLength ?? 0;
+      var receivedBytes = 0;
 
-      await for (final chunk in response.stream) {
+      sink = file.openWrite();
+
+      // Если данные перестали поступать, завершаем загрузку ошибкой.
+      await for (final chunk
+      in response.stream.timeout(const Duration(seconds: 30))) {
         sink.add(chunk);
-        received += chunk.length;
-        if (total > 0) {
-          onProgress(received / total);
+        receivedBytes += chunk.length;
+
+        if (totalBytes > 0) {
+          onProgress(receivedBytes / totalBytes);
         }
       }
 
+      await sink.flush();
       await sink.close();
-      client.close();
+      sink = null;
 
-      debugPrint('✅ APK скачан: $filePath');
-      return filePath;
-    } catch (e) {
-      debugPrint('❌ Ошибка скачивания: $e');
+      debugPrint('APK скачан: ${file.path}');
+      return file.path;
+    } catch (error) {
+      debugPrint('Ошибка скачивания или отмена: $error');
+
+      if (sink != null) {
+        try {
+          await sink.close();
+        } catch (_) {
+          // Не заменяем исходную ошибку ошибкой закрытия файла.
+        }
+        sink = null;
+      }
+
+      // При ошибке или отмене удаляем частично скачанный APK.
+      if (file != null) {
+        try {
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (deleteError) {
+          debugPrint('Не удалось удалить неполный APK: $deleteError');
+        }
+      }
+
       return null;
+    } finally {
+      // Закрывает клиент и прерывает незавершённый HTTP-запрос.
+      client?.close();
     }
   }
 
-  static void _showUpdateDialog(BuildContext context, GithubAPKRelease release) async {
+  static Future<void> _showUpdateDialog(
+      BuildContext context,
+      GithubAPKRelease release,
+      AppLocalizations l10n,
+      ) async {
     final releaseNotes = await _getReleaseNotes(release.version);
-    final progressNotifier = ValueNotifier<double>(0);
-    final isDownloading = ValueNotifier<bool>(false);
-
     if (!context.mounted) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogCtx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              const Icon(Icons.system_update, color: Colors.green, size: 22),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Обновление ${release.version}',
-                  style: const TextStyle(fontSize: 16),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+    final progressNotifier = ValueNotifier<double>(0);
+    final isDownloading = ValueNotifier<bool>(false);
+    final isCancelling = ValueNotifier<bool>(false);
+
+    Completer<void>? activeDownloadAbort;
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(
+                  Icons.system_update,
+                  color: Colors.green,
+                  size: 22,
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.updateDialogTitle(release.version),
+                    style: const TextStyle(fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: isDownloading.value
+                  ? ValueListenableBuilder<double>(
+                valueListenable: progressNotifier,
+                builder: (context, progress, _) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${(progress * 100).toStringAsFixed(0)}%',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.updateDownloading,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (releaseNotes != null &&
+                      releaseNotes.isNotEmpty) ...[
+                    Text(
+                      l10n.updateWhatsNew,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      releaseNotes,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ] else
+                    Text(l10n.updateAvailable),
+                ],
+              ),
+            ),
+            actions: isDownloading.value
+                ? [
+              TextButton(
+                onPressed: isCancelling.value ||
+                    activeDownloadAbort == null
+                    ? null
+                    : () {
+                  final abort = activeDownloadAbort;
+                  if (abort == null || abort.isCompleted) return;
+
+                  isCancelling.value = true;
+                  setDialogState(() {});
+                  abort.complete();
+                },
+                child: Text(
+                  isCancelling.value
+                      ? l10n.updateCancelling
+                      : l10n.updateCancel,
+                ),
+              ),
+            ]
+                : [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.updateLater),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  isDownloading.value = true;
+                  isCancelling.value = false;
+                  progressNotifier.value = 0;
+                  setDialogState(() {});
+
+                  try {
+                    final abis = await _updater.getSupportedAbis();
+                    final abi = (abis != null && abis.isNotEmpty)
+                        ? abis.first
+                        : 'arm64-v8a';
+
+                    if (!dialogContext.mounted) return;
+
+                    final abort = Completer<void>();
+                    activeDownloadAbort = abort;
+                    setDialogState(() {});
+
+                    final filePath = await _downloadApkDirect(
+                      release.version,
+                      abi,
+                          (progress) {
+                        progressNotifier.value = progress;
+                      },
+                      abortTrigger: abort.future,
+                    );
+
+                    activeDownloadAbort = null;
+
+                    if (filePath == null) {
+                      if (!dialogContext.mounted) return;
+
+                      if (abort.isCompleted) {
+                        final messenger =
+                        ScaffoldMessenger.of(dialogContext);
+                        Navigator.pop(dialogContext);
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.updateDownloadCancelled),
+                          ),
+                        );
+                        return;
+                      }
+
+                      await _logUpdateError(
+                        l10n,
+                        l10n.updateDownloadError(release.version),
+                      );
+
+                      if (!dialogContext.mounted) return;
+
+                      final messenger =
+                      ScaffoldMessenger.of(dialogContext);
+                      Navigator.pop(dialogContext);
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.updateDownloadFailed),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Если отмена пришла одновременно с окончанием
+                    // загрузки, не запускаем установщик.
+                    if (abort.isCompleted) {
+                      try {
+                        final apkFile = File(filePath);
+                        if (await apkFile.exists()) {
+                          await apkFile.delete();
+                        }
+                      } catch (error) {
+                        debugPrint(
+                          'Could not delete cancelled update APK: $error',
+                        );
+                      }
+
+                      if (!dialogContext.mounted) return;
+
+                      final messenger =
+                      ScaffoldMessenger.of(dialogContext);
+                      Navigator.pop(dialogContext);
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.updateDownloadCancelled),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Загрузка завершена; теперь открывается установщик.
+                    setDialogState(() {});
+
+                    final result = await OpenFilex.open(filePath);
+
+                    if (result.type != ResultType.done) {
+                      await _logUpdateError(
+                        l10n,
+                        l10n.updateInstallError(
+                          release.version,
+                          result.message,
+                        ),
+                      );
+
+                      if (!dialogContext.mounted) return;
+
+                      isDownloading.value = false;
+                      isCancelling.value = false;
+                      setDialogState(() {});
+
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            l10n.updateInstallFailed(result.message),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (!dialogContext.mounted) return;
+
+                    final messenger =
+                    ScaffoldMessenger.of(dialogContext);
+                    Navigator.pop(dialogContext);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.updateInstalledHint),
+                      ),
+                    );
+                  } catch (error) {
+                    activeDownloadAbort = null;
+
+                    if (!dialogContext.mounted) return;
+
+                    if (isCancelling.value) {
+                      final messenger =
+                      ScaffoldMessenger.of(dialogContext);
+                      Navigator.pop(dialogContext);
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.updateDownloadCancelled),
+                        ),
+                      );
+                      return;
+                    }
+
+                    await _logUpdateError(
+                      l10n,
+                      l10n.updateInstallError(
+                        release.version,
+                        error.toString(),
+                      ),
+                    );
+
+                    if (!dialogContext.mounted) return;
+
+                    isDownloading.value = false;
+                    isCancelling.value = false;
+                    setDialogState(() {});
+
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.updateInstallFailed(error.toString()),
+                        ),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.download),
+                label: Text(l10n.updateButton),
               ),
             ],
           ),
-          content: SingleChildScrollView(
-            child: isDownloading.value
-                ? ValueListenableBuilder<double>(
-              valueListenable: progressNotifier,
-              builder: (context, progress, _) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '${(progress * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('Скачивание обновления...', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            )
-                : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (releaseNotes != null && releaseNotes.isNotEmpty) ...[
-                  const Text('Что нового:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(releaseNotes, style: const TextStyle(fontSize: 13)),
-                ] else
-                  const Text('Доступна новая версия приложения.'),
-              ],
-            ),
-          ),
-          actions: isDownloading.value
-              ? null
-              : [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Позже'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () async {
-                isDownloading.value = true;
-                setDialogState(() {});
-
-                // Получаем ABI устройства
-                final abis = await _updater.getSupportedAbis();
-                final abi = (abis != null && abis.isNotEmpty) ? abis.first : 'arm64-v8a';
-
-                // Прямое скачивание
-                final filePath = await _downloadApkDirect(
-                  release.version,
-                  abi,
-                      (progress) {
-                    progressNotifier.value = progress;
-                  },
-                );
-
-                if (filePath != null) {
-                  debugPrint('✅ APK скачан: $filePath');
-
-                  final result = await OpenFilex.open(filePath);
-                  debugPrint('📦 Результат: ${result.type} — ${result.message}');
-
-                  if (!dialogCtx.mounted) return;
-
-                  if (result.type != ResultType.done) {
-                    ScaffoldMessenger.of(dialogCtx).showSnackBar(
-                      SnackBar(content: Text('Ошибка установки: ${result.message}')),
-                    );
-                  } else {
-                    Navigator.pop(dialogCtx);
-                    ScaffoldMessenger.of(dialogCtx).showSnackBar(
-                      const SnackBar(content: Text('После установки откройте SHome вручную')),
-                    );
-                  }
-                } else {
-                  if (dialogCtx.mounted) {
-                    Navigator.pop(dialogCtx);
-                    ScaffoldMessenger.of(dialogCtx).showSnackBar(
-                      const SnackBar(content: Text('Ошибка скачивания')),
-                    );
-                  }
-                }
-              },
-              icon: const Icon(Icons.download),
-              label: const Text('Обновить'),
-            ),
-          ],
         ),
-      ),
-    );
+      );
+    } finally {
+      progressNotifier.dispose();
+      isDownloading.dispose();
+      isCancelling.dispose();
+    }
   }
 }

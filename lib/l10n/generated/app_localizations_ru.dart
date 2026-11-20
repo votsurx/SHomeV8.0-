@@ -1175,7 +1175,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get roomsAllDevices => 'Все устройства';
+  String get roomsAllDevices => 'Все';
 
   @override
   String roomsDeletedMessage(String name) {
@@ -2712,4 +2712,75 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsResetOrderConfirm => 'Сбросить';
+
+  @override
+  String get updateJournalSource => 'Обновление';
+
+  @override
+  String get updateCheckFailed => 'Не удалось проверить обновления';
+
+  @override
+  String updateCheckError(String error) {
+    return 'Ошибка проверки обновлений: $error';
+  }
+
+  @override
+  String get updateNoUpdatesTitle => 'Обновлений нет';
+
+  @override
+  String get updateNoUpdatesMessage =>
+      'У вас установлена последняя версия SHome.';
+
+  @override
+  String get updateOk => 'ОК';
+
+  @override
+  String updateDialogTitle(String version) {
+    return 'Обновление $version';
+  }
+
+  @override
+  String get updateWhatsNew => 'Что нового:';
+
+  @override
+  String get updateAvailable => 'Доступна новая версия приложения.';
+
+  @override
+  String get updateLater => 'Позже';
+
+  @override
+  String get updateDownloading => 'Скачивание обновления...';
+
+  @override
+  String get updateButton => 'Обновить';
+
+  @override
+  String get updateDownloadFailed => 'Ошибка скачивания';
+
+  @override
+  String updateDownloadError(String version) {
+    return 'Не удалось скачать APK версии $version';
+  }
+
+  @override
+  String updateInstallFailed(String error) {
+    return 'Ошибка установки: $error';
+  }
+
+  @override
+  String updateInstallError(String version, String error) {
+    return 'Не удалось открыть установщик версии $version: $error';
+  }
+
+  @override
+  String get updateInstalledHint => 'После установки откройте SHome вручную';
+
+  @override
+  String get updateCancel => 'Отмена';
+
+  @override
+  String get updateCancelling => 'Отмена...';
+
+  @override
+  String get updateDownloadCancelled => 'Скачивание отменено';
 }

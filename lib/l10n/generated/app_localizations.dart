@@ -2285,7 +2285,7 @@ abstract class AppLocalizations {
   /// No description provided for @roomsAllDevices.
   ///
   /// In ru, this message translates to:
-  /// **'Все устройства'**
+  /// **'Все'**
   String get roomsAllDevices;
 
   /// No description provided for @roomsDeletedMessage.
@@ -5089,6 +5089,126 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сбросить'**
   String get settingsResetOrderConfirm;
+
+  /// No description provided for @updateJournalSource.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновление'**
+  String get updateJournalSource;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось проверить обновления'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateCheckError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка проверки обновлений: {error}'**
+  String updateCheckError(String error);
+
+  /// No description provided for @updateNoUpdatesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновлений нет'**
+  String get updateNoUpdatesTitle;
+
+  /// No description provided for @updateNoUpdatesMessage.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас установлена последняя версия SHome.'**
+  String get updateNoUpdatesMessage;
+
+  /// No description provided for @updateOk.
+  ///
+  /// In ru, this message translates to:
+  /// **'ОК'**
+  String get updateOk;
+
+  /// No description provided for @updateDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновление {version}'**
+  String updateDialogTitle(String version);
+
+  /// No description provided for @updateWhatsNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что нового:'**
+  String get updateWhatsNew;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступна новая версия приложения.'**
+  String get updateAvailable;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позже'**
+  String get updateLater;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скачивание обновления...'**
+  String get updateDownloading;
+
+  /// No description provided for @updateButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить'**
+  String get updateButton;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка скачивания'**
+  String get updateDownloadFailed;
+
+  /// No description provided for @updateDownloadError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось скачать APK версии {version}'**
+  String updateDownloadError(String version);
+
+  /// No description provided for @updateInstallFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ошибка установки: {error}'**
+  String updateInstallFailed(String error);
+
+  /// No description provided for @updateInstallError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось открыть установщик версии {version}: {error}'**
+  String updateInstallError(String version, String error);
+
+  /// No description provided for @updateInstalledHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'После установки откройте SHome вручную'**
+  String get updateInstalledHint;
+
+  /// No description provided for @updateCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get updateCancel;
+
+  /// No description provided for @updateCancelling.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена...'**
+  String get updateCancelling;
+
+  /// No description provided for @updateDownloadCancelled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скачивание отменено'**
+  String get updateDownloadCancelled;
 }
 
 class _AppLocalizationsDelegate

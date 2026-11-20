@@ -615,7 +615,7 @@
       }
     }
   },
-  "roomsAllDevices": "Все устройства",
+  "roomsAllDevices": "Все",
   "roomsDeletedMessage": "Комната «{name}» удалена",
   "@roomsDeletedMessage": {
     "placeholders": {
@@ -1556,4 +1556,65 @@
     "settingsResetOrderTitle": "Сбросить порядок",
     "settingsResetOrderBody": "Строки вернутся в исходный порядок.",
     "settingsResetOrderConfirm": "Сбросить"
+
+
+,
+      "updateJournalSource": "Обновление",
+      "updateCheckFailed": "Не удалось проверить обновления",
+      "updateCheckError": "Ошибка проверки обновлений: {error}",
+      "@updateCheckError": {
+        "placeholders": {
+          "error": {
+            "type": "String"
+          }
+        }
+      },
+      "updateNoUpdatesTitle": "Обновлений нет",
+      "updateNoUpdatesMessage": "У вас установлена последняя версия SHome.",
+      "updateOk": "ОК",
+      "updateDialogTitle": "Обновление {version}",
+      "@updateDialogTitle": {
+        "placeholders": {
+          "version": {
+            "type": "String"
+          }
+        }
+      },
+      "updateWhatsNew": "Что нового:",
+      "updateAvailable": "Доступна новая версия приложения.",
+      "updateLater": "Позже",
+      "updateDownloading": "Скачивание обновления...",
+      "updateButton": "Обновить",
+      "updateDownloadFailed": "Ошибка скачивания",
+      "updateDownloadError": "Не удалось скачать APK версии {version}",
+      "@updateDownloadError": {
+        "placeholders": {
+          "version": {
+            "type": "String"
+          }
+        }
+      },
+      "updateInstallFailed": "Ошибка установки: {error}",
+      "@updateInstallFailed": {
+        "placeholders": {
+          "error": {
+            "type": "String"
+          }
+        }
+      },
+      "updateInstallError": "Не удалось открыть установщик версии {version}: {error}",
+      "@updateInstallError": {
+        "placeholders": {
+          "version": {
+            "type": "String"
+          },
+          "error": {
+            "type": "String"
+          }
+        }
+      },
+      "updateInstalledHint": "После установки откройте SHome вручную",
+      "updateCancel": "Отмена",
+      "updateCancelling": "Отмена...",
+      "updateDownloadCancelled": "Скачивание отменено"
 }
