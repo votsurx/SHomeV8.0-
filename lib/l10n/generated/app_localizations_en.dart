@@ -2649,4 +2649,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get todayDrawerToday => 'Today';
+
+  @override
+  String get menuResetOrderTitle => 'Reset order';
+
+  @override
+  String get menuResetOrderBody => 'Tiles will return to their default order.';
+
+  @override
+  String get menuResetOrderConfirm => 'Reset';
+
+  @override
+  String get settingsResetOrderTitle => 'Reset order';
+
+  @override
+  String get settingsResetOrderBody =>
+      'Rows will return to their default order.';
+
+  @override
+  String get settingsResetOrderConfirm => 'Reset';
 }

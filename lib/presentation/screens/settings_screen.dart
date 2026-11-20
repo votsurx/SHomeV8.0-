@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
 
 import '../../application/services/update_service.dart';
+import '../../application/state/order_storage.dart';
 import '../../data/local/database.dart';
 import '../../data/services/adaptive_poller.dart';
 import '../../data/services/config_service.dart';
@@ -12,6 +13,286 @@ import 'documents/legal_documents_screen.dart';
 import 'screen_settings_screen.dart';
 
 typedef StatsSettingReader = Future<String?> Function(String key);
+
+// ═══════════════════════════════════════════════════════════════
+// ОПИСАНИЕ СТРОК НАСТРОЕК
+// ═══════════════════════════════════════════════════════════════
+
+/// Базовый тип строки настроек.
+/// Каждая строка имеет стабильный [id] (для сортировки),
+/// [icon], [title], [subtitle] и [onTap].
+/// Подклассы: _CardListTileSpec, _LanguageTileSpec.
+sealed class _SettingsRowSpec {
+  final String id;
+  const _SettingsRowSpec({required this.id});
+}
+
+/// Обычная строка в Card с ListTile.
+class _CardListTileSpec extends _SettingsRowSpec {
+  final IconData icon;
+  final Color? iconColor;
+  final String Function(AppLocalizations) title;
+  final Widget Function(
+      BuildContext context,
+      AppLocalizations l10n,
+      _SettingsScreenState state,
+      ) subtitle;
+  final void Function(
+      BuildContext context,
+      AppLocalizations l10n,
+      _SettingsScreenState state,
+      ) onTap;
+
+  const _CardListTileSpec({
+    required super.id,
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+}
+
+/// Строка LanguageSelectorTile (готовый виджет, а не ListTile).
+class _LanguageTileSpec extends _SettingsRowSpec {
+  const _LanguageTileSpec({required super.id});
+}
+
+// ── Функции-обёртки для title ──
+String _tPollInterval(AppLocalizations l) => l.settingsPollInterval;
+String _tScreenSettings(AppLocalizations l) => l.screenSettings;
+String _tEventsRetention(AppLocalizations l) => l.settingsEventsRetention;
+String _tElectricityTariff(AppLocalizations l) => l.settingsElectricityTariff;
+String _tBackup(AppLocalizations l) => l.settingsBackup;
+String _tMqtt(AppLocalizations l) => l.settingsMqtt;
+String _tCheckUpdates(AppLocalizations l) => l.settingsCheckUpdates;
+String _tInformation(AppLocalizations l) => l.settingsInformation;
+
+// ── Subtitle-билдеры ──
+Widget _subPollInterval(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    Text(s._formatInterval(s._pollIntervalMs, l10n));
+
+Widget _subScreenSettings(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    Text(l10n.screenSettingsSubtitle);
+
+Widget _subEventsRetention(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    FutureBuilder<String?>(
+      future: s._eventsRetentionFuture,
+      builder: (context, snapshot) {
+        final days = int.tryParse(snapshot.data ?? '') ?? 30;
+        return Text(l10n.settingsDays(days));
+      },
+    );
+
+Widget _subElectricityTariff(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    FutureBuilder<String?>(
+      future: s._electricityTariffFuture,
+      builder: (context, snapshot) {
+        final tariff = snapshot.data ?? '5.5';
+        return Text(l10n.settingsCurrencyPerKwh(tariff));
+      },
+    );
+
+Widget _subBackup(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    Text(l10n.settingsBackupSubtitle);
+
+Widget _subMqtt(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    Text(l10n.settingsMqttSubtitle);
+
+Widget _subCheckUpdates(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    Text(l10n.settingsCheckUpdatesSubtitle);
+
+Widget _subInformation(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    Text(l10n.settingsInformationSubtitle);
+
+// ── onTap-обёртки ──
+void _tapPollInterval(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    s._selectPollInterval();
+
+void _tapScreenSettings(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) {
+  Navigator.of(c).push(
+    MaterialPageRoute<void>(
+      builder: (_) => const ScreenSettingsScreen(),
+    ),
+  );
+}
+
+void _tapEventsRetention(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    s._selectEventsRetention();
+
+void _tapElectricityTariff(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    s._editElectricityTariff();
+
+void _tapBackup(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    s._showBackupDialog();
+
+void _tapMqtt(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    c.push('/mqtt_broker_settings');
+
+void _tapCheckUpdates(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) =>
+    UpdateService.checkForUpdates(c);
+
+void _tapInformation(
+    BuildContext c,
+    AppLocalizations l10n,
+    _SettingsScreenState s,
+    ) {
+  Navigator.of(c).push(
+    MaterialPageRoute<void>(
+      builder: (_) => const LegalDocumentsScreen(),
+    ),
+  );
+}
+
+// ── Список строк — порядок по умолчанию ──
+const _settingsRowSpecs = <_SettingsRowSpec>[
+  _CardListTileSpec(
+    id: 'poll_interval',
+    icon: Icons.timer,
+    iconColor: Colors.orange,
+    title: _tPollInterval,
+    subtitle: _subPollInterval,
+    onTap: _tapPollInterval,
+  ),
+  _LanguageTileSpec(id: 'language'),
+  _CardListTileSpec(
+    id: 'screen_settings',
+    icon: Icons.display_settings,
+    iconColor: Colors.blue,
+    title: _tScreenSettings,
+    subtitle: _subScreenSettings,
+    onTap: _tapScreenSettings,
+  ),
+  _CardListTileSpec(
+    id: 'events_retention',
+    icon: Icons.auto_delete,
+    iconColor: Colors.grey,
+    title: _tEventsRetention,
+    subtitle: _subEventsRetention,
+    onTap: _tapEventsRetention,
+  ),
+  _CardListTileSpec(
+    id: 'electricity_tariff',
+    icon: Icons.payments,
+    iconColor: Colors.amber,
+    title: _tElectricityTariff,
+    subtitle: _subElectricityTariff,
+    onTap: _tapElectricityTariff,
+  ),
+  _CardListTileSpec(
+    id: 'backup',
+    icon: Icons.backup,
+    iconColor: Colors.blue,
+    title: _tBackup,
+    subtitle: _subBackup,
+    onTap: _tapBackup,
+  ),
+  _CardListTileSpec(
+    id: 'mqtt',
+    icon: Icons.settings_ethernet,
+    iconColor: Colors.teal,
+    title: _tMqtt,
+    subtitle: _subMqtt,
+    onTap: _tapMqtt,
+  ),
+  _CardListTileSpec(
+    id: 'check_updates',
+    icon: Icons.update,
+    iconColor: Colors.green,
+    title: _tCheckUpdates,
+    subtitle: _subCheckUpdates,
+    onTap: _tapCheckUpdates,
+  ),
+  _CardListTileSpec(
+    id: 'information',
+    icon: Icons.gavel,
+    title: _tInformation,
+    subtitle: _subInformation,
+    onTap: _tapInformation,
+  ),
+];
+
+// ═══════════════════════════════════════════════════════════════
+// ХРАНЕНИЕ ПОРЯДКА
+// ═══════════════════════════════════════════════════════════════
+
+const _settingsStorageKey = 'settings_order';
+
+final _settingsDefaultOrder = <String>[
+  'poll_interval',
+  'language',
+  'screen_settings',
+  'events_retention',
+  'electricity_tariff',
+  'backup',
+  'mqtt',
+  'check_updates',
+  'information',
+];
+
+// ═══════════════════════════════════════════════════════════════
+// ЭКРАН
+// ═══════════════════════════════════════════════════════════════
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -33,6 +314,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late Future<String?> _eventsRetentionFuture;
   late Future<String?> _electricityTariffFuture;
 
+  List<String> _order = List<String>.from(_settingsDefaultOrder);
+
   Future<String?> _readStatsSetting(String key) {
     final reader = widget.statsSettingReader;
     if (reader != null) {
@@ -51,6 +334,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _readStatsSetting('electricity_tariff_rub_per_kwh');
 
     _loadSettings();
+    _loadOrder();
   }
 
   Future<void> _loadSettings() async {
@@ -58,6 +342,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
 
     setState(() => _pollIntervalMs = interval);
+  }
+
+  Future<void> _loadOrder() async {
+    final loaded =
+    await OrderStorage.load(_settingsStorageKey, _settingsDefaultOrder);
+    if (!mounted) return;
+    setState(() => _order = loaded);
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    final updated = OrderStorage.reorder(_order, oldIndex, newIndex);
+    setState(() => _order = updated);
+    OrderStorage.save(_settingsStorageKey, updated);
+  }
+
+  Future<void> _resetOrder(AppLocalizations l10n) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsResetOrderTitle),
+        content: Text(l10n.settingsResetOrderBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.settingsResetOrderConfirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await OrderStorage.clear(_settingsStorageKey);
+    if (!mounted) return;
+    setState(() => _order = List<String>.from(_settingsDefaultOrder));
   }
 
   Future<void> _refreshEventsRetention() async {
@@ -315,129 +636,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
+    final byId = {for (final s in _settingsRowSpecs) s.id: s};
+    final rows = _order
+        .map((id) => byId[id])
+        .whereType<_SettingsRowSpec>()
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.timer,
-                color: Colors.orange,
-              ),
-              title: Text(l10n.settingsPollInterval),
-              subtitle: Text(_formatInterval(_pollIntervalMs, l10n)),
-              onTap: _selectPollInterval,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          const LanguageSelectorTile(),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.display_settings,
-                color: Colors.blue,
-              ),
-              title: Text(l10n.screenSettings),
-              subtitle: Text(l10n.screenSettingsSubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const ScreenSettingsScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.auto_delete, color: Colors.grey),
-              title: Text(l10n.settingsEventsRetention),
-              subtitle: FutureBuilder<String?>(
-                future: _eventsRetentionFuture,
-                builder: (context, snapshot) {
-                  final days = int.tryParse(snapshot.data ?? '') ?? 30;
-                  return Text(l10n.settingsDays(days));
-                },
-              ),
-              onTap: _selectEventsRetention,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.payments, color: Colors.amber),
-              title: Text(l10n.settingsElectricityTariff),
-              subtitle: FutureBuilder<String?>(
-                future: _electricityTariffFuture,
-                builder: (context, snapshot) {
-                  final tariff = snapshot.data ?? '5.5';
-                  return Text(l10n.settingsCurrencyPerKwh(tariff));
-                },
-              ),
-              onTap: _editElectricityTariff,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.backup, color: Colors.blue),
-              title: Text(l10n.settingsBackup),
-              subtitle: Text(l10n.settingsBackupSubtitle),
-              onTap: _showBackupDialog,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(
-                Icons.settings_ethernet,
-                color: Colors.teal,
-              ),
-              title: Text(l10n.settingsMqtt),
-              subtitle: Text(l10n.settingsMqttSubtitle),
-              onTap: () => context.push('/mqtt_broker_settings'),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.update, color: Colors.green),
-              title: Text(l10n.settingsCheckUpdates),
-              subtitle: Text(l10n.settingsCheckUpdatesSubtitle),
-              onTap: () => UpdateService.checkForUpdates(context),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.gavel),
-              title: Text(l10n.settingsInformation),
-              subtitle: Text(l10n.settingsInformationSubtitle),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const LegalDocumentsScreen(),
-                  ),
-                );
-              },
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.restore),
+            tooltip: l10n.settingsResetOrderTitle,
+            onPressed: () => _resetOrder(l10n),
           ),
         ],
+      ),
+      body: ReorderableListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: rows.length,
+        buildDefaultDragHandles: false, // long-press вместо ручки
+        onReorder: _onReorder,
+        itemBuilder: (context, index) {
+          final spec = rows[index];
+
+          final Widget child;
+          switch (spec) {
+            case _LanguageTileSpec():
+              child = const LanguageSelectorTile();
+            case _CardListTileSpec():
+              child = Card(
+                child: ListTile(
+                  leading: Icon(
+                    spec.icon,
+                    color: spec.iconColor,
+                  ),
+                  title: Text(spec.title(l10n)),
+                  subtitle: spec.subtitle(context, l10n, this),
+                  onTap: () => spec.onTap(context, l10n, this),
+                ),
+              );
+          }
+
+          return ReorderableDelayedDragStartListener(
+            key: ValueKey(spec.id),
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: child,
+            ),
+          );
+        },
       ),
     );
   }

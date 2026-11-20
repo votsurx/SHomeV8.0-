@@ -2652,4 +2652,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get todayDrawerToday => 'Сегодня';
+
+  @override
+  String get menuResetOrderTitle => 'Сбросить порядок';
+
+  @override
+  String get menuResetOrderBody => 'Плитки вернутся в исходный порядок.';
+
+  @override
+  String get menuResetOrderConfirm => 'Сбросить';
+
+  @override
+  String get settingsResetOrderTitle => 'Сбросить порядок';
+
+  @override
+  String get settingsResetOrderBody => 'Строки вернутся в исходный порядок.';
+
+  @override
+  String get settingsResetOrderConfirm => 'Сбросить';
 }

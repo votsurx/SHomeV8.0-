@@ -1542,4 +1542,13 @@
 
 ,
     "todayDrawerToday": "Today"
+
+
+,
+      "menuResetOrderTitle": "Reset order",
+      "menuResetOrderBody": "Tiles will return to their default order.",
+      "menuResetOrderConfirm": "Reset",
+      "settingsResetOrderTitle": "Reset order",
+      "settingsResetOrderBody": "Rows will return to their default order.",
+      "settingsResetOrderConfirm": "Reset"
 }

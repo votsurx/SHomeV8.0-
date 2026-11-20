@@ -1533,4 +1533,13 @@
 
 ,
   "todayDrawerToday": "Сегодня"
+
+
+,
+    "menuResetOrderTitle": "Сбросить порядок",
+    "menuResetOrderBody": "Плитки вернутся в исходный порядок.",
+    "menuResetOrderConfirm": "Сбросить",
+    "settingsResetOrderTitle": "Сбросить порядок",
+    "settingsResetOrderBody": "Строки вернутся в исходный порядок.",
+    "settingsResetOrderConfirm": "Сбросить"
 }

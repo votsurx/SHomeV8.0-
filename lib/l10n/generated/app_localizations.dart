@@ -4969,6 +4969,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Сегодня'**
   String get todayDrawerToday;
+
+  /// No description provided for @menuResetOrderTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить порядок'**
+  String get menuResetOrderTitle;
+
+  /// No description provided for @menuResetOrderBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Плитки вернутся в исходный порядок.'**
+  String get menuResetOrderBody;
+
+  /// No description provided for @menuResetOrderConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить'**
+  String get menuResetOrderConfirm;
+
+  /// No description provided for @settingsResetOrderTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить порядок'**
+  String get settingsResetOrderTitle;
+
+  /// No description provided for @settingsResetOrderBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Строки вернутся в исходный порядок.'**
+  String get settingsResetOrderBody;
+
+  /// No description provided for @settingsResetOrderConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить'**
+  String get settingsResetOrderConfirm;
 }
 
 class _AppLocalizationsDelegate
